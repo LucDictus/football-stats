@@ -6,6 +6,7 @@ namespace App\Tests\Functional;
 
 use App\Entity\Player;
 use App\Entity\PlayerSeason;
+use App\Entity\ScoreRun;
 use App\Entity\Season;
 use App\Football\Scoring\ModelCatalog;
 use App\Football\Scoring\ScoreRunner;
@@ -114,6 +115,20 @@ final class ApiTest extends WebTestCase
         self::assertSame(['Pedri'], array_column($this->getJson('/api/players?q=pedri')['players'], 'name'));
         self::assertSame([], $this->getJson('/api/players?q=__')['players']);
         self::assertSame([], $this->getJson('/api/players?q=%25%25')['players']);
+    }
+
+    public function testARunOfAnotherSeasonIsNotServed(): void
+    {
+        $previous = new Season('2024/25', new \DateTimeImmutable('2024-08-01'), new \DateTimeImmutable('2025-05-31'));
+        $model = ModelCatalog::get(ModelCatalog::DEFAULT);
+        $oldRun = new ScoreRun($model->id(), $model->toArray(), $model->hash(), $previous, []);
+        $this->em()->persist($previous);
+        $this->em()->persist($oldRun);
+        $this->em()->flush();
+
+        $this->client->request('GET', '/api/rankings?run=' . $oldRun->getId());
+
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testErrorsAreJson(): void

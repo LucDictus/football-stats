@@ -13,27 +13,42 @@ function FrozenOutlet() {
 
 /**
  * Scroll position per history entry: a new page starts at the top, Back/Forward return to
- * where you were (e.g. deep in the ranking). Applied after the old page has animated out.
+ * where you were (e.g. deep in the ranking).
+ *
+ * Restoring waits until the new page is on screen: AnimatePresence calls onExitComplete
+ * before the incoming page has rendered, and scrolling then would be cut short by the
+ * outgoing page's height. Scroll events during a transition are ignored for the same reason.
  */
 function useScrollMemory() {
   const location = useLocation()
   const navigationType = useNavigationType()
   const positions = useRef(new Map<string, number>())
   const current = useRef({ key: location.key, navigationType })
+  const transitioning = useRef(false)
+
   useLayoutEffect(() => {
+    if (current.current.key !== location.key) transitioning.current = true
     current.current = { key: location.key, navigationType }
   }, [location.key, navigationType])
 
   useEffect(() => {
     window.history.scrollRestoration = 'manual'
-    const save = () => positions.current.set(current.current.key, window.scrollY)
+    const save = () => {
+      if (!transitioning.current) positions.current.set(current.current.key, window.scrollY)
+    }
     window.addEventListener('scroll', save, { passive: true })
     return () => window.removeEventListener('scroll', save)
   }, [])
 
   return () => {
-    const { key, navigationType: type } = current.current
-    window.scrollTo({ top: type === 'POP' ? (positions.current.get(key) ?? 0) : 0 })
+    // Two frames: the first lets React render the incoming page, the second runs after layout.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const { key, navigationType: type } = current.current
+        window.scrollTo({ top: type === 'POP' ? (positions.current.get(key) ?? 0) : 0 })
+        transitioning.current = false
+      }),
+    )
   }
 }
 

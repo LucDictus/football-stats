@@ -42,8 +42,8 @@ final readonly class ApiContext
     }
 
     /**
-     * ?run= pins a specific run of the model (so paging never mixes two runs); otherwise
-     * the latest run. Null when the model has no run yet.
+     * ?run= pins a specific run of the model in the current season (so paging never mixes
+     * two runs); otherwise the latest run. Null when the model has no run yet.
      */
     public function run(Request $request, string $modelId): ?ScoreRun
     {
@@ -52,7 +52,7 @@ final readonly class ApiContext
             return $this->runs->latest($modelId, $this->season());
         }
         $run = ctype_digit($runId) ? $this->runs->find((int) $runId) : null;
-        if ($run === null || $run->getModelId() !== $modelId) {
+        if ($run === null || $run->getModelId() !== $modelId || $run->getSeason()->getId() !== $this->season()->getId()) {
             throw new NotFoundHttpException("No run {$runId} of {$modelId}");
         }
 

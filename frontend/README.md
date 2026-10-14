@@ -12,6 +12,7 @@ npm install
 npm run dev      # http://127.0.0.1:5173, proxies /api to Symfony on :8010
 npm run check    # TypeScript, lint (oxlint) and unit tests (Vitest)
 npm run build    # production build in dist/
+npm run e2e      # browser checks (needs both servers and Chrome; CHROME_PATH to override)
 ```
 
 The Symfony server must run for data: `php -S 127.0.0.1:8010 -t public` from the repo root.
