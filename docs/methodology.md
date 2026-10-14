@@ -13,7 +13,7 @@ a new version. Every `ScoreRun` stores the full definition, its SHA-256 hash and
 batches its statistics came from, so any published ranking can be explained and reproduced.
 `app:score` does not store a run that would be identical to the latest one.
 
-## mvp-v2 (roadmap phase 5, release candidate, the current model)
+## mvp-v2 (roadmap phase 5, released, the current model)
 
 **Same blend as mvp-v1 (50% positional + 50% contribution in goals), with defending measured
 against opportunity and errors counted in goals, for every outfield player.**
@@ -47,7 +47,7 @@ multiplied by ((1 − p) / (1 − league average p))^−β. `app:score` prints t
 Negative β: the statistic rises *with* possession (defenders of dominant teams win the ball
 back high up the pitch; their keepers pass more), so those players are scaled down. The player
 page shows the factor next to each adjusted count. Check at player level (correlation of the
-defending component with the team's estimated possession): defenders −0.11 → 0.00,
+defending component with the team's estimated possession share p): defenders −0.11 → 0.00,
 midfielders −0.14 → −0.01.
 
 ### Result (run #14)
@@ -61,9 +61,11 @@ midfielders −0.14 → −0.01.
 
 - **Errors move the replacement level.** With errors in the contribution, the 20th-percentile
   player per position contributes less, so the replacement level falls (per 90: defenders
-  0.033 → 0.010, midfielders 0.082 → 0.068, forwards 0.169 → 0.160). A full-season defender with
-  an average or better error record therefore gains about a goal above replacement; this, not
-  the possession adjustment, is most of why several defenders rose (Konaté #189 → #164,
+  0.033 → 0.010, midfielders 0.082 → 0.068, forwards 0.169 → 0.160), by about 0.75 goals over a
+  full defender's season, while every player is charged his errors. Net, an error-free
+  full-season defender gains about half a goal (+0.58 on average), one with an average record
+  (about 0.7 a season) breaks even, and one with two errors loses about a goal. This, not the
+  possession adjustment, is most of why several defenders rose (Konaté #189 → #164,
   Cubarsí #163 → #147: positional scores slightly down, contribution up).
 - **Errors cost places**: van Dijk #57 → #63 (positional 73 → 77, but −1.75 goals for errors);
   the worst error record costs 3.3 goals, and 59 ranked outfield players lose more than 1.
