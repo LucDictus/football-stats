@@ -174,7 +174,7 @@ final class ScoreCalculatorTest extends TestCase
             $this->candidate(3, 'Average', goals: 0.0, minutes: 2700.0),
         ]);
         $byName = array_column(array_map(static fn ($r) => ['name' => $r->candidate->name, 'r' => $r], $results), 'r', 'name');
-        $adjusted = static fn (string $n) => $byName[$n]->components['output']['metrics']['goals_p90']['adjusted'];
+        $adjusted = static fn (string $n) => $byName[$n]->components['output']['metrics']['goals_p90']['adjusted'] ?? null;
 
         // (rate × matches + average × 10) / (matches + 10), with the average of the raw rates = 2/3
         self::assertEqualsWithDelta((1.0 * 10 + (2 / 3) * 10) / 20, $adjusted('Hot streak'), 1e-9);
@@ -193,7 +193,7 @@ final class ScoreCalculatorTest extends TestCase
             $this->candidate(1, '15 of 15', goals: null, group: 'DF', extra: ['tackle_success_pct' => 100.0, 'tackles' => 15.0]),
             $this->candidate(2, '60 of 80', goals: null, group: 'DF', extra: ['tackle_success_pct' => 75.0, 'tackles' => 80.0]),
         ]);
-        $adjusted = array_column(array_map(static fn ($r) => [$r->candidate->name, $r->components['duels']['metrics']['tackle_pct']['adjusted']], $results), 1, 0);
+        $adjusted = array_column(array_map(static fn ($r) => [$r->candidate->name, $r->components['duels']['metrics']['tackle_pct']['adjusted'] ?? null], $results), 1, 0);
 
         self::assertEqualsWithDelta((100 * 15 + 87.5 * 20) / 35, $adjusted['15 of 15'], 1e-9);
         self::assertEqualsWithDelta((75 * 80 + 87.5 * 20) / 100, $adjusted['60 of 80'], 1e-9);

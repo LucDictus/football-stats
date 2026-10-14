@@ -7,7 +7,7 @@ namespace App\Football\Scoring;
 /**
  * One player's score under a model, with everything needed to explain it.
  *
- * @phpstan-type MetricBreakdown array{value: ?float, percentile: ?float, weight: float}
+ * @phpstan-type MetricBreakdown array{value: ?float, percentile: ?float, weight: float, adjusted?: ?float}
  * @phpstan-type ComponentBreakdown array{score: ?float, weight: float, coverage: float, metrics: array<string, MetricBreakdown>}
  */
 final readonly class PlayerScoreResult

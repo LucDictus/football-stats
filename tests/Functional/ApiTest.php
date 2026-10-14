@@ -32,8 +32,8 @@ final class ApiTest extends WebTestCase
         ]);
         $this->importCl([F::sofascoreRecord(826643, 'Kylian Mbappé', 2829, 'Real Madrid', ['goals' => 15])]);
         $this->build();
-        foreach (['baseline-v1', 'positional-v1'] as $model) {
-            self::getContainer()->get(ScoreRunner::class)->run(ModelCatalog::get($model));
+        foreach (ModelCatalog::all() as $model) {
+            self::getContainer()->get(ScoreRunner::class)->run($model);
         }
     }
 
@@ -41,7 +41,7 @@ final class ApiTest extends WebTestCase
     {
         $data = $this->getJson('/api/models');
 
-        self::assertSame('positional-v1', $data['default']);
+        self::assertSame('positional-v2', $data['default']);
         $byId = array_column($data['models'], null, 'id');
         self::assertSame('Attacking output', $byId['baseline-v1']['components'][0]['label']);
         self::assertSame('Shot stopping', $byId['positional-v1']['roles']['GK'][0]['label']);

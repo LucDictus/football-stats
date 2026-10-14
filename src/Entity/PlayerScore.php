@@ -23,7 +23,7 @@ class PlayerScore
     private ?int $id = null;
 
     /**
-     * @param array<string, array{score: ?float, weight: float, coverage: float, metrics: array<string, array{value: ?float, percentile: ?float, weight: float}>}> $components
+     * @param array<string, array{score: ?float, weight: float, coverage: float, metrics: array<string, array{value: ?float, percentile: ?float, weight: float, adjusted?: ?float}>}> $components
      */
     public function __construct(
         #[ORM\ManyToOne]
@@ -99,7 +99,7 @@ class PlayerScore
         return $this->minutes;
     }
 
-    /** @return array<string, array{score: ?float, weight: float, coverage: float, metrics: array<string, array{value: ?float, percentile: ?float, weight: float}>}> */
+    /** @return array<string, array{score: ?float, weight: float, coverage: float, metrics: array<string, array{value: ?float, percentile: ?float, weight: float, adjusted?: ?float}>}> */
     public function getComponents(): array
     {
         return $this->components;

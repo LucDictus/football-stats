@@ -45,10 +45,8 @@ final class RankingController extends AbstractController
     #[Route('/rankings', name: 'rankings', methods: ['GET'])]
     public function ranking(Request $request): JsonResponse
     {
+        // Parameters first: a malformed request is a 400 whatever the data.
         $modelId = $this->context->modelId($request);
-        $run = $this->context->run($request, $modelId)
-            ?? throw new NotFoundHttpException("No ranking yet for {$modelId}: run app:score");
-
         $position = $this->context->string($request, 'position');
         if ($position !== null && !in_array($position, PlayerSeason::POSITION_GROUPS, true)) {
             throw new BadRequestHttpException('position must be one of ' . implode(', ', PlayerSeason::POSITION_GROUPS));
@@ -56,6 +54,9 @@ final class RankingController extends AbstractController
         $limit = max(1, min(self::MAX_LIMIT, $this->context->int($request, 'limit', 100)));
         $offset = max(0, $this->context->int($request, 'offset', 0));
         $unranked = filter_var($this->context->string($request, 'unranked') ?? '0', FILTER_VALIDATE_BOOL);
+
+        $run = $this->context->run($request, $modelId)
+            ?? throw new NotFoundHttpException("No ranking yet for {$modelId}: run app:score");
 
         return $this->json([
             'run' => $this->presenter->run($run),
