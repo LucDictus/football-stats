@@ -14,33 +14,36 @@ use App\Football\Scoring\ScoringModel;
  * Variance decomposition: the final score F is linear in its parts,
  *   F = (1 − w) × P + w × I,  P = a + b × Σ termᵢ,  I = c + d × (Σ goalsⱼ − replacement),
  * with termᵢ = a component's share of the composite (its weight over the weight that could be
- * measured, × its score). The share of F's variance a part explains is
+ * measured, × its score; 0 when unknown). The share of F's variance a part explains is
  *   share(x) = coefficient × Cov(x, F) / Var(F),
- * and the shares add up to 1 (up to the residual: clamping, players with missing parts).
- * A part that correlates with the rest gets credit for what it shares with it, so two parts
- * measuring the same thing show up as one family with a large share.
+ * and the shares add up to 1 exactly; only clamping (models without an impact part, whose
+ * positional score is clamped to 0–100) leaves a residual. A part that correlates with the
+ * rest gets credit for what it shares with it, so two parts measuring the same thing show up
+ * as one family with a large share. Shares describe the spread within a role, not where a
+ * role lands in the shared ranking: that is what the counterfactuals show.
  *
  * Families group the parts that measure the same thing in both halves of the score.
  *
- * Counterfactual (models with an impact part): the positional half replaced by what it adds
- * beyond the contribution, i.e. its residual after regressing it on the contribution score
- * within the role, standardised like a positional score (mean 50, SD 10). It shows what
- * removing the overlap would do to the ranking.
- */
-/**
+ * Counterfactuals (models with an impact part), each a full re-ranking across roles:
+ * - "residual": the positional half replaced by what it adds beyond the contribution (its
+ *   residual after regressing it on the contribution score within the role, around the same
+ *   mean, at its own size: rescaling it would blow up what little is left);
+ * - "drop …": the duplicated components left out of the positional composite, which is then
+ *   standardised again to the role's positional mean and SD.
+ *
  * @phpstan-type Pair array{a: string, b: string, r: float}
- * @phpstan-type RoleAnalysis array{players: int, shares: array<string, float>, families: array<string, float>, residual: float, positional_impact_correlation: ?float, minutes_correlation: ?float, final_sd: float, overlaps: list<Pair>, metric_overlaps: list<Pair>}
- * @phpstan-type Counterfactual array{top: array<int, array<string, array{model: int, counterfactual: int}>>, leaders: list<array{rank: int, name: string, role: string, model_rank: int}>}
+ * @phpstan-type RoleAnalysis array{players: int, shares: array<string, float>, families: array<string, float>, residual: float, positional_impact_correlation: ?float, minutes_correlation: ?float, final_sd: float, impact_sd: ?float, overlaps: list<Pair>, metric_overlaps: list<Pair>}
+ * @phpstan-type Variant array{key: string, label: string, top: array<int, array<string, int>>, best: array<string, int>, leaders: list<string>}
  */
 final class OverlapAnalysis
 {
     /** Positional component or impact component (prefixed "impact.") => family. */
     public const FAMILIES = [
-        'attacking_output' => 'scoring',
-        'attacking_quality' => 'scoring',
-        'attacking' => 'scoring',
-        'impact.shooting' => 'scoring',
-        'impact.finishing' => 'scoring',
+        'attacking_output' => 'attack',
+        'attacking_quality' => 'attack',
+        'attacking' => 'attack',
+        'impact.shooting' => 'attack',
+        'impact.finishing' => 'attack',
         'creation' => 'creation',
         'link_up' => 'creation',
         'impact.creation' => 'creation',
@@ -56,6 +59,13 @@ final class OverlapAnalysis
         'impact.replacement' => 'volume',
     ];
 
+    /** Positional components that repeat a contribution part, per role: the "drop" counterfactuals. */
+    public const DUPLICATES = [
+        'FW' => 'attacking_quality', // xG + xA per 90 ↔ shooting and creation in goals
+        'MF' => 'creation',          // xA, key passes, big chances ↔ creation in goals
+        'GK' => 'shot_stopping',     // goals prevented per 90 ↔ goalkeeping in goals
+    ];
+
     /** Pairs of parts correlated at least this much are listed as overlapping. */
     public const OVERLAP_THRESHOLD = 0.6;
 
@@ -65,7 +75,7 @@ final class OverlapAnalysis
     /**
      * @param list<PlayerScoreResult> $results
      *
-     * @return array{roles: array<string, RoleAnalysis>, counterfactual: ?Counterfactual}
+     * @return array{roles: array<string, RoleAnalysis>, counterfactuals: list<Variant>}
      */
     public function analyse(ScoringModel $model, array $results): array
     {
@@ -82,50 +92,120 @@ final class OverlapAnalysis
             $analysis[$role] = $this->role($model, $rows);
         }
 
-        return ['roles' => $analysis, 'counterfactual' => $model->impact !== null ? $this->counterfactual($model, $byRole) : null];
+        return ['roles' => $analysis, 'counterfactuals' => $model->impact !== null ? $this->counterfactuals($model, $byRole) : []];
     }
 
     /**
      * @param array<string, list<PlayerScoreResult>> $byRole
      *
-     * @return Counterfactual
+     * @return list<Variant>
      */
-    private function counterfactual(ScoringModel $model, array $byRole): array
+    private function counterfactuals(ScoringModel $model, array $byRole): array
     {
+        $variants = [self::variant('model', 'mvp-v1 as is', $byRole, static fn (PlayerScoreResult $r) => (float) $r->score)];
+
         $w = $model->impactWeight;
-        $all = [];
-        foreach ($byRole as $role => $rows) {
+        $residual = [];
+        foreach ($byRole as $rows) {
             $positional = array_map(static fn (PlayerScoreResult $r) => (float) $r->positional, $rows);
             $impact = array_map(static fn (PlayerScoreResult $r) => (float) ($r->impact['score'] ?? 0.0), $rows);
             $b = self::slope($impact, $positional);
-            $meanP = array_sum($positional) / count($positional);
             $meanI = array_sum($impact) / count($impact);
-            $residual = array_map(static fn (int $i) => $positional[$i] - $meanP - $b * ($impact[$i] - $meanI), array_keys($rows));
-            $sd = sqrt(self::covariance($residual, $residual));
             foreach ($rows as $i => $r) {
-                $beyond = $sd > 0 ? 50 + 10 * $residual[$i] / $sd : 50.0;
-                $all[] = ['name' => $r->candidate->name, 'role' => $role, 'rank' => (int) $r->rank, 'score' => (1 - $w) * $beyond + $w * $impact[$i]];
+                // Same mean as the positional score, without the part the contribution explains.
+                $residual[spl_object_id($r)] = (1 - $w) * ($positional[$i] - $b * ($impact[$i] - $meanI)) + $w * $impact[$i];
+            }
+        }
+        $variants[] = self::variant('residual', 'Positional half: only what it adds beyond the contribution', $byRole, static fn (PlayerScoreResult $r) => $residual[spl_object_id($r)]);
+
+        $all = [];
+        foreach (self::DUPLICATES as $role => $component) {
+            if (!isset($byRole[$role])) {
+                continue;
+            }
+            $dropped = $this->withoutComponent($w, $byRole[$role], $component);
+            $all += $dropped;
+            $variants[] = self::variant("drop_{$role}", "{$role}: without {$component}", $byRole, static fn (PlayerScoreResult $r) => $dropped[spl_object_id($r)] ?? (float) $r->score);
+        }
+        $variants[] = self::variant('drop_all', 'All three left out', $byRole, static fn (PlayerScoreResult $r) => $all[spl_object_id($r)] ?? (float) $r->score);
+
+        return $variants;
+    }
+
+    /**
+     * Final scores of a role with one positional component left out: the composite over the
+     * remaining components, standardised again to the positional score's mean and SD.
+     *
+     * @param list<PlayerScoreResult> $rows
+     *
+     * @return array<int, float> by spl_object_id
+     */
+    private function withoutComponent(float $w, array $rows, string $component): array
+    {
+        $composite = [];
+        foreach ($rows as $i => $r) {
+            $sum = 0.0;
+            $known = 0.0;
+            foreach ($r->components as $key => $c) {
+                if ($key !== $component && $c['score'] !== null) {
+                    $sum += $c['weight'] * $c['score'];
+                    $known += $c['weight'];
+                }
+            }
+            $composite[$i] = $known > 0 ? $sum / $known : 0.0;
+        }
+        $composite = array_values($composite);
+        $positional = array_map(static fn (PlayerScoreResult $r) => (float) $r->positional, $rows);
+        $meanC = array_sum($composite) / count($composite);
+        $sdC = sqrt(self::covariance($composite, $composite));
+        $meanP = array_sum($positional) / count($positional);
+        $sdP = sqrt(self::covariance($positional, $positional));
+
+        $final = [];
+        foreach ($rows as $i => $r) {
+            $p = $sdC > 0 ? $meanP + $sdP * ($composite[$i] - $meanC) / $sdC : $meanP;
+            $final[spl_object_id($r)] = (1 - $w) * $p + $w * (float) ($r->impact['score'] ?? 0.0);
+        }
+
+        return $final;
+    }
+
+    /**
+     * Ranks every player by $score and counts each role in the top 10 and top 100.
+     *
+     * @param array<string, list<PlayerScoreResult>> $byRole
+     * @param callable(PlayerScoreResult): float     $score
+     *
+     * @return Variant
+     */
+    private static function variant(string $key, string $label, array $byRole, callable $score): array
+    {
+        $all = [];
+        foreach ($byRole as $role => $rows) {
+            foreach ($rows as $r) {
+                $all[] = ['name' => $r->candidate->name, 'role' => $role, 'rank' => (int) $r->rank, 'score' => $score($r)];
             }
         }
         usort($all, static fn (array $x, array $y) => [$y['score'], $x['rank']] <=> [$x['score'], $y['rank']]);
 
         $top = [];
-        foreach ([10, 100] as $n) {
-            foreach (array_keys($byRole) as $role) {
-                $top[$n][$role] = [
-                    'model' => count(array_filter($byRole[$role], static fn (PlayerScoreResult $r) => $r->rank <= $n)),
-                    'counterfactual' => count(array_filter(array_slice($all, 0, $n), static fn (array $x) => $x['role'] === $role)),
-                ];
+        $best = [];
+        foreach ($all as $i => $x) {
+            $best[$x['role']] ??= $i + 1;
+            foreach ([10, 100] as $n) {
+                $top[$n][$x['role']] ??= 0;
+                if ($i < $n) {
+                    ++$top[$n][$x['role']];
+                }
             }
         }
 
         return [
+            'key' => $key,
+            'label' => $label,
             'top' => $top,
-            'leaders' => array_map(
-                static fn (array $x, int $i) => ['rank' => $i + 1, 'name' => $x['name'], 'role' => $x['role'], 'model_rank' => $x['rank']],
-                array_slice($all, 0, 10),
-                array_keys(array_slice($all, 0, 10)),
-            ),
+            'best' => $best,
+            'leaders' => array_map(static fn (array $x) => sprintf('%s (%s)', $x['name'], $x['role']), array_slice($all, 0, 10)),
         ];
     }
 
@@ -181,6 +261,7 @@ final class OverlapAnalysis
         arsort($shares);
         arsort($families);
 
+        $impactScores = $model->impact !== null ? array_map(static fn (PlayerScoreResult $r) => (float) ($r->impact['score'] ?? 0.0), $rows) : null;
         $series = array_map(
             fn (array $v) => self::complete($v, count($rows)),
             array_filter($terms + $parts, static fn (string $key) => abs($shares[$key]) >= self::MIN_SHARE, ARRAY_FILTER_USE_KEY),
@@ -196,6 +277,7 @@ final class OverlapAnalysis
                 : null,
             'minutes_correlation' => self::correlation(array_map(static fn (PlayerScoreResult $r) => $r->candidate->stats->getMinutes(), $rows), $final),
             'final_sd' => sqrt(self::covariance($final, $final)),
+            'impact_sd' => $impactScores === null ? null : sqrt(self::covariance($impactScores, $impactScores)),
             'overlaps' => self::overlaps($series),
             'metric_overlaps' => self::overlaps($this->metrics($rows)),
         ];
@@ -314,6 +396,7 @@ final class OverlapAnalysis
             $sum += ($v - $mx) * ($y[$i] - $my);
         }
 
-        return $sum / ($n - 1);
+        // Population covariance (÷ n), like the T-scores of Normalization.
+        return $sum / $n;
     }
 }

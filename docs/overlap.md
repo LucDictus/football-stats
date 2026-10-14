@@ -7,23 +7,30 @@ thing. Interpretation: [methodology.md](methodology.md).
 **Share** = the part of the final score's variance (within the role, ranked players) a part
 explains: its coefficient × Cov(part, final) / Var(final). Shares add up to 100%; a part that
 moves with others shares their credit, so a family measured in both halves shows a large share.
-Contribution parts are prefixed `impact.`; `impact.replacement` is minus the replacement level
-(proportional to minutes).
+Shares describe the spread within a role, not where the role lands in the shared ranking:
+the counterfactuals at the end show that.
+
+- Contribution parts are prefixed `impact.`; `impact.replacement` is minus the replacement
+  level, which is proportional to minutes.
+- `attack` holds goals and xG, and xA where a component combines them (forwards' xG + xA).
+- `volume` (availability and the replacement level) is **not** the effect of minutes: the two
+  nearly cancel, and the minutes inside the contribution's season totals are credited to
+  attack, creation and build-up. The effect of minutes is the minutes ↔ final correlation.
 
 ## Summary
 
-| Role | Players | Positional ↔ contribution r | Final score SD | Minutes ↔ final r | Largest family |
-|---|---|---|---|---|---|
-| Forwards | 226 | 0.93 | 10.6 | 0.37 | scoring 86.9% |
-| Midfielders | 683 | 0.72 | 9.6 | 0.36 | scoring 36.6% |
-| Defenders | 501 | 0.58 | 8.3 | 0.41 | defending 33.5% |
-| Goalkeepers | 113 | 0.89 | 8.8 | 0.44 | goalkeeping 88.0% |
+| Role | Players | Positional ↔ contribution r | Contribution score SD | Final score SD | Minutes ↔ final r | Largest family |
+|---|---|---|---|---|---|---|
+| Forwards | 226 | 0.93 | 11.6 | 10.6 | 0.37 | attack 86.9% |
+| Midfielders | 683 | 0.72 | 10.6 | 9.6 | 0.36 | attack 36.6% |
+| Defenders | 501 | 0.58 | 8.5 | 8.2 | 0.41 | defending 33.5% |
+| Goalkeepers | 113 | 0.89 | 8.1 | 8.8 | 0.44 | goalkeeping 88.0% |
 
 ## Forwards
 
 | Family | Share |
 |---|---|
-| scoring | 86.9% |
+| attack | 86.9% |
 | creation | 10.8% |
 | defending | 4.4% |
 | build_up | 3.9% |
@@ -32,19 +39,19 @@ Contribution parts are prefixed `impact.`; `impact.replacement` is minus the rep
 
 | Part | Family | Share |
 |---|---|---|
-| `impact.shooting` | scoring | 47.4% |
-| `attacking_output` | scoring | 21.1% |
-| `attacking_quality` | scoring | 17.4% |
+| `impact.shooting` | attack | 47.4% |
+| `attacking_output` | attack | 21.1% |
+| `attacking_quality` | attack | 17.4% |
 | `impact.creation` | creation | 8.0% |
 | `availability` | volume | 4.9% |
 | `impact.defence` | defending | 4.4% |
 | `impact.build_up` | build_up | 3.9% |
 | `link_up` | creation | 2.8% |
-| `impact.finishing` | scoring | 1.0% |
+| `impact.finishing` | attack | 1.0% |
 | `impact.goalkeeping` | goalkeeping | 0.0% |
 | `impact.replacement` | volume | -10.8% |
 
-Unexplained (clamping, missing parts): 0.0%.
+Not explained by the parts (clamping only): 0.0%.
 
 Overlapping parts (|r| ≥ 0.6):
 
@@ -65,7 +72,7 @@ Overlapping metrics within the positional half:
 
 | Family | Share |
 |---|---|
-| scoring | 36.6% |
+| attack | 36.6% |
 | creation | 35.5% |
 | build_up | 22.0% |
 | defending | 4.9% |
@@ -74,20 +81,20 @@ Overlapping metrics within the positional half:
 
 | Part | Family | Share |
 |---|---|---|
-| `impact.shooting` | scoring | 25.0% |
+| `impact.shooting` | attack | 25.0% |
 | `creation` | creation | 17.9% |
 | `impact.creation` | creation | 17.6% |
 | `build_up` | build_up | 13.7% |
-| `attacking_output` | scoring | 10.8% |
+| `attacking_output` | attack | 10.8% |
 | `impact.build_up` | build_up | 8.4% |
 | `availability` | volume | 7.2% |
 | `impact.defence` | defending | 6.2% |
-| `impact.finishing` | scoring | 0.8% |
+| `impact.finishing` | attack | 0.8% |
 | `impact.goalkeeping` | goalkeeping | 0.0% |
 | `defending` | defending | -1.3% |
 | `impact.replacement` | volume | -6.2% |
 
-Unexplained (clamping, missing parts): 0.0%.
+Not explained by the parts (clamping only): 0.0%.
 
 Overlapping parts (|r| ≥ 0.6):
 
@@ -118,7 +125,7 @@ Overlapping metrics within the positional half:
 |---|---|
 | defending | 33.5% |
 | build_up | 29.3% |
-| scoring | 18.2% |
+| attack | 18.2% |
 | volume | 9.7% |
 | creation | 6.1% |
 | reliability | 3.2% |
@@ -130,17 +137,17 @@ Overlapping metrics within the positional half:
 | `build_up` | build_up | 17.7% |
 | `availability` | volume | 13.2% |
 | `impact.build_up` | build_up | 11.6% |
-| `impact.shooting` | scoring | 10.5% |
+| `impact.shooting` | attack | 10.5% |
 | `duels` | defending | 10.0% |
-| `attacking` | scoring | 7.9% |
+| `attacking` | attack | 7.9% |
 | `impact.creation` | creation | 6.1% |
 | `reliability` | reliability | 3.2% |
 | `defending` | defending | 3.0% |
 | `impact.goalkeeping` | goalkeeping | 0.0% |
-| `impact.finishing` | scoring | -0.3% |
+| `impact.finishing` | attack | -0.3% |
 | `impact.replacement` | volume | -3.5% |
 
-Unexplained (clamping, missing parts): -0.0%.
+Not explained by the parts (clamping only): -0.0%.
 
 Overlapping parts (|r| ≥ 0.6):
 
@@ -173,7 +180,7 @@ Overlapping metrics within the positional half:
 | reliability | 1.8% |
 | creation | 0.1% |
 | defending | 0.0% |
-| scoring | -0.0% |
+| attack | -0.0% |
 
 | Part | Family | Share |
 |---|---|---|
@@ -185,10 +192,10 @@ Overlapping metrics within the positional half:
 | `impact.replacement` | volume | 1.0% |
 | `impact.creation` | creation | 0.1% |
 | `impact.defence` | defending | 0.0% |
-| `impact.finishing` | scoring | -0.0% |
-| `impact.shooting` | scoring | -0.0% |
+| `impact.finishing` | attack | -0.0% |
+| `impact.shooting` | attack | -0.0% |
 
-Unexplained (clamping, missing parts): 0.0%.
+Not explained by the parts (clamping only): 0.0%.
 
 Overlapping parts (|r| ≥ 0.6):
 
@@ -198,27 +205,27 @@ Overlapping parts (|r| ≥ 0.6):
 
 Overlapping metrics within the positional half: none.
 
-## Counterfactual: positional half without the overlap
+## Counterfactuals: the ranking without the overlap
 
-The positional half replaced by what it adds beyond the contribution (its residual after
-regressing it on the contribution score within the role, rescaled to mean 50, SD 10).
+- **residual**: the positional half keeps only what it adds beyond the contribution (its
+  residual after regressing it on the contribution score within the role, at its own size).
+- **drop**: the positional component that repeats a contribution part is left out, and the
+  positional score is standardised again within the role.
 
-| Role | Top 10 (model) | Top 10 (counterfactual) | Top 100 (model) | Top 100 (counterfactual) |
-|---|---|---|---|---|
-| Forwards | 5 | 1 | 21 | 22 |
-| Midfielders | 5 | 9 | 48 | 51 |
-| Defenders | 0 | 0 | 25 | 26 |
-| Goalkeepers | 0 | 0 | 6 | 1 |
-
-| # | Player | Role | Rank in the model |
+| Variant | Top 10 FW / MF / DF / GK | Top 100 FW / MF / DF / GK | Best FW / MF / DF / GK |
 |---|---|---|---|
-| 1 | Michael Olise | MF | 1 |
-| 2 | Bruno Fernandes | MF | 7 |
-| 3 | Federico Dimarco | MF | 6 |
-| 4 | Lamine Yamal | MF | 3 |
-| 5 | Joshua Kimmich | MF | 12 |
-| 6 | Pedri | MF | 31 |
-| 7 | Luis Díaz | MF | 4 |
-| 8 | Ousmane Dembélé | FW | 92 |
-| 9 | Rayan Cherki | MF | 15 |
-| 10 | Aleix García | MF | 46 |
+| mvp-v1 as is | 5 / 5 / 0 / 0 | 21 / 48 / 25 / 6 | #2 / #1 / #17 / #36 |
+| Positional half: only what it adds beyond the contribution | 3 / 7 / 0 / 0 | 17 / 51 / 32 / 0 | #4 / #1 / #16 / #103 |
+| FW: without attacking_quality | 4 / 6 / 0 / 0 | 19 / 49 / 26 / 6 | #2 / #1 / #17 / #37 |
+| MF: without creation | 5 / 5 / 0 / 0 | 21 / 49 / 24 / 6 | #1 / #2 / #15 / #31 |
+| GK: without shot_stopping | 5 / 5 / 0 / 0 | 22 / 50 / 27 / 1 | #2 / #1 / #17 / #96 |
+| All three left out | 5 / 5 / 0 / 0 | 20 / 52 / 27 / 1 | #1 / #2 / #15 / #95 |
+
+Top 10 per variant:
+
+- mvp-v1 as is: Michael Olise (MF), Harry Kane (FW), Lamine Yamal (MF), Luis Díaz (MF), Erling Haaland (FW), Federico Dimarco (MF), Bruno Fernandes (MF), Deniz Undav (FW), Lautaro Martínez (FW), Kylian Mbappé (FW)
+- Positional half: only what it adds beyond the contribution: Michael Olise (MF), Bruno Fernandes (MF), Lamine Yamal (MF), Harry Kane (FW), Federico Dimarco (MF), Luis Díaz (MF), Erling Haaland (FW), Joshua Kimmich (MF), Deniz Undav (FW), Pedri (MF)
+- FW: without attacking_quality: Michael Olise (MF), Harry Kane (FW), Lamine Yamal (MF), Luis Díaz (MF), Erling Haaland (FW), Federico Dimarco (MF), Bruno Fernandes (MF), Deniz Undav (FW), Lautaro Martínez (FW), Florian Thauvin (MF)
+- MF: without creation: Harry Kane (FW), Michael Olise (MF), Luis Díaz (MF), Erling Haaland (FW), Lamine Yamal (MF), Federico Dimarco (MF), Deniz Undav (FW), Lautaro Martínez (FW), Bruno Fernandes (MF), Kylian Mbappé (FW)
+- GK: without shot_stopping: Michael Olise (MF), Harry Kane (FW), Lamine Yamal (MF), Luis Díaz (MF), Erling Haaland (FW), Federico Dimarco (MF), Bruno Fernandes (MF), Deniz Undav (FW), Lautaro Martínez (FW), Kylian Mbappé (FW)
+- All three left out: Harry Kane (FW), Michael Olise (MF), Luis Díaz (MF), Erling Haaland (FW), Lamine Yamal (MF), Federico Dimarco (MF), Deniz Undav (FW), Lautaro Martínez (FW), Bruno Fernandes (MF), Kylian Mbappé (FW)

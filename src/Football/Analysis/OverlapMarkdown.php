@@ -9,14 +9,14 @@ namespace App\Football\Analysis;
  * docs/methodology.md).
  *
  * @phpstan-import-type RoleAnalysis from OverlapAnalysis
- * @phpstan-import-type Counterfactual from OverlapAnalysis
+ * @phpstan-import-type Variant from OverlapAnalysis
  */
 final class OverlapMarkdown
 {
     private const ROLES = ['FW' => 'Forwards', 'MF' => 'Midfielders', 'DF' => 'Defenders', 'GK' => 'Goalkeepers'];
 
     /**
-     * @param array{roles: array<string, RoleAnalysis>, counterfactual: ?Counterfactual} $analysis
+     * @param array{roles: array<string, RoleAnalysis>, counterfactuals: list<Variant>} $analysis
      */
     public function render(string $modelId, int $runId, array $analysis): string
     {
@@ -27,11 +27,17 @@ final class OverlapMarkdown
             . "**Share** = the part of the final score's variance (within the role, ranked players) a part\n"
             . "explains: its coefficient × Cov(part, final) / Var(final). Shares add up to 100%; a part that\n"
             . "moves with others shares their credit, so a family measured in both halves shows a large share.\n"
-            . "Contribution parts are prefixed `impact.`; `impact.replacement` is minus the replacement level\n"
-            . "(proportional to minutes).\n\n";
+            . "Shares describe the spread within a role, not where the role lands in the shared ranking:\n"
+            . "the counterfactuals at the end show that.\n\n"
+            . "- Contribution parts are prefixed `impact.`; `impact.replacement` is minus the replacement\n"
+            . "  level, which is proportional to minutes.\n"
+            . "- `attack` holds goals and xG, and xA where a component combines them (forwards' xG + xA).\n"
+            . "- `volume` (availability and the replacement level) is **not** the effect of minutes: the two\n"
+            . "  nearly cancel, and the minutes inside the contribution's season totals are credited to\n"
+            . "  attack, creation and build-up. The effect of minutes is the minutes ↔ final correlation.\n\n";
 
         $roles = $analysis['roles'];
-        $md .= "## Summary\n\n| Role | Players | Positional ↔ contribution r | Final score SD | Minutes ↔ final r | Largest family |\n|---|---|---|---|---|---|\n";
+        $md .= "## Summary\n\n| Role | Players | Positional ↔ contribution r | Contribution score SD | Final score SD | Minutes ↔ final r | Largest family |\n|---|---|---|---|---|---|---|\n";
         foreach (self::ROLES as $role => $label) {
             if (!isset($roles[$role])) {
                 continue;
@@ -39,10 +45,11 @@ final class OverlapMarkdown
             $a = $roles[$role];
             $family = array_key_first($a['families']);
             $md .= sprintf(
-                "| %s | %d | %s | %.1f | %s | %s %s |\n",
+                "| %s | %d | %s | %s | %.1f | %s | %s %s |\n",
                 $label,
                 $a['players'],
                 self::r($a['positional_impact_correlation']),
+                $a['impact_sd'] === null ? '–' : number_format($a['impact_sd'], 1),
                 $a['final_sd'],
                 self::r($a['minutes_correlation']),
                 $family,
@@ -63,32 +70,25 @@ final class OverlapMarkdown
             foreach ($a['shares'] as $part => $share) {
                 $md .= sprintf("| `%s` | %s | %s |\n", $part, OverlapAnalysis::FAMILIES[$part] ?? $part, self::pct($share));
             }
-            $md .= sprintf("\nUnexplained (clamping, missing parts): %s.\n", self::pct($a['residual']));
+            $md .= sprintf("\nNot explained by the parts (clamping only): %s.\n", self::pct($a['residual']));
             $md .= self::pairs('Overlapping parts (|r| ≥ ' . OverlapAnalysis::OVERLAP_THRESHOLD . ')', $a['overlaps']);
             $md .= self::pairs('Overlapping metrics within the positional half', $a['metric_overlaps']);
         }
 
-        $cf = $analysis['counterfactual'];
-        if ($cf !== null) {
-            $md .= "\n## Counterfactual: positional half without the overlap\n\n"
-                . "The positional half replaced by what it adds beyond the contribution (its residual after\n"
-                . "regressing it on the contribution score within the role, rescaled to mean 50, SD 10).\n\n"
-                . "| Role | Top 10 (model) | Top 10 (counterfactual) | Top 100 (model) | Top 100 (counterfactual) |\n|---|---|---|---|---|\n";
-            foreach (self::ROLES as $role => $label) {
-                if (isset($cf['top'][10][$role])) {
-                    $md .= sprintf(
-                        "| %s | %d | %d | %d | %d |\n",
-                        $label,
-                        $cf['top'][10][$role]['model'],
-                        $cf['top'][10][$role]['counterfactual'],
-                        $cf['top'][100][$role]['model'] ?? 0,
-                        $cf['top'][100][$role]['counterfactual'] ?? 0,
-                    );
-                }
+        $variants = $analysis['counterfactuals'];
+        if ($variants !== []) {
+            $md .= "\n## Counterfactuals: the ranking without the overlap\n\n"
+                . "- **residual**: the positional half keeps only what it adds beyond the contribution (its\n"
+                . "  residual after regressing it on the contribution score within the role, at its own size).\n"
+                . "- **drop**: the positional component that repeats a contribution part is left out, and the\n"
+                . "  positional score is standardised again within the role.\n\n"
+                . "| Variant | Top 10 FW / MF / DF / GK | Top 100 FW / MF / DF / GK | Best FW / MF / DF / GK |\n|---|---|---|---|\n";
+            foreach ($variants as $v) {
+                $md .= sprintf("| %s | %s | %s | %s |\n", $v['label'], self::byRole($v['top'][10] ?? []), self::byRole($v['top'][100] ?? []), self::byRole($v['best'], '#'));
             }
-            $md .= "\n| # | Player | Role | Rank in the model |\n|---|---|---|---|\n";
-            foreach ($cf['leaders'] as $l) {
-                $md .= sprintf("| %d | %s | %s | %d |\n", $l['rank'], $l['name'], $l['role'], $l['model_rank']);
+            $md .= "\nTop 10 per variant:\n\n";
+            foreach ($variants as $v) {
+                $md .= sprintf("- %s: %s\n", $v['label'], implode(', ', $v['leaders']));
             }
         }
 
@@ -107,6 +107,12 @@ final class OverlapMarkdown
         }
 
         return $md;
+    }
+
+    /** @param array<string, int> $counts */
+    private static function byRole(array $counts, string $prefix = ''): string
+    {
+        return implode(' / ', array_map(static fn (string $role) => isset($counts[$role]) ? $prefix . $counts[$role] : '–', array_keys(self::ROLES)));
     }
 
     private static function pct(float $share): string

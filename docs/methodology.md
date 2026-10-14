@@ -109,44 +109,53 @@ level of comparable Understat players: Cherki #15, Gabriel Magalhães #24.
 
 `php bin/console app:analyse:overlap` (`OverlapAnalysis`) breaks the final score down, per role,
 into the share of its variance each part explains, and groups the parts that measure the same
-thing in both halves into families. The full generated report is in [overlap.md](overlap.md).
+thing in both halves into families. It also re-ranks everyone under counterfactuals without
+the overlap. The full generated report is in [overlap.md](overlap.md).
 
-| Role | Positional ↔ contribution r | Final score SD | Largest family |
+| Role | Positional ↔ contribution r | Contribution SD | Final SD | Largest family |
+|---|---|---|---|---|
+| Forwards | 0.93 | 11.6 | 10.6 | attack (goals, xG, xA) 87% |
+| Midfielders | 0.72 | 10.6 | 9.6 | attack 37%, creation 36%, build-up 22% |
+| Defenders | 0.58 | 8.5 | 8.2 | defending 34%, build-up 29%, attack 18% |
+| Goalkeepers | 0.89 | 8.1 | 8.8 | goalkeeping (goals prevented) 88% |
+
+| Counterfactual | Top 10 FW / MF | Top 100 FW / MF / DF / GK | Best GK |
 |---|---|---|---|
-| Forwards | 0.93 | 10.6 | scoring 87% |
-| Midfielders | 0.72 | 9.6 | scoring 37%, creation 36%, build-up 22% |
-| Defenders | 0.58 | 8.3 | defending 34%, build-up 29%, scoring 18% |
-| Goalkeepers | 0.89 | 8.8 | goalkeeping (goals prevented) 88% |
+| mvp-v1 as is | 5 / 5 | 21 / 48 / 25 / 6 | #36 |
+| Positional half only beyond the contribution | 3 / 7 | 17 / 51 / 32 / 0 | #103 |
+| Forwards without xG + xA per 90 | 4 / 6 | 19 / 49 / 26 / 6 | #37 |
+| Midfielders without creation | 5 / 5 | 21 / 49 / 24 / 6 | #31 |
+| Goalkeepers without shot stopping | 5 / 5 | 22 / 50 / 27 / 1 | #96 |
 
 Findings:
 
-- **Forwards: overlap, but not double-counting to remove.** Both halves measure scoring:
-  goals + assists and xG + xA per 90 (r 0.80 with each other) in the positional half, and
-  shooting and creation in goals in the contribution. For a forward, scoring *is* positional
-  excellence, and the data has nothing else to measure him by (no dribbles, carries or
-  pressing). The **counterfactual** proves it: when the positional half counts only what it
-  adds beyond the contribution, midfielders take 9 of the top 10 again, and Kane and Haaland
-  drop out of the top 20. Removing the overlap would bring back the bias that mvp-v1 fixed.
-- **Wider spread for forwards is mostly intended.** Their contribution varies most (SD 11.6
-  against 8.1 to 10.6 for the other roles): a goal counts the same in every role, and forwards
-  differ most in goals. The agreement between the halves adds some spread on top of that.
+- **Forwards: both halves measure attack** (goals + assists and xG + xA per 90, r 0.80 with
+  each other, against shooting and creation in goals). For a forward, attack *is* positional
+  excellence, and the data has nothing else to measure them by (no dribbles, carries or
+  pressing). Removing the overlap moves the top 10 a little toward midfielders (3 FW / 7 MF;
+  Kane #4, Haaland #7), and leaving out only the duplicated xG + xA component moves one place
+  (4 / 6). The overlap gives forwards a modest edge, not a distortion that needs removing.
+- **The forwards' wider spread** (final SD 10.6 against 9.6 for midfielders) comes about half
+  from their wider contribution (a goal counts the same in every role, and forwards differ
+  most in goals) and half from the agreement between the halves.
 - **Midfielders: creation is counted in both halves** (positional creation ↔ contribution
   creation r 0.85; inside the positional component xA ↔ big chances 0.92, xA ↔ key passes
-  0.85). The metrics share one component with a fixed weight, so they do not add weight to
-  each other; across the halves the overlap is agreement between two views, as for forwards.
+  0.85). Those metrics share one component with a fixed weight, so they do not add weight to
+  each other. Leaving the component out changes nothing in the top 10.
 - **Defenders are the most balanced role** (r 0.58): the halves add different information.
-- **Goalkeepers: real double-counting.** Goals prevented is 70% of the positional half and
-  almost all of the contribution (r 0.90), so 88% of a goalkeeper's final score is one
-  statistic. Most of that statistic over one season is chance. The contribution half shrinks it
-  hard (a prior of 300 shots on target); the positional half shrinks it only by a prior worth
-  10 matches, so the noise still comes through. The data has no other goalkeeping measure that
-  is not also driven by the team (save % repeats goals prevented; clean sheets are team
-  outcomes). **For the next model version:** shrink the positional shot stopping like the
-  contribution's goalkeeping. That needs a new version, because released models are never
-  edited. The effect on the top of the ranking today is small (best goalkeeper #36).
+- **Goalkeepers: real double-counting, with a visible effect.** Goals prevented is 70% of the
+  positional half and almost all of the contribution (goalkeeping explains 92% of a keeper's
+  contribution; shot stopping ↔ goalkeeping r 0.90), so 88% of a goalkeeper's final score is
+  one statistic. It is noisy over one season: the contribution half shrinks it hard (a prior
+  of 300 shots on target), but the positional half only by a prior worth 10 matches, so with a
+  typical 31 matches about 76% of a keeper's deviation comes through. Counted once, goalkeepers
+  in the top 100 go from 6 to 1 and the best from #36 to #96. The data has no other goalkeeping
+  measure that is not also driven by the team (save % repeats goals prevented; clean sheets are
+  team outcomes). **For the next model version:** shrink the positional shot stopping like the
+  contribution's goalkeeping. That needs a new version, because released models are never edited.
 - **Minutes**: availability (20% of the positional half) and the season totals of the
-  contribution both reward volume. The final score correlates 0.36 to 0.44 with minutes,
-  similarly in every role, so volume favours no position.
+  contribution both reward volume; the final score correlates 0.36 to 0.44 with minutes in
+  every role.
 
 ## positional-v2 (roadmap phase 4, released)
 
