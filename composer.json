@@ -10,6 +10,8 @@
         "doctrine/doctrine-bundle": "^2.19",
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^3.7",
+        "league/commonmark": "^2.10",
+        "symfony/asset": "7.4.*",
         "symfony/console": "7.4.*",
         "symfony/dotenv": "7.4.*",
         "symfony/filesystem": "7.4.*",
@@ -20,7 +22,8 @@
         "symfony/runtime": "7.4.*",
         "symfony/twig-bundle": "7.4.*",
         "symfony/validator": "7.4.*",
-        "symfony/yaml": "7.4.*"
+        "symfony/yaml": "7.4.*",
+        "twig/extra-bundle": "^3.29"
     },
     "config": {
         "allow-plugins": {

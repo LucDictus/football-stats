@@ -1,0 +1,11 @@
+{% extends 'inspector/layout.html.twig' %}
+
+{% set page_title = 'Coverage report' %}
+
+{% block content %}
+    {% if html %}
+        <article class="markdown">{{ html|raw }}</article>
+    {% else %}
+        <p>No report yet. Run <code>php bin/console app:data:audit</code>.</p>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'inspector/layout.html.twig' %}
+
+{% set page_title = player.name %}
+
+{% block content %}
+    <p><a href="{{ path('inspector_players') }}">← Players</a></p>
+    <h1>{{ player.name }} <small>player #{{ player.id }}{{ player.birthYear ? ', born ' ~ player.birthYear }}</small></h1>
+
+    <h2>Identifiers <small>how each source refers to this player</small></h2>
+    <table class="narrow">
+        <thead><tr><th>Source</th><th>External id</th><th>Linked by</th></tr></thead>
+        <tbody>
+        {% for i in identifiers %}
+            <tr><td>{{ i.source }}</td><td><code>{{ i.externalId }}</code></td><td>{{ i.method }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% for season in seasons %}
+        <h2>Season {{ season.season.label }} <small>{{ season.positions ?? 'position unknown' }} · {{ season.mainTeam ? season.mainTeam.name : '' }}</small></h2>
+
+        {% if season.stints|length %}
+            <table class="narrow">
+                <thead><tr><th>Club</th><th>League</th><th class="num">Apps</th><th class="num">Starts</th><th class="num">Minutes</th></tr></thead>
+                <tbody>
+                {% for stint in season.stints %}
+                    <tr><td>{{ stint.team.name }}</td><td>{{ stint.competition.name }}</td><td class="num">{{ stint.appearances }}</td><td class="num">{{ stint.starts }}</td><td class="num">{{ stint.minutes|number_format }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        <div class="columns">
+            {% for scope in scopes %}
+                {% set stats = season.stats(scope) %}
+                <section>
+                    <h3>{{ scope.value == 'league' ? 'Domestic league' : 'Champions League' }}</h3>
+                    {% if stats is null %}
+                        <p class="muted">No data for this scope.</p>
+                    {% else %}
+                        <p class="providers">
+                            {{ stats.minutes|number_format }} min · batch #{{ stats.batch.id }} ({{ stats.batch.source }})<br>
+                            {% for origin, check in stats.originChecks %}
+                                {{ origin }} {% include 'inspector/_status.html.twig' with {status: check.status, reason: check.reason} %}
+                                <span class="muted">{{ check.minutes is null ? '' : check.minutes|number_format ~ ' min' }}{{ check.reason ? ' · ' ~ check.reason }}</span><br>
+                            {% endfor %}
+                        </p>
+                        <table>
+                            <thead><tr><th>Statistic</th><th class="num">Value</th><th class="num">Per 90</th><th>Provider</th><th>Trust</th></tr></thead>
+                            <tbody>
+                            {% set category = null %}
+                            {% for key, field in fields %}
+                                {% if not field.goalkeeper or season.goalkeeper %}
+                                    {% if field.category != category %}
+                                        {% set category = field.category %}
+                                        <tr class="group"><th colspan="5">{{ category }}</th></tr>
+                                    {% endif %}
+                                    {% set value = stats.value(key) %}
+                                    {% set per90 = field.per90 ? stats.per90(key) : null %}
+                                    <tr class="{{ value is null ? 'missing' }}">
+                                        <td>{{ field.label }}</td>
+                                        <td class="num">{{ value is null ? '–' : (value == value|round ? value|number_format : value|number_format(2)) }}</td>
+                                        <td class="num">{{ per90 is null ? '' : per90|number_format(2) }}</td>
+                                        <td>{{ stats.origin(key) ? stats.origin(key).value : '' }}</td>
+                                        <td>{% if value is not null %}{% include 'inspector/_status.html.twig' with {status: stats.fieldStatus(key).value} %}{% endif %}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </section>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endblock %}

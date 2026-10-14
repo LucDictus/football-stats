@@ -1,0 +1,55 @@
+{% extends 'inspector/layout.html.twig' %}
+
+{% set page_title = 'Players' %}
+
+{% block content %}
+    <h1>Players</h1>
+    <form class="filters" method="get">
+        <input type="search" name="q" value="{{ q }}" placeholder="Search a name (accents optional)" autofocus>
+        <select name="filter">
+            {% for value, label in {'all': 'All players', 'league': 'With league data', 'cl': 'With CL data', 'cl_only': 'CL only', 'flagged': 'Flagged provider (partial / suspect / missing)'} %}
+                <option value="{{ value }}" {{ value == filter ? 'selected' }}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="sort">
+            {% for value, label in {'league_goals': 'League goals', 'cl_goals': 'CL goals', 'league_minutes': 'League minutes', 'name': 'Name'} %}
+                <option value="{{ value }}" {{ value == sort ? 'selected' }}>Sort: {{ label }}</option>
+            {% endfor %}
+        </select>
+        <button>Show</button>
+    </form>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Player</th><th>Pos</th><th>Club</th>
+            <th class="num">League min</th><th class="num">G</th><th class="num">A</th>
+            <th class="num">CL min</th><th class="num">G</th><th class="num">A</th>
+            <th>Provider flags</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for p in players %}
+            <tr>
+                <td><a href="{{ path('inspector_player', {id: p.id}) }}">{{ p.name }}</a> <span class="muted">{{ p.birth_year }}</span></td>
+                <td>{{ p.position_group ?? '–' }}</td>
+                <td>{{ p.team }}</td>
+                <td class="num">{{ p.league_minutes is null ? '–' : p.league_minutes|number_format }}</td>
+                <td class="num">{{ p.league_goals ?? '–' }}</td>
+                <td class="num">{{ p.league_assists ?? '–' }}</td>
+                <td class="num">{{ p.cl_minutes is null ? '–' : p.cl_minutes|number_format }}</td>
+                <td class="num">{{ p.cl_goals ?? '–' }}</td>
+                <td class="num">{{ p.cl_assists ?? '–' }}</td>
+                <td>
+                    {% for origin, check in p.league_checks %}
+                        {% if check.status != 'ok' %}{{ origin }} {% include 'inspector/_status.html.twig' with {status: check.status, reason: check.reason} %} {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="10">No players found.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <p class="hint">First 100 results. A dash means no data, never zero.</p>
+{% endblock %}

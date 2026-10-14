@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ page_title|default('Data inspector') }} · Football MVP{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('inspector.css') }}">
+{% endblock %}
+
+{% block body %}
+    <header class="top">
+        <a class="brand" href="{{ path('inspector_overview') }}">Football MVP <span>data inspector</span></a>
+        <nav>
+            {% set route = app.request.attributes.get('_route') %}
+            <a href="{{ path('inspector_overview') }}" {{ route == 'inspector_overview' ? 'aria-current="page"' }}>Overview</a>
+            <a href="{{ path('inspector_players') }}" {{ route starts with 'inspector_player' ? 'aria-current="page"' }}>Players</a>
+            <a href="{{ path('inspector_coverage') }}" {{ route == 'inspector_coverage' ? 'aria-current="page"' }}>Coverage report</a>
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+{% endblock %}

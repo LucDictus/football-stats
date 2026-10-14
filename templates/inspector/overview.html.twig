@@ -1,0 +1,53 @@
+{% extends 'inspector/layout.html.twig' %}
+
+{% block content %}
+    <h1>Overview</h1>
+    <p class="lead">What the pipeline produced: raw imports → merged, checked and linked season data.</p>
+
+    <section class="tiles">
+        {% for label, key in {'Players': 'players', 'Teams': 'teams', 'League stat lines': 'league_stats', 'CL stat lines': 'cl_stats', 'Identifiers': 'identifiers', 'Import batches': 'batches'} %}
+            <div class="tile"><span class="tile__value">{{ counts[key]|number_format }}</span><span class="tile__label">{{ label }}</span></div>
+        {% endfor %}
+    </section>
+
+    <h2>Import batches <small>raw layer: <code>import_batch</code> + <code>source_record</code></small></h2>
+    <table>
+        <thead><tr><th>#</th><th>Source</th><th>Dataset</th><th>Competitions</th><th class="num">Records</th><th>Version</th><th>Imported</th></tr></thead>
+        <tbody>
+        {% for b in batches %}
+            <tr>
+                <td>{{ b.id }}</td><td>{{ b.source }}</td><td>{{ b.dataset }}</td><td>{{ b.competition_code }}</td>
+                <td class="num">{{ b.record_count|number_format }}</td>
+                <td><code>{{ b.source_version ? b.source_version[:10] : '–' }}</code></td>
+                <td>{{ b.imported_at|date('Y-m-d H:i') }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="columns">
+        <section>
+            <h2>Provider trust <small>league, players with {{ min_minutes }}+ min</small></h2>
+            <table>
+                <thead><tr><th>Provider</th>{% for s in ['ok', 'partial', 'suspect', 'missing'] %}<th class="num">{% include 'inspector/_status.html.twig' with {status: s} %}</th>{% endfor %}</tr></thead>
+                <tbody>
+                {% for origin, counts in statuses %}
+                    <tr><td>{{ origin }}</td>{% for s in ['ok', 'partial', 'suspect', 'missing'] %}<td class="num">{{ counts[s]|default(0) }}</td>{% endfor %}</tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p class="hint"><a href="{{ path('inspector_players', {filter: 'flagged'}) }}">See players with a flagged provider →</a></p>
+        </section>
+        <section>
+            <h2>Player identifiers <small>how sources are linked</small></h2>
+            <table>
+                <thead><tr><th>Source</th><th>Method</th><th class="num">Identifiers</th></tr></thead>
+                <tbody>
+                {% for m in methods %}
+                    <tr><td>{{ m.source }}</td><td>{{ m.method }}</td><td class="num">{{ m.identifiers|number_format }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </div>
+{% endblock %}

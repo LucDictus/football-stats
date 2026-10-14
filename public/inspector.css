@@ -1,0 +1,58 @@
+:root {
+    --bg: #f7f7f5; --surface: #fff; --text: #1d1f23; --muted: #6b7079; --line: #e3e3df; --accent: #2f5bd3;
+    --ok: #1f7a4d; --ok-bg: #e3f4ea; --partial: #8a5a00; --partial-bg: #fdf0d2; --suspect: #b42318; --suspect-bg: #fde4e1; --missing: #555b66; --missing-bg: #eceef1;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #15171b; --surface: #1d2026; --text: #e7e8ea; --muted: #9399a3; --line: #2d3139; --accent: #8aa8ff;
+        --ok: #7fd3a5; --ok-bg: #1d3a2b; --partial: #f0c36b; --partial-bg: #3d3018; --suspect: #ff9b8f; --suspect-bg: #43201d; --missing: #b5bac3; --missing-bg: #2b2f36;
+    }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--missing-bg); padding: 1px 4px; border-radius: 4px; }
+.top { display: flex; align-items: center; gap: 32px; padding: 14px 32px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 1; }
+.brand { font-weight: 700; color: var(--text); }
+.brand span { color: var(--muted); font-weight: 400; }
+.top nav { display: flex; gap: 20px; }
+.top nav a { color: var(--muted); }
+.top nav a[aria-current] { color: var(--text); font-weight: 600; }
+main { max-width: 1280px; margin: 0 auto; padding: 24px 32px 64px; }
+h1 { font-size: 26px; margin: 8px 0; }
+h2 { font-size: 18px; margin: 32px 0 10px; }
+h3 { font-size: 15px; margin: 16px 0 8px; }
+h1 small, h2 small { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 8px; }
+.lead, .hint, .muted { color: var(--muted); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin: 20px 0; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; }
+.tile__value { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tile__label { color: var(--muted); }
+table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+table.narrow { width: auto; min-width: 480px; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+thead th { font-size: 12px; color: var(--muted); font-weight: 600; background: var(--bg); }
+tr.group th { background: var(--bg); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+tr.missing td { color: var(--muted); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px; }
+.status { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 18px; }
+.status--ok { color: var(--ok); background: var(--ok-bg); }
+.status--partial { color: var(--partial); background: var(--partial-bg); }
+.status--suspect { color: var(--suspect); background: var(--suspect-bg); }
+.status--missing { color: var(--missing); background: var(--missing-bg); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.filters input, .filters select, .filters button { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); }
+.filters input { min-width: 280px; }
+.filters button { background: var(--accent); color: #fff; border-color: var(--accent); cursor: pointer; }
+.providers { line-height: 1.9; }
+.markdown { max-width: 1100px; }
+.markdown table { margin: 12px 0; font-size: 13px; }
+.markdown h1 { font-size: 26px; }
+@media (max-width: 720px) {
+    .top { flex-wrap: wrap; gap: 8px 20px; padding: 12px 16px; }
+    main { padding: 16px; }
+    .columns { grid-template-columns: 1fr; }
+    table { display: block; overflow-x: auto; }
+}
