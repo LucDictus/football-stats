@@ -11,6 +11,7 @@ use App\Entity\PlayerSeason;
 use App\Entity\Season;
 use App\Entity\StatsScope;
 use App\Football\Analysis\OverlapAnalysis;
+use App\Football\Analysis\OverlapMarkdown;
 use App\Football\Scoring\ModelCatalog;
 use App\Football\Scoring\PlayerScoreResult;
 use App\Football\Scoring\ScoringCandidate;
@@ -88,6 +89,17 @@ final class OverlapAnalysisTest extends TestCase
         // A missing component: the composite is the known component alone, and the shares still add up.
         $fw = (new OverlapAnalysis())->analyse(ModelCatalog::get('mvp-v1'), $this->results(self::ROWS, defendingUnknownFor: 0))['roles']['FW'];
         self::assertEqualsWithDelta(1.0, array_sum($fw['shares']), 1e-9);
+    }
+
+    public function testTheReportRenders(): void
+    {
+        $analysis = (new OverlapAnalysis())->analyse(ModelCatalog::get('mvp-v1'), $this->results(self::ROWS));
+
+        $md = (new OverlapMarkdown())->render('mvp-v1', 11, $analysis);
+
+        self::assertStringContainsString('# Overlap analysis: mvp-v1 (score run #11)', $md);
+        self::assertStringContainsString('| `impact.shooting` | attack |', $md);
+        self::assertStringContainsString('| mvp-v1 as is | 6 / – / – / – |', $md);
     }
 
     /**
