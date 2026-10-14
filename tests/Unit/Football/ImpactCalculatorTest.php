@@ -109,6 +109,23 @@ final class ImpactCalculatorTest extends TestCase
         self::assertArrayNotHasKey('calibration', $result[1]);
     }
 
+    public function testWithTooFewPlayersToCalibrateOnTheFallbackIsNotScaled(): void
+    {
+        $model = new ImpactModel(minCalibrationPlayers: 3);
+        $both = array_map(fn (int $id) => $this->player($id, 'FW', [
+            'np_xg' => 10.0, 'xa' => 4.0, 'xg_buildup' => 3.0, 'xg_sofascore' => 8.0, 'xa_sofascore' => 2.0, 'accurate_passes' => 300.0,
+        ]), [1, 2]);
+        $fallback = $this->player(3, 'FW', ['xg_sofascore' => 4.0, 'xa_sofascore' => 1.0, 'accurate_passes' => 500.0], understat: 'missing');
+        $all = [...$both, $fallback];
+
+        $result = (new ImpactCalculator())->calculate($model, $all, $all);
+
+        self::assertEqualsWithDelta(0.5 * 4.0, $result[3]['goals']['shooting'], 1e-9);
+        self::assertEqualsWithDelta(0.3 * 1.0, $result[3]['goals']['creation'], 1e-9);
+        self::assertNull($result[3]['goals']['build_up']);
+        self::assertEqualsWithDelta(['xg' => 1.0, 'xa' => 1.0, 'build_up_per_pass' => null], $result[3]['calibration'] ?? null, 1e-9);
+    }
+
     public function testReplacementLevelComesFromTheReferencePlayers(): void
     {
         $players = array_map(fn (int $i) => $this->player($i, 'FW', ['np_xg' => (float) $i]), range(1, 5));

@@ -244,7 +244,7 @@
 
 .statGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr));
   gap: 16px;
   align-items: start;
 }

@@ -13,7 +13,7 @@ a new version. Every `ScoreRun` stores the full definition, its SHA-256 hash and
 batches its statistics came from, so any published ranking can be explained and reproduced.
 `app:score` does not store a run that would be identical to the latest one.
 
-## mvp-v1 (roadmap phase 5, release candidate, the current model)
+## mvp-v1 (roadmap phase 5, released, the current model)
 
 **Final score = 50% positional excellence (positional-v2, unchanged) + 50% contribution in goals.**
 
@@ -59,7 +59,8 @@ positional-v2 answers "how far does a player stand above others in his position?
   cover with full-season data (at least 30): × Σ Understat / Σ SofaScore, on 2025/26 ×1.107
   for npxG and ×1.123 for xA (correlation 0.99). xGBuildup is Understat-only, so the
   fallback's **build-up is estimated** from accurate passes × the role's xGBuildup per
-  accurate pass (correlation with xGBuildup 0.79), shown as weak evidence; the estimate also
+  accurate pass (correlation with xGBuildup 0.83 MF, 0.79 FW, 0.76 DF, 0.59 GK), shown as
+  weak evidence; the estimate also
   counts in the team's build-up total. The player page says when the fallback is used.
 - **Shrinkage**: most of one season's finishing and goals prevented is chance. Goals prevented
   is shrunk with a prior of 300 shots on target (more than a season); with 150, three

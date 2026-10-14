@@ -225,9 +225,14 @@ function Row({ row, model, compare }: { row: RankingRow; model: ScoringModel; co
       <span className={`num ${styles.rank}`}>{row.rank ?? '–'}</span>
       <span className={styles.who}>
         <span className={styles.name}>{row.player.name}</span>
-        <span className={styles.team}>{row.team}</span>
+        <span className={styles.team}>
+          {row.team}
+          {row.position && <span className={styles.teamPosition}> · {row.position}</span>}
+        </span>
       </span>
-      <PositionBadge position={row.position} />
+      <span className={styles.badge}>
+        <PositionBadge position={row.position} />
+      </span>
       {compare ? (
         <span className={styles.components} style={{ gridTemplateColumns: `repeat(${components.length}, 1fr)` }}>
           {components.map((c, i) => (
