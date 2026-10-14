@@ -48,7 +48,15 @@ class PlayerScore
         private float $minutes,
         #[ORM\Column(type: Types::JSON, options: ['jsonb' => true])]
         private array $components,
+        /** Weighted mean of the components (before normalising within the role). */
+        #[ORM\Column(nullable: true)]
+        private ?float $composite = null,
     ) {
+    }
+
+    public function getComposite(): ?float
+    {
+        return $this->composite;
     }
 
     public function getRun(): ScoreRun

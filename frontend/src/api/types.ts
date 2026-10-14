@@ -8,8 +8,9 @@ export interface ModelMetric {
   key: string
   label: string
   fields: string[]
-  mode: 'total' | 'per90'
+  mode: 'total' | 'per90' | 'rate'
   weight: number
+  lower_is_better?: boolean
 }
 
 export interface ModelComponent {
@@ -30,7 +31,11 @@ export interface ScoringModel {
   min_minutes: number
   min_confidence: number
   position_groups: PositionGroup[]
+  /** Shared components (models without roles). */
   components: ModelComponent[]
+  /** Role models: components per position group, each normalised within its role. */
+  roles?: Partial<Record<PositionGroup, ModelComponent[]>>
+  normalization?: 'percentile' | 'standard'
 }
 
 export interface ScoreRun {
@@ -95,7 +100,8 @@ export interface ScopeStats {
 
 export interface BreakdownMetric extends ModelMetric {
   value: number | null
-  percentile: number | null
+  /** 0–100 within the comparison group: a percentile, or a T-score (50 = average) for standard models. */
+  normalised: number | null
 }
 
 export interface BreakdownComponent {
@@ -114,6 +120,9 @@ export interface ScoreBreakdown {
   rank: number | null
   ranked_players: number
   score: number | null
+  composite: number | null
+  role: PositionGroup | null
+  normalization: 'percentile' | 'standard'
   confidence: number
   components: BreakdownComponent[]
 }

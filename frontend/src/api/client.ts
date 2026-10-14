@@ -26,6 +26,6 @@ export const api = {
   models: () => get<{ default: string; models: ScoringModel[] }>('/models'),
   ranking: (params: { model?: string; run?: number; position?: string; limit?: number; offset?: number; unranked?: boolean }) =>
     get<RankingResponse>('/rankings', params),
-  player: (id: number) => get<PlayerProfile>(`/players/${id}`),
+  player: (id: number, model?: string) => get<PlayerProfile>(`/players/${id}`, { model }),
   search: (q: string) => get<{ players: SearchResult[] }>('/players', { q }),
 }

@@ -17,6 +17,7 @@ final readonly class PlayerScoreResult
      * @param float|null                        $score      0–100, weighted over the components that could be measured
      * @param float                             $confidence 0–1, share of the model's weight that could be measured
      * @param array<string, ComponentBreakdown> $components
+     * @param float|null                        $composite  weighted mean of the components; equals the score unless the model normalises within roles
      */
     public function __construct(
         public ScoringCandidate $candidate,
@@ -24,6 +25,7 @@ final readonly class PlayerScoreResult
         public ?float $score,
         public float $confidence,
         public array $components,
+        public ?float $composite = null,
     ) {
     }
 }

@@ -14,12 +14,20 @@ final readonly class Metric
         public array $fields,
         public MetricMode $mode,
         public float $weight,
+        /** For metrics like errors leading to goal: fewer is better. */
+        public bool $lowerIsBetter = false,
     ) {
     }
 
-    /** @return array{key: string, label: string, fields: list<string>, mode: string, weight: float} */
+    /**
+     * Optional settings appear only when used, so older model definitions (and their hashes)
+     * stay exactly the same.
+     *
+     * @return array{key: string, label: string, fields: list<string>, mode: string, weight: float, lower_is_better?: true}
+     */
     public function toArray(): array
     {
-        return ['key' => $this->key, 'label' => $this->label, 'fields' => $this->fields, 'mode' => $this->mode->value, 'weight' => $this->weight];
+        return ['key' => $this->key, 'label' => $this->label, 'fields' => $this->fields, 'mode' => $this->mode->value, 'weight' => $this->weight]
+            + ($this->lowerIsBetter ? ['lower_is_better' => true] : []);
     }
 }

@@ -25,6 +25,7 @@ use App\Entity\StatsScope;
 use App\Entity\Team;
 use App\Football\Assessment\AssessmentScope;
 use App\Football\Assessment\CompetitionCatalog;
+use App\Football\Data\DerivedRates;
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
 use App\Football\Data\OriginCheck;
@@ -275,9 +276,11 @@ final class SeasonBuilder
             $values['np_goals'] = $values['goals'] - $values['penalty_goals'];
             $origins['np_goals'] = Origin::Derived->value;
         }
-        if ($goalkeeper && isset($values['saves'], $values['goals_conceded']) && $values['saves'] + $values['goals_conceded'] > 0) {
-            $values['save_pct'] = round($values['saves'] / ($values['saves'] + $values['goals_conceded']) * 100, 1);
-            $origins['save_pct'] = Origin::Derived->value;
+        foreach (DerivedRates::compute($values, $goalkeeper) as $rate => $value) {
+            if ($value !== null) {
+                $values[$rate] = $value;
+                $origins[$rate] = Origin::Derived->value;
+            }
         }
 
         return [$values, $origins];

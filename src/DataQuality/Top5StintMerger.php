@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DataQuality;
 
 use App\DataImport\Top5\Top5CsvReader;
+use App\Football\Data\DerivedRates;
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
 use App\Football\Data\OriginCheck;
@@ -120,10 +121,7 @@ final class Top5StintMerger
             $values['np_goals'] = self::num($main['us_np_goals']);
             $origins['np_goals'] = Origin::Understat;
         }
-        $values['save_pct'] = $goalkeeper && $values['saves'] !== null && $values['goals_conceded'] !== null
-            && $values['saves'] + $values['goals_conceded'] > 0
-            ? round($values['saves'] / ($values['saves'] + $values['goals_conceded']) * 100, 1)
-            : null;
+        $values = DerivedRates::compute($values, $goalkeeper) + $values;
         if (!$goalkeeper) {
             // "Goals conceded" etc. for outfield players means "while on the pitch": not a goalkeeping stat.
             foreach (FieldCatalog::all() as $field) {

@@ -7,13 +7,19 @@ const OPTIONS: { value: PositionGroup | null; label: string }[] = [
   { value: 'FW', label: 'Forwards' },
   { value: 'MF', label: 'Midfielders' },
   { value: 'DF', label: 'Defenders' },
+  { value: 'GK', label: 'Goalkeepers' },
 ]
 
 /** Segmented control; the highlight slides to the selected option. */
-export function PositionFilter({ value, onChange }: { value: PositionGroup | null; onChange: (value: PositionGroup | null) => void }) {
+export function PositionFilter({ value, onChange, available }: {
+  value: PositionGroup | null
+  onChange: (value: PositionGroup | null) => void
+  /** Position groups the model ranks; others are hidden. */
+  available: PositionGroup[]
+}) {
   return (
     <div className={styles.group} role="radiogroup" aria-label="Position">
-      {OPTIONS.map((option) => {
+      {OPTIONS.filter((option) => option.value === null || available.includes(option.value)).map((option) => {
         const selected = option.value === value
         return (
           <button

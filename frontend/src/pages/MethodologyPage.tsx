@@ -1,11 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'motion/react'
+import { useState } from 'react'
 import { api } from '../api/client'
+import type { ModelComponent, PositionGroup, ScoringModel } from '../api/types'
 import { ErrorState } from '../components/ErrorState'
 import { TrustBadge } from '../components/TrustBadge'
 import { componentColor } from '../lib/colors'
+import { POSITION_LABELS } from '../lib/format'
+import { componentsFor, describeScale, isRoleModel } from '../lib/model'
 import styles from './MethodologyPage.module.css'
 
+const MODE_LABELS = { total: 'season total', per90: 'per 90', rate: 'success rate' } as const
 
 /** The model definition comes from the API, so this page can never drift from the code. */
 export function MethodologyPage() {
@@ -22,81 +27,30 @@ export function MethodologyPage() {
       </p>
 
       {error && <ErrorState error={error} />}
-      {model && (
-        <section className={styles.section}>
-          <h2>
-            {model.label} <span className="muted">({model.id})</span>
-          </h2>
-          <p>{model.description}</p>
-          <ul className={styles.facts}>
-            <li>
-              <strong>Scope</strong> {model.scope === 'league' ? 'Domestic league matches (Champions League follows in a later version)' : 'Champions League'}
-            </li>
-            <li>
-              <strong>Who is ranked</strong> {model.position_groups.join(', ')} with at least {model.min_minutes} minutes
-            </li>
-            <li>
-              <strong>Minimum data</strong> {Math.round(model.min_confidence * 100)}% of the model must be measurable
-            </li>
-          </ul>
-
-          <div className={styles.weights} aria-label="Component weights">
-            {model.components.map((c, i) => (
-              <motion.div
-                key={c.key}
-                style={{ background: componentColor(i), flexGrow: c.weight }}
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {c.label} {Math.round(c.weight * 100)}%
-              </motion.div>
-            ))}
-          </div>
-
-          <div className={styles.components}>
-            {model.components.map((c, i) => (
-              <article key={c.key} className="card">
-                <h3>
-                  <span style={{ background: componentColor(i) }} />
-                  {c.label}
-                </h3>
-                <p className="muted">{c.description}</p>
-                <ul>
-                  {c.metrics.map((m) => (
-                    <li key={m.key}>
-                      {m.label}
-                      <span className="muted">
-                        {' '}
-                        · {m.mode === 'per90' ? 'per 90' : 'season total'} · {Math.round(m.weight * 100)}%
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
+      {model && <ModelSection model={model} />}
 
       <section className={styles.section}>
         <h2>Principles</h2>
         <ol className={styles.principles}>
           <li>
-            <strong>Percentiles, not raw numbers.</strong> Goals and minutes live on different scales, so every metric becomes a
-            percentile among all eligible players (outfield, 900+ minutes): 90 means better than 90% of them.
+            <strong>Compared with the right peers.</strong> A defender is measured on defending, build-up and duels, and compared
+            only with other defenders. A score of 90 means exceptional for that role.
           </li>
           <li>
-            <strong>Quality and volume, both.</strong> Per-90 rates reward efficiency, season totals reward doing it all season.
-            Each attacking component weighs both equally.
+            <strong>One ranking for every position.</strong> Each player’s combined score is expressed as how far it stands
+            above his positional peers, so a defender who dominates his position can rank above a forward who does not.
+          </li>
+          <li>
+            <strong>Quality and volume, both.</strong> Per-90 rates reward efficiency, season totals and minutes reward doing it
+            all season.
           </li>
           <li>
             <strong>Missing is never zero.</strong> When a number is unknown it is left out, not counted as 0. The score is
             built from what is known, and the share of the model that could be measured is shown as a percentage.
           </li>
           <li>
-            <strong>Per-90 uses the source’s own minutes.</strong> After a transfer between leagues, some sources only cover
-            one club. Their rates are divided by the minutes they actually cover.
+            <strong>Per-90 uses the source’s own minutes</strong>, and needs at least 450 of them. After a transfer between
+            leagues, some sources only cover one club.
           </li>
           <li>
             <strong>Reproducible.</strong> Every ranking is stored with the exact model definition and the data imports it
@@ -107,7 +61,10 @@ export function MethodologyPage() {
 
       <section className={styles.section}>
         <h2>How far each source is trusted</h2>
-        <p>Statistics come from FBref (minutes, goals, assists, shots), Understat (xG, xA) and SofaScore (defending, passing, goalkeeping, Champions League). Each source is checked against the reference minutes for every player:</p>
+        <p>
+          Statistics come from FBref (minutes, goals, assists, shots), Understat (xG, xA) and SofaScore (defending, passing,
+          goalkeeping, Champions League). Each source is checked against the reference minutes for every player:
+        </p>
         <ul className={styles.trust}>
           <li><TrustBadge status="ok" /> covers the whole season and agrees with the reference</li>
           <li><TrustBadge status="partial" /> covers part of the season (a transfer between leagues): used for rates only</li>
@@ -119,12 +76,107 @@ export function MethodologyPage() {
       <section className={styles.section}>
         <h2>Known limitations of this version</h2>
         <ul className={styles.limits}>
-          <li>Only attacking contribution and availability are measured, so defenders and goalkeepers are undervalued or not ranked. Position-aware metrics are next.</li>
+          <li>
+            Position labels are broad: “midfielder” covers wingers and holding midfielders alike, so attacking midfielders stand
+            out most against that mixed group. Finer roles are next.
+          </li>
+          <li>
+            Defensive action counts are not adjusted for how much the team has the ball, which favours defenders of teams that
+            defend a lot. Duel success rates partly offset this.
+          </li>
           <li>Champions League performances are not in the score yet; they are shown on player pages.</li>
-          <li>Percentiles flatten outliers: a 36-goal season and a 25-goal season can both be in the 99th percentile, so availability decides more among the elite than it should.</li>
           <li>All leagues count equally; league strength is not adjusted for yet.</li>
+          <li>Goals prevented, the goalkeeper measure, is noisy over one season.</li>
         </ul>
       </section>
     </main>
+  )
+}
+
+function ModelSection({ model }: { model: ScoringModel }) {
+  const roles = isRoleModel(model) ? (model.position_groups as PositionGroup[]) : []
+  const [role, setRole] = useState<PositionGroup | null>(roles[0] ?? null)
+  const components = componentsFor(model, role)
+
+  return (
+    <section className={styles.section}>
+      <h2>
+        {model.label} <span className="muted">({model.id})</span>
+      </h2>
+      <p>{model.description}</p>
+      <ul className={styles.facts}>
+        <li>
+          <strong>Scope</strong>{' '}
+          {model.scope === 'league' ? 'Domestic league matches (Champions League follows in a later version)' : 'Champions League'}
+        </li>
+        <li>
+          <strong>Who is ranked</strong> {model.position_groups.map((g) => POSITION_LABELS[g].toLowerCase() + 's').join(', ')} with
+          at least {model.min_minutes} minutes
+        </li>
+        <li>
+          <strong>Scale</strong> {describeScale(model.normalization)}
+        </li>
+        <li>
+          <strong>Minimum data</strong> {Math.round(model.min_confidence * 100)}% of the model must be measurable
+        </li>
+      </ul>
+
+      {roles.length > 0 && (
+        <div className={styles.roleTabs} role="tablist" aria-label="Position">
+          {roles.map((r) => (
+            <button key={r} role="tab" aria-selected={r === role} onClick={() => setRole(r)}>
+              {POSITION_LABELS[r]}s
+              {r === role && <motion.span layoutId="role-tab" className={styles.roleTabLine} />}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <motion.div key={role ?? 'all'} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
+        <Weights components={components} />
+        <div className={styles.components}>
+          {components.map((c, i) => (
+            <article key={c.key} className="card">
+              <h3>
+                <span style={{ background: componentColor(i) }} />
+                {c.label}
+              </h3>
+              <p className="muted">{c.description}</p>
+              <ul>
+                {c.metrics.map((m) => (
+                  <li key={m.key}>
+                    {m.label}
+                    <span className="muted">
+                      {' '}
+                      · {MODE_LABELS[m.mode]}
+                      {m.lower_is_better ? ', fewer is better' : ''} · {Math.round(m.weight * 100)}%
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </motion.div>
+    </section>
+  )
+}
+
+function Weights({ components }: { components: ModelComponent[] }) {
+  return (
+    <div className={styles.weights} aria-label="Component weights">
+      {components.map((c, i) => (
+        <motion.div
+          key={c.key}
+          style={{ background: componentColor(i), flexGrow: c.weight }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          title={`${c.label} ${Math.round(c.weight * 100)}%`}
+        >
+          {c.label} {Math.round(c.weight * 100)}%
+        </motion.div>
+      ))}
+    </div>
   )
 }

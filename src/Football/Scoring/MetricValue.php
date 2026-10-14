@@ -16,6 +16,7 @@ final class MetricValue
             $value = match ($metric->mode) {
                 MetricMode::Total => $stats->trusted($field) ? $stats->value($field) : null,
                 MetricMode::Per90 => $stats->per90($field),
+                MetricMode::Rate => $stats->fieldStatus($field)->usable() ? $stats->value($field) : null,
             };
             if ($value === null) {
                 return null; // one unknown part makes the metric unknown, never a partial sum

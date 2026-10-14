@@ -63,6 +63,14 @@
   color: var(--accent-text);
 }
 
+.scoreCard[data-unranked] {
+  border-color: var(--line);
+}
+
+.scoreCard[data-unranked] .bigScore {
+  color: var(--muted);
+}
+
 .rankLine {
   font-size: 15px;
   color: var(--text-2);
@@ -121,7 +129,7 @@
   margin: 14px 0 10px;
 }
 
-.componentScore .num {
+.componentScore :global(.num) {
   font-size: 36px;
   font-weight: 600;
   line-height: 1;

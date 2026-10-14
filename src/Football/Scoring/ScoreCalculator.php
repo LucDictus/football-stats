@@ -9,12 +9,17 @@ namespace App\Football\Scoring;
  * and the same statistics always give the same ranking.
  *
  * 1. Eligibility: position group and minimum minutes from the model.
- * 2. Every metric is turned into a percentile among the eligible players that have it.
- * 3. A component is the weighted mean of its known metric percentiles.
- * 4. The score is the weighted mean of the known components. What could not be measured
+ * 2. Comparison groups: all eligible players, or each position group on its own when the
+ *    model has roles ("90" then means exceptional for that role).
+ * 3. Every metric is normalised (model's Normalization) among the group members that have it.
+ * 4. A component is the weighted mean of its known metric scores.
+ * 5. The composite is the weighted mean of the known components. What could not be measured
  *    is left out (never counted as zero) and lowers the confidence instead.
- * 5. Players below the model's minimum confidence are returned unranked (rank null), after
- *    the ranked players.
+ * 6. The score is the composite, or in role models the composite normalised again within
+ *    the role: averaging several metrics pulls composites toward the middle, more so with
+ *    more metrics, so without this a role with many metrics could never reach the top.
+ * 7. One ranking across all groups. Players below the model's minimum confidence are
+ *    returned unranked (rank null), after the ranked players.
  */
 final class ScoreCalculator
 {
@@ -32,69 +37,101 @@ final class ScoreCalculator
                 && $c->stats->getMinutes() >= $model->minMinutes,
         ));
 
-        // Metric values and percentiles, per metric, indexed like $eligible.
+        $groups = [];
+        foreach ($eligible as $candidate) {
+            $groups[$model->comparesWithinRole() ? (string) $candidate->positionGroup : 'all'][] = $candidate;
+        }
+
+        $scored = [];
+        foreach ($groups as $group => $members) {
+            $groupScores = $this->scoreGroup($model, $model->componentsFor($model->comparesWithinRole() ? $group : null), $members);
+            if ($model->comparesWithinRole()) {
+                $final = $model->normalization->scores(array_map(static fn (array $s) => $s['composite'], $groupScores));
+                foreach ($groupScores as $i => $s) {
+                    $groupScores[$i]['score'] = $final[$i];
+                }
+            }
+            array_push($scored, ...$groupScores);
+        }
+
+        // Ranked players first, best score first; ties broken by composite, minutes, then by
+        // player id, so the order is stable.
+        // Tolerance: weights like 0.4 + 0.2 do not add up exactly in floating point.
+        $ranked = static fn (array $s) => $s['score'] !== null && $s['confidence'] >= $model->minConfidence - 1e-9;
+        usort($scored, static fn (array $a, array $b) => [$ranked($b), $b['score'], $b['composite'], $b['candidate']->stats->getMinutes(), $a['candidate']->playerId]
+            <=> [$ranked($a), $a['score'], $a['composite'], $a['candidate']->stats->getMinutes(), $b['candidate']->playerId]);
+
+        $results = [];
+        $rank = 0;
+        foreach ($scored as $s) {
+            $results[] = new PlayerScoreResult($s['candidate'], $ranked($s) ? ++$rank : null, $s['score'], $s['confidence'], $s['components'], $s['composite']);
+        }
+
+        return $results;
+    }
+
+    /**
+     * Scores one comparison group on its components.
+     *
+     * @param list<Component>        $components
+     * @param list<ScoringCandidate> $members
+     *
+     * @return list<array{candidate: ScoringCandidate, score: ?float, composite: ?float, confidence: float, components: array<string, mixed>}>
+     */
+    private function scoreGroup(ScoringModel $model, array $components, array $members): array
+    {
+        // Metric values and normalised scores, per metric, indexed like $members.
         $values = [];
-        $percentiles = [];
-        foreach ($model->components as $component) {
+        $normalised = [];
+        foreach ($components as $component) {
             foreach ($component->metrics as $metric) {
-                $values[$metric->key] = array_map(static fn (ScoringCandidate $c) => MetricValue::of($metric, $c->stats), $eligible);
-                $percentiles[$metric->key] = Percentile::ranks($values[$metric->key]);
+                $values[$metric->key] = array_map(static fn (ScoringCandidate $c) => MetricValue::of($metric, $c->stats), $members);
+                $normalised[$metric->key] = $model->normalization->scores($values[$metric->key], $metric->lowerIsBetter);
             }
         }
 
         $scored = [];
-        foreach ($eligible as $i => $candidate) {
-            $components = [];
+        foreach ($members as $i => $candidate) {
+            $breakdown = [];
             $weighted = 0.0;
             $knownWeight = 0.0;
             $measured = 0.0;
             $modelWeight = 0.0;
-            foreach ($model->components as $component) {
+            foreach ($components as $component) {
                 $metrics = [];
                 $sum = 0.0;
                 $known = 0.0;
                 $total = 0.0;
                 foreach ($component->metrics as $metric) {
-                    $percentile = $percentiles[$metric->key][$i];
-                    $metrics[$metric->key] = ['value' => $values[$metric->key][$i], 'percentile' => $percentile, 'weight' => $metric->weight];
+                    $score = $normalised[$metric->key][$i];
+                    $metrics[$metric->key] = ['value' => $values[$metric->key][$i], 'percentile' => $score, 'weight' => $metric->weight];
                     $total += $metric->weight;
-                    if ($percentile !== null) {
-                        $sum += $percentile * $metric->weight;
+                    if ($score !== null) {
+                        $sum += $score * $metric->weight;
                         $known += $metric->weight;
                     }
                 }
-                $score = $known > 0 ? $sum / $known : null;
-                $components[$component->key] = ['score' => $score, 'weight' => $component->weight, 'coverage' => $known / $total, 'metrics' => $metrics];
+                $componentScore = $known > 0 ? $sum / $known : null;
+                $breakdown[$component->key] = ['score' => $componentScore, 'weight' => $component->weight, 'coverage' => $known / $total, 'metrics' => $metrics];
 
                 $modelWeight += $component->weight;
                 $measured += $component->weight * $known / $total;
-                if ($score !== null) {
-                    $weighted += $score * $component->weight;
+                if ($componentScore !== null) {
+                    $weighted += $componentScore * $component->weight;
                     $knownWeight += $component->weight;
                 }
             }
 
+            $composite = $knownWeight > 0 ? $weighted / $knownWeight : null;
             $scored[] = [
                 'candidate' => $candidate,
-                'score' => $knownWeight > 0 ? $weighted / $knownWeight : null,
+                'score' => $composite,
+                'composite' => $composite,
                 'confidence' => $modelWeight > 0 ? $measured / $modelWeight : 0.0,
-                'components' => $components,
+                'components' => $breakdown,
             ];
         }
 
-        // Ranked players first, best score first; ties broken by minutes, then by player id,
-        // so the order is stable.
-        // Tolerance: weights like 0.4 + 0.2 do not add up exactly in floating point.
-        $ranked = static fn (array $s) => $s['score'] !== null && $s['confidence'] >= $model->minConfidence - 1e-9;
-        usort($scored, static fn (array $a, array $b) => [$ranked($b), $b['score'], $b['candidate']->stats->getMinutes(), $a['candidate']->playerId]
-            <=> [$ranked($a), $a['score'], $a['candidate']->stats->getMinutes(), $b['candidate']->playerId]);
-
-        $results = [];
-        $rank = 0;
-        foreach ($scored as $s) {
-            $results[] = new PlayerScoreResult($s['candidate'], $ranked($s) ? ++$rank : null, $s['score'], $s['confidence'], $s['components']);
-        }
-
-        return $results;
+        return $scored;
     }
 }

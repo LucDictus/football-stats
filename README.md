@@ -38,7 +38,7 @@ php bin/console app:import:sofascore-cl    # needs the curl binary (SofaScore bl
 php bin/console app:import:fotmob-cl
 php bin/console app:data:audit             # writes docs/data-coverage.md
 php bin/console app:build-season           # players, teams, season stats (safe to re-run)
-php bin/console app:score                  # ranking with the default model (baseline-v1), stored as a score run
+php bin/console app:score                  # ranking with the default model (positional-v1), stored as a score run
 php -S 127.0.0.1:8010 -t public            # API + data inspector: http://127.0.0.1:8010
 npm --prefix frontend install && npm --prefix frontend run dev   # the app: http://127.0.0.1:5173
 ```

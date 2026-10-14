@@ -32,20 +32,25 @@ final class ApiTest extends WebTestCase
         ]);
         $this->importCl([F::sofascoreRecord(826643, 'Kylian Mbappé', 2829, 'Real Madrid', ['goals' => 15])]);
         $this->build();
-        self::getContainer()->get(ScoreRunner::class)->run(ModelCatalog::get(ModelCatalog::DEFAULT));
+        foreach (['baseline-v1', 'positional-v1'] as $model) {
+            self::getContainer()->get(ScoreRunner::class)->run(ModelCatalog::get($model));
+        }
     }
 
     public function testModels(): void
     {
         $data = $this->getJson('/api/models');
 
-        self::assertSame('baseline-v1', $data['default']);
-        self::assertSame('Attacking output', $data['models'][0]['components'][0]['label']);
+        self::assertSame('positional-v1', $data['default']);
+        $byId = array_column($data['models'], null, 'id');
+        self::assertSame('Attacking output', $byId['baseline-v1']['components'][0]['label']);
+        self::assertSame('Shot stopping', $byId['positional-v1']['roles']['GK'][0]['label']);
+        self::assertSame('standard', $byId['positional-v1']['normalization']);
     }
 
     public function testRankingListsRankedOutfieldPlayersWithComponents(): void
     {
-        $data = $this->getJson('/api/rankings');
+        $data = $this->getJson('/api/rankings?model=baseline-v1');
 
         self::assertSame(2, $data['total'], 'the goalkeeper is not in baseline v1');
         self::assertSame('Kylian Mbappé', $data['rows'][0]['player']['name']);
@@ -56,7 +61,7 @@ final class ApiTest extends WebTestCase
 
     public function testRankingFiltersAndValidates(): void
     {
-        self::assertSame(['Pedri'], array_map(static fn ($r) => $r['player']['name'], $this->getJson('/api/rankings?position=MF')['rows']));
+        self::assertSame(['Pedri'], array_map(static fn ($r) => $r['player']['name'], $this->getJson('/api/rankings?model=baseline-v1&position=MF')['rows']));
 
         $this->client->request('GET', '/api/rankings?position=XX');
         self::assertResponseStatusCodeSame(400);
@@ -66,7 +71,7 @@ final class ApiTest extends WebTestCase
 
     public function testPlayerProfileHasStatsWithProvenanceAndScoreBreakdown(): void
     {
-        $data = $this->getJson('/api/players/' . $this->playerId('Kylian Mbappé'));
+        $data = $this->getJson('/api/players/' . $this->playerId('Kylian Mbappé') . '?model=baseline-v1');
         $leagueGoals = array_values(array_filter($data['stats']['league']['fields'], static fn ($f) => $f['key'] === 'np_goals'))[0];
 
         self::assertSame('Real Madrid', $data['season']['team']);
@@ -76,14 +81,23 @@ final class ApiTest extends WebTestCase
         self::assertSame(15, (int) array_values(array_filter($data['stats']['CL']['fields'], static fn ($f) => $f['key'] === 'goals'))[0]['value']);
         self::assertSame(1, $data['score']['rank']);
         self::assertSame('np_ga_p90', $data['score']['components'][0]['metrics'][0]['key']);
+        self::assertSame('percentile', $data['score']['normalization']);
+        self::assertNull($data['score']['role']);
     }
 
-    public function testGoalkeeperProfileHasNoScoreYet(): void
+    public function testGoalkeepersAreRankedOnTheirOwnComponentsInThePositionalModel(): void
     {
         $data = $this->getJson('/api/players/' . $this->playerId('Thibaut Courtois'));
 
-        self::assertNull($data['score']);
-        self::assertSame('GK', $data['season']['position_group']);
+        self::assertSame('GK', $data['score']['role']);
+        self::assertSame('standard', $data['score']['normalization']);
+        self::assertSame(['shot_stopping', 'reliability', 'availability'], array_column($data['score']['components'], 'key'));
+        self::assertSame(3, $this->getJson('/api/rankings')['total'], 'the default model ranks every position');
+    }
+
+    public function testGoalkeeperIsNotScoredByTheBaselineModel(): void
+    {
+        self::assertNull($this->getJson('/api/players/' . $this->playerId('Thibaut Courtois') . '?model=baseline-v1')['score']);
     }
 
     public function testSearchIgnoresAccents(): void
@@ -94,8 +108,8 @@ final class ApiTest extends WebTestCase
 
     public function testUnrankedPagingIsDeterministicAndPinnedToARun(): void
     {
-        $first = $this->getJson('/api/rankings?unranked=1&limit=1');
-        $second = $this->getJson('/api/rankings?unranked=1&limit=1&offset=1&run=' . $first['run']['id']);
+        $first = $this->getJson('/api/rankings?model=baseline-v1&unranked=1&limit=1');
+        $second = $this->getJson('/api/rankings?model=baseline-v1&unranked=1&limit=1&offset=1&run=' . $first['run']['id']);
 
         self::assertSame(2, $first['total']);
         self::assertNotSame($first['rows'][0]['player']['id'], $second['rows'][0]['player']['id']);

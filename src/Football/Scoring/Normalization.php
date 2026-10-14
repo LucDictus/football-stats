@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Football\Scoring;
+
+/**
+ * How raw metric values become comparable 0–100 scores within a comparison group.
+ *
+ * - Percentile: rank-based. Robust and fair across roles (every role gets the same spread),
+ *   but flat at the top: the best is ~99 whether he leads by a little or by a lot.
+ * - Standard: T-score, 50 + 10 × standard deviations from the group mean, clamped to 0–100.
+ *   Keeps distances (a runaway leader stands out), but depends on each metric's shape.
+ */
+enum Normalization: string
+{
+    case Percentile = 'percentile';
+    case Standard = 'standard';
+
+    /**
+     * @param array<array-key, float|null> $values nulls stay null and are not counted
+     *
+     * @return array<array-key, float|null> same keys, 0–100, higher is better
+     */
+    public function scores(array $values, bool $lowerIsBetter = false): array
+    {
+        if ($lowerIsBetter) {
+            $values = array_map(static fn (?float $v) => $v === null ? null : -$v, $values);
+        }
+
+        return match ($this) {
+            self::Percentile => Percentile::ranks($values),
+            self::Standard => self::tScores($values),
+        };
+    }
+
+    /**
+     * @param array<array-key, float|null> $values
+     *
+     * @return array<array-key, float|null>
+     */
+    private static function tScores(array $values): array
+    {
+        $known = array_values(array_filter($values, static fn (?float $v) => $v !== null));
+        $n = count($known);
+        $mean = $n > 0 ? array_sum($known) / $n : 0.0;
+        $sd = $n > 1 ? sqrt(array_sum(array_map(static fn (float $v) => ($v - $mean) ** 2, $known)) / $n) : 0.0;
+
+        return array_map(static function (?float $v) use ($mean, $sd): ?float {
+            if ($v === null) {
+                return null;
+            }
+
+            return $sd > 0 ? max(0.0, min(100.0, 50 + 10 * ($v - $mean) / $sd)) : 50.0;
+        }, $values);
+    }
+}

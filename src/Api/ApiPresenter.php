@@ -57,7 +57,9 @@ final class ApiPresenter
         $definition = $score->getRun()->getDefinition();
         $stored = $score->getComponents();
         $components = [];
-        foreach ($definition['components'] as $component) {
+        // Role models define components per position group; the score was made with his role's.
+        $modelComponents = $definition['roles'][$score->getPositionGroup()] ?? $definition['components'];
+        foreach ($modelComponents as $component) {
             $result = $stored[$component['key']] ?? null;
             $components[] = [
                 'key' => $component['key'],
@@ -66,9 +68,10 @@ final class ApiPresenter
                 'weight' => $component['weight'],
                 'score' => self::round($result['score'] ?? null),
                 'coverage' => $result['coverage'] ?? 0.0,
+                // Stored as 'percentile' since v1; with standard normalisation it is a T-score.
                 'metrics' => array_map(static fn (array $metric) => $metric + [
                     'value' => self::round($result['metrics'][$metric['key']]['value'] ?? null, 2),
-                    'percentile' => self::round($result['metrics'][$metric['key']]['percentile'] ?? null),
+                    'normalised' => self::round($result['metrics'][$metric['key']]['percentile'] ?? null),
                 ], $component['metrics']),
             ];
         }
@@ -79,6 +82,9 @@ final class ApiPresenter
             'rank' => $score->getRank(),
             'ranked_players' => $score->getRun()->getRankedCount(),
             'score' => self::round($score->getScore()),
+            'composite' => self::round($score->getComposite()),
+            'role' => isset($definition['roles']) ? $score->getPositionGroup() : null,
+            'normalization' => $definition['normalization'] ?? 'percentile',
             'confidence' => round($score->getConfidence(), 3),
             'components' => $components,
         ];

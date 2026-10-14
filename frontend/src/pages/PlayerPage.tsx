@@ -1,14 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'motion/react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { api, ApiError } from '../api/client'
-import type { BreakdownComponent, PlayerProfile, ScopeStats } from '../api/types'
+import type { PlayerProfile, ScopeStats, ScoreBreakdown } from '../api/types'
 import { AnimatedNumber } from '../components/AnimatedNumber'
 import { Bar } from '../components/Bar'
 import { ErrorState } from '../components/ErrorState'
 import { TrustBadge } from '../components/TrustBadge'
 import { POSITION_LABELS, formatNumber, formatScore, formatValue, ordinal } from '../lib/format'
+import { POSITION_PLURAL, describeScale } from '../lib/model'
 import { NotFoundPage } from './NotFoundPage'
 import { componentColor } from '../lib/colors'
 import styles from './PlayerPage.module.css'
@@ -17,9 +18,10 @@ import styles from './PlayerPage.module.css'
 export function PlayerPage() {
   const raw = useParams().id ?? ''
   const id = /^\d+$/.test(raw) ? Number(raw) : null
+  const model = useSearchParams()[0].get('model') ?? undefined
   const { data, error, isPending } = useQuery({
-    queryKey: ['player', id],
-    queryFn: () => api.player(id as number),
+    queryKey: ['player', id, model],
+    queryFn: () => api.player(id as number, model),
     enabled: id !== null,
   })
 
@@ -37,11 +39,11 @@ export function PlayerPage() {
 
   return (
     <main className="page">
-      <Link to="/" className={styles.back}>
+      <Link to={model ? `/?model=${encodeURIComponent(model)}` : '/'} className={styles.back}>
         ← Ranking
       </Link>
       <Header profile={data} />
-      {data.score ? <Breakdown components={data.score.components} /> : <NotRanked profile={data} />}
+      {data.score ? <Breakdown score={data.score} /> : <NotRanked profile={data} />}
       <Stats profile={data} />
     </main>
   )
@@ -74,6 +76,7 @@ function Header({ profile }: { profile: PlayerProfile }) {
       {score && score.score !== null && (
         <motion.div
           className={`card ${styles.scoreCard}`}
+          data-unranked={score.rank === null || undefined}
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -99,13 +102,24 @@ function Header({ profile }: { profile: PlayerProfile }) {
   )
 }
 
-function Breakdown({ components }: { components: BreakdownComponent[] }) {
+function Breakdown({ score }: { score: ScoreBreakdown }) {
+  const { components, normalization, role } = score
+  const peers = role ? POSITION_PLURAL[role] : 'eligible players'
   return (
     <section className={styles.section} aria-labelledby="breakdown">
       <h2 id="breakdown">Why this score</h2>
       <p className={styles.sectionLead}>
-        Each metric is a percentile among all eligible players (outfield, 900+ league minutes): 90 means better than 90% of
-        them. A component averages its metrics; the score weighs the components.
+        Every metric is compared with other {peers} (900+ league minutes): {describeScale(normalization)}. A component averages
+        its metrics, and the components are weighed into a combined score
+        {role && score.composite !== null ? (
+          <>
+            {' '}
+            of <strong className="num">{formatScore(score.composite)}</strong>. The final score says how far that stands above
+            other {peers}, so every position can share one ranking.
+          </>
+        ) : (
+          '.'
+        )}
       </p>
       <div className={styles.components}>
         {components.map((component, ci) => (
@@ -130,9 +144,13 @@ function Breakdown({ components }: { components: BreakdownComponent[] }) {
                 <li key={metric.key}>
                   <span className={styles.metricLabel}>{metric.label}</span>
                   <span className="num">{formatValue(metric.value)}</span>
-                  <Bar value={metric.percentile} color={componentColor(ci)} height={4} delay={0.3 + ci * 0.08 + mi * 0.05} />
+                  <Bar value={metric.normalised} color={componentColor(ci)} height={4} delay={0.3 + ci * 0.08 + mi * 0.05} />
                   <span className={styles.percentile}>
-                    {metric.percentile === null ? 'not measurable' : `${ordinal(Math.round(metric.percentile))} percentile`}
+                    {metric.normalised === null
+                      ? 'not measurable'
+                      : normalization === 'standard'
+                        ? `${formatScore(metric.normalised)} for ${peers}${metric.lower_is_better ? ' (fewer is better)' : ''}`
+                        : `${ordinal(Math.round(metric.normalised))} percentile`}
                   </span>
                 </li>
               ))}
@@ -146,14 +164,16 @@ function Breakdown({ components }: { components: BreakdownComponent[] }) {
 
 function NotRanked({ profile }: { profile: PlayerProfile }) {
   const { position_group: group } = profile.season
-  const reason =
-    group === 'GK'
-      ? 'Goalkeepers are not part of the baseline model yet: they need their own metrics (saves, goals prevented), which arrive in the next model version.'
-      : !profile.stats.league
-        ? 'This player has Champions League data only. The baseline model ranks domestic league seasons.'
-        : group === null
-          ? 'No source gives this player’s position, and the baseline model ranks outfield players only.'
-          : 'The baseline model ranks outfield players with at least 900 league minutes.'
+  const league = profile.stats.league
+  const reason = !league
+    ? 'This player has Champions League data only. The ranking covers domestic league seasons.'
+    : group === null
+      ? 'No source gives this player’s position, so he cannot be compared with players in his role.'
+      : league.minutes < 900
+        ? `The ranking needs at least 900 league minutes; he played ${formatNumber(league.minutes)}.`
+        : group === 'GK'
+          ? 'This model does not rank goalkeepers. The positional model does: switch models on the ranking page.'
+          : 'Too little of the model could be measured for him (missing or untrusted data).'
   return (
     <section className={`card ${styles.notRanked}`}>
       <h2>Not in this ranking</h2>

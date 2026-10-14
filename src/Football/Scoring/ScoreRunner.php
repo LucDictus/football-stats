@@ -65,6 +65,7 @@ final readonly class ScoreRunner
                     $result->candidate->team,
                     $result->candidate->stats->getMinutes(),
                     $result->components,
+                    $result->composite,
                 ));
             }
             $run->setCounts($ranked, count($results) - $ranked);
@@ -112,14 +113,14 @@ final readonly class ScoreRunner
         }
         $stored = [];
         foreach ($this->scores->findBy(['run' => $latest]) as $score) {
-            $stored[(int) $score->getPlayer()->getId()] = [$score->getRank(), $score->getScore(), $score->getConfidence(), $score->getComponents()];
+            $stored[(int) $score->getPlayer()->getId()] = [$score->getRank(), $score->getScore(), $score->getConfidence(), $score->getComponents(), $score->getComposite()];
         }
         if (count($stored) !== count($results)) {
             return false;
         }
         foreach ($results as $result) {
             $previous = $stored[$result->candidate->playerId] ?? null;
-            if ($previous === null || !self::same($previous, [$result->rank, $result->score, $result->confidence, $result->components])) {
+            if ($previous === null || !self::same($previous, [$result->rank, $result->score, $result->confidence, $result->components, $result->composite])) {
                 return false;
             }
         }

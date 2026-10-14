@@ -14,6 +14,7 @@ use App\Football\Scoring\Component;
 use App\Football\Scoring\Metric;
 use App\Football\Scoring\MetricMode;
 use App\Football\Scoring\ModelCatalog;
+use App\Football\Scoring\Normalization;
 use App\Football\Scoring\ScoreCalculator;
 use App\Football\Scoring\ScoringCandidate;
 use App\Football\Scoring\ScoringModel;
@@ -111,9 +112,83 @@ final class ScoreCalculatorTest extends TestCase
         self::assertSame(1, $results[0]->rank);
     }
 
+    public function testRoleModelsCompareEachPositionWithItsOwnGroupInOneRanking(): void
+    {
+        $model = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['FW', 'GK'], 0.0, [], [
+            'FW' => [new Component('output', 'Output', '', 1.0, [new Metric('goals', 'Goals', ['goals'], MetricMode::Total, 1.0)])],
+            'GK' => [new Component('stopping', 'Shot stopping', '', 1.0, [new Metric('prevented', 'Goals prevented', ['goals_prevented'], MetricMode::Total, 1.0)])],
+        ]);
+
+        $results = (new ScoreCalculator())->score($model, [
+            $this->candidate(1, 'Average striker', goals: 10.0),
+            $this->candidate(2, 'Best striker', goals: 30.0),
+            $this->candidate(3, 'Average keeper', goals: null, group: 'GK', extra: ['goals_prevented' => 0.0]),
+            $this->candidate(4, 'Best keeper', goals: null, group: 'GK', extra: ['goals_prevented' => 9.0]),
+        ]);
+        $byName = array_column(array_map(static fn ($r) => ['name' => $r->candidate->name, 'r' => $r], $results), 'r', 'name');
+
+        // Goals and goals prevented never meet: each is compared within its role only.
+        self::assertSame($byName['Best striker']->score, $byName['Best keeper']->score, 'the best of each role score the same here');
+        self::assertArrayHasKey('stopping', $byName['Best keeper']->components);
+        self::assertArrayNotHasKey('output', $byName['Best keeper']->components);
+        self::assertSame(1, $byName['Best striker']->rank, 'tie broken by composite, then minutes, then id');
+    }
+
+    public function testRoleScoreIsTheCompositeNormalisedWithinTheRole(): void
+    {
+        $model = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['FW'], 0.0, [], [
+            'FW' => [new Component('output', 'Output', '', 1.0, [new Metric('goals', 'Goals', ['goals'], MetricMode::Total, 1.0)])],
+        ], Normalization::Percentile);
+
+        $results = (new ScoreCalculator())->score($model, [$this->candidate(1, 'A', goals: 1.0), $this->candidate(2, 'B', goals: 2.0)]);
+
+        self::assertSame(75.0, $results[0]->composite, 'percentile of 2 goals among 2 players');
+        self::assertSame(75.0, $results[0]->score, 'percentile of the composite among the role');
+    }
+
+    public function testRateMetricsUseUsableValuesWithoutMinutes(): void
+    {
+        $model = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['DF'], 0.0, [
+            new Component('duels', 'Duels', '', 1.0, [new Metric('aerial', 'Aerial %', ['aerial_win_pct'], MetricMode::Rate, 1.0)]),
+        ]);
+
+        $results = (new ScoreCalculator())->score($model, [
+            $this->candidate(1, 'A', goals: null, group: 'DF', extra: ['aerial_win_pct' => 70.0], sofascore: 'partial'),
+            $this->candidate(2, 'B', goals: null, group: 'DF', extra: ['aerial_win_pct' => 50.0], sofascore: 'suspect'),
+        ]);
+        $byName = array_column(array_map(static fn ($r) => ['name' => $r->candidate->name, 'r' => $r], $results), 'r', 'name');
+
+        self::assertSame(70.0, $byName['A']->components['duels']['metrics']['aerial']['value'], 'a partial provider still gives a fair rate');
+        self::assertNull($byName['B']->components['duels']['metrics']['aerial']['value'], 'a suspect provider is not used');
+    }
+
+    public function testBaselineModelIsUnchanged(): void
+    {
+        // A released model must never change: its hash is pinned.
+        self::assertSame('74768eddf47b9da716df9fbe8c9740cab248f411c56323d019184e795a2739b8', ModelCatalog::get('baseline-v1')->hash());
+    }
+
+    public function testEveryReleasedModelHasValidWeights(): void
+    {
+        foreach (ModelCatalog::all() as $model) {
+            foreach ($model->positionGroups as $group) {
+                $components = $model->componentsFor($group);
+                self::assertEqualsWithDelta(1.0, array_sum(array_map(static fn (Component $c) => $c->weight, $components)), 1e-9, "{$model->id()} {$group}");
+                foreach ($components as $component) {
+                    self::assertEqualsWithDelta(1.0, array_sum(array_map(static fn (Metric $m) => $m->weight, $component->metrics)), 1e-9, "{$model->id()} {$group} {$component->key}");
+                    foreach ($component->metrics as $metric) {
+                        foreach ($metric->fields as $field) {
+                            \App\Football\Data\FieldCatalog::get($field); // throws for an unknown field
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public function testBaselineModelIsValid(): void
     {
-        $model = ModelCatalog::get(ModelCatalog::DEFAULT);
+        $model = ModelCatalog::get('baseline-v1');
 
         self::assertSame('baseline-v1', $model->id());
         self::assertSame(64, strlen($model->hash()));
@@ -128,9 +203,10 @@ final class ScoreCalculatorTest extends TestCase
         ]);
     }
 
-    private function candidate(int $id, string $name, ?float $goals, string $group = 'FW', float $minutes = 2000.0): ScoringCandidate
+    /** @param array<string, float> $extra */
+    private function candidate(int $id, string $name, ?float $goals, string $group = 'FW', float $minutes = 2000.0, array $extra = [], string $sofascore = 'ok'): ScoringCandidate
     {
-        $values = ['minutes' => $minutes] + ($goals !== null ? ['goals' => $goals] : []);
+        $values = ['minutes' => $minutes] + ($goals !== null ? ['goals' => $goals] : []) + $extra;
         $season = new PlayerSeason(new Player($name), new Season('2025/26', new \DateTimeImmutable(), new \DateTimeImmutable()));
         $stats = new PlayerCompetitionStats(
             $season,
@@ -138,8 +214,11 @@ final class ScoreCalculatorTest extends TestCase
             new ImportBatch('test', 'test', '2025/26', 'test', '1'),
             $minutes,
             $values,
-            array_fill_keys(array_keys($values), 'FBref'),
-            ['FBref' => ['status' => 'ok', 'minutes' => $minutes, 'reason' => null]],
+            array_map(static fn (string $field) => \App\Football\Data\FieldCatalog::get($field)->origin->value, array_combine(array_keys($values), array_keys($values))),
+            [
+                'FBref' => ['status' => 'ok', 'minutes' => $minutes, 'reason' => null],
+                'SofaScore' => ['status' => $sofascore, 'minutes' => $minutes, 'reason' => null],
+            ],
         );
 
         return new ScoringCandidate($id, $name, $group, 'Club', $stats);

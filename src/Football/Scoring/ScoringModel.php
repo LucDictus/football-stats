@@ -9,13 +9,18 @@ use App\Entity\StatsScope;
 /**
  * A versioned, fully explicit scoring model. A model never changes once released: a change
  * is a new version, so every stored score run can be explained and reproduced.
+ *
+ * Without roles, every eligible player is measured on the same components and normalised
+ * against all eligible players. With roles, each position group has its own components and
+ * is normalised within its own group, so a score means "how good for his role".
  */
 final readonly class ScoringModel
 {
     /**
-     * @param non-empty-list<Component> $components     weights are relative across components
-     * @param list<string>              $positionGroups who is ranked (PlayerSeason position groups)
-     * @param float                     $minConfidence  share of the model that must be measurable to be ranked
+     * @param list<Component>                          $components     shared components (models without roles)
+     * @param list<string>                             $positionGroups who is ranked (PlayerSeason position groups)
+     * @param float                                    $minConfidence  share of the model that must be measurable to be ranked
+     * @param array<string, non-empty-list<Component>> $roles          position group => its components
      */
     public function __construct(
         public string $key,
@@ -27,7 +32,26 @@ final readonly class ScoringModel
         public array $positionGroups,
         public float $minConfidence,
         public array $components,
+        public array $roles = [],
+        public Normalization $normalization = Normalization::Percentile,
     ) {
+        foreach ($positionGroups as $group) {
+            if ($this->componentsFor($group) === []) {
+                throw new \InvalidArgumentException("Model {$key}-v{$version} has no components for {$group}");
+            }
+        }
+    }
+
+    /** @return list<Component> */
+    public function componentsFor(?string $positionGroup): array
+    {
+        return $this->roles === [] ? $this->components : ($this->roles[(string) $positionGroup] ?? []);
+    }
+
+    /** Players are compared with their own position group when the model has roles. */
+    public function comparesWithinRole(): bool
+    {
+        return $this->roles !== [];
     }
 
     public function id(): string
@@ -49,7 +73,13 @@ final readonly class ScoringModel
             'position_groups' => $this->positionGroups,
             'min_confidence' => $this->minConfidence,
             'components' => array_map(static fn (Component $c) => $c->toArray(), $this->components),
-        ];
+        ]
+            // Optional settings appear only when used: older definitions keep their hash.
+            + ($this->roles !== [] ? [
+                'roles' => array_map(static fn (array $components) => array_map(static fn (Component $c) => $c->toArray(), $components), $this->roles),
+                'score' => 'composite normalised within the role',
+            ] : [])
+            + ($this->normalization !== Normalization::Percentile ? ['normalization' => $this->normalization->value] : []);
     }
 
     /**

@@ -36,7 +36,43 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  margin: 8px 0 22px;
+  margin: 8px 0 12px;
+}
+
+.modelSelect select {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 34px 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237d8696' fill='none' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 14px center;
+  color: var(--text);
+  appearance: none;
+  cursor: pointer;
+}
+
+.legendRow {
+  min-height: 24px;
+  margin: 0 0 22px;
+}
+
+.legendNote {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.strength {
+  font-size: 13px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.strength :global(.num) {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .legend {
@@ -120,7 +156,7 @@
   margin: 18px 0 14px;
 }
 
-.podiumScore .num {
+.podiumScore :global(.num) {
   font-size: 44px;
   font-weight: 600;
   letter-spacing: -0.03em;
@@ -206,7 +242,7 @@
   gap: 8px;
 }
 
-.score .num {
+.score :global(.num) {
   font-size: 20px;
   font-weight: 600;
 }
@@ -267,7 +303,8 @@
   .row {
     grid-template-columns: 36px minmax(0, 1fr) 36px 72px;
   }
-  .components {
+  .components,
+  .strength {
     display: none;
   }
 }

@@ -84,6 +84,8 @@ final class FieldCatalog
             new Field('aerial_duels_won', 'Aerial duels won', 'Defending', $ss, 'ss_aerialDuelsWon', 'aerialDuelsWon'),
             new Field('aerial_duels_lost', 'Aerial duels lost', 'Defending', $ss, 'ss_aerialLost', 'aerialLost'),
             new Field('errors_leading_to_goal', 'Errors leading to goal', 'Defending', $ss, 'ss_errorLeadToGoal', 'errorLeadToGoal'),
+            new Field('aerial_win_pct', 'Aerial duels won %', 'Defending', Origin::Derived, null, null, per90: false, note: 'won / (won + lost), at least 20 duels', inputs: [$ss]),
+            new Field('tackle_success_pct', 'Tackle success %', 'Defending', Origin::Derived, null, null, per90: false, note: 'tackles won / tackles, at least 15 tackles', inputs: [$ss]),
             // Goalkeeping
             new Field('saves', 'Saves', 'Goalkeeping', $ss, 'ss_saves', 'saves', goalkeeper: true),
             new Field('goals_conceded', 'Goals conceded', 'Goalkeeping', $ss, 'ss_goalsConceded', 'goalsConceded', goalkeeper: true),
