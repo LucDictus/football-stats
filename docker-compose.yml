@@ -1,0 +1,10 @@
+services:
+  app:
+    image: php:8.3-cli
+    working_dir: /app
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ./:/app
+    ports:
+      - "9988:8000"
+    command: php -S 0.0.0.0:8000 -t public
