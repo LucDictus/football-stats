@@ -45,6 +45,17 @@ class PlayerScoreRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    public function countForRun(ScoreRun $run, ?string $positionGroup = null, bool $includeUnranked = false): int
+    {
+        $criteria = ['run' => $run];
+        if ($positionGroup !== null) {
+            $criteria['positionGroup'] = $positionGroup;
+        }
+        $count = $this->count($criteria);
+
+        return $includeUnranked ? $count : $count - $this->count($criteria + ['rank' => null]);
+    }
+
     public function forPlayer(ScoreRun $run, Player $player): ?PlayerScore
     {
         return $this->findOneBy(['run' => $run, 'player' => $player]);

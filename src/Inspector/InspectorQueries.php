@@ -84,8 +84,8 @@ final readonly class InspectorQueries
         };
         $params = [];
         if ($search !== '') {
-            $where .= ' AND search_name LIKE :q';
-            $params['q'] = '%' . self::unaccent($search) . '%';
+            $where .= " AND search_name LIKE '%' || unaccent_lower(:q) || '%'";
+            $params['q'] = $search;
         }
         $order = match ($sort) {
             'cl_goals' => 'cl_goals DESC NULLS LAST',
@@ -104,7 +104,7 @@ final readonly class InspectorQueries
                        c.minutes AS cl_minutes,
                        (c.values->>'goals')::numeric AS cl_goals,
                        (c.values->>'assists')::numeric AS cl_assists,
-                       translate(lower(p.name), :accents, :plain) AS search_name
+                       unaccent_lower(p.name) AS search_name
                 FROM player_season ps
                 JOIN player p ON p.id = ps.player_id
                 LEFT JOIN team t ON t.id = ps.main_team_id
@@ -116,19 +116,10 @@ final readonly class InspectorQueries
             LIMIT {$limit}
             SQL;
 
-        $rows = $this->db->fetchAllAssociative($sql, $params + ['accents' => self::ACCENTS, 'plain' => self::PLAIN]);
+        $rows = $this->db->fetchAllAssociative($sql, $params);
 
         return array_map(static fn (array $row) => [
             'league_checks' => $row['league_checks'] !== null ? json_decode($row['league_checks'], true, flags: JSON_THROW_ON_ERROR) : [],
         ] + $row, $rows);
-    }
-
-    /** Same character mapping as the SQL translate(), so "mbappe" finds "Mbappé". */
-    private const ACCENTS = 'áàâäãåçćčéèêëíìîïıñńóòôöõøřúùûüýÿšşśžđłğ';
-    private const PLAIN = 'aaaaaaccceeeeiiiiinnooooooruuuuyyssszdlg';
-
-    private static function unaccent(string $value): string
-    {
-        return strtr(mb_strtolower($value), array_combine(mb_str_split(self::ACCENTS), mb_str_split(self::PLAIN)));
     }
 }
