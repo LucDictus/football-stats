@@ -103,8 +103,8 @@ final class ClPlayerMatcher
      * Club names differ per source ("Paris Saint-Germain" / "PSG"): the league club most of a
      * CL club's linked players play for.
      *
-     * @param array<string, array<string, mixed>>                                      $cl
-     * @param array<string, array{player: MergedPlayerSeason, method: string}>          $links
+     * @param array<string, array<string, mixed>>                              $cl
+     * @param array<string, array{player: MergedPlayerSeason, method: string}> $links
      *
      * @return array<string, string> CL club name => league club name
      */

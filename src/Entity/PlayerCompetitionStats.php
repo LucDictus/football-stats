@@ -27,8 +27,8 @@ class PlayerCompetitionStats
     private ?int $id = null;
 
     /**
-     * @param array<string, float>                                              $values        field key => value (known values only)
-     * @param array<string, string>                                             $valueOrigins  field key => Origin value
+     * @param array<string, float>                                                   $values       field key => value (known values only)
+     * @param array<string, string>                                                  $valueOrigins field key => Origin value
      * @param array<string, array{status: string, minutes: ?float, reason: ?string}> $originChecks Origin value => check
      */
     public function __construct(

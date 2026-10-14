@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration;
 
-use App\Command\ImportSofascoreCommand;
 use App\DataImport\Normalizer\SeasonBuilder;
 use App\DataImport\RawImporter;
 use App\DataImport\Sofascore\SofascoreClient;
 use App\DataImport\Top5\Top5CsvReader;
 use App\Entity\ImportBatch;
 use App\Entity\Player;
+use App\Entity\PlayerCompetitionStats;
 use App\Entity\PlayerSeason;
 use App\Entity\StatsScope;
 use App\Football\Data\Origin;
@@ -55,15 +55,15 @@ final class SeasonBuilderTest extends KernelTestCase
         $this->build();
 
         $season = $this->seasonOf('Kylian Mbappé');
-        $league = $season->getStats(StatsScope::League);
-        $cl = $season->getStats(StatsScope::ChampionsLeague);
+        $league = $this->statsOf('Kylian Mbappé', StatsScope::League);
+        $cl = $this->statsOf('Kylian Mbappé', StatsScope::ChampionsLeague);
 
         self::assertSame(25.0, $league->value('goals'));
         self::assertSame(Origin::Fbref, $league->origin('goals'));
         self::assertSame(15.0, $cl->value('goals'));
         self::assertSame(Origin::Sofascore, $cl->origin('goals'));
-        self::assertSame('Real Madrid', $season->getMainTeam()->getName());
-        self::assertSame('PD', $season->getStints()->first()->getCompetition()->getCode());
+        self::assertSame('Real Madrid', $season->getMainTeam()?->getName());
+        self::assertSame(['PD'], $season->getStints()->map(static fn ($s) => $s->getCompetition()->getCode())->getValues());
         self::assertSame('top5-football-dataset', $league->getBatch()->getSource());
     }
 
@@ -73,11 +73,13 @@ final class SeasonBuilderTest extends KernelTestCase
         $this->build();
 
         $season = $this->seasonOf('Victor Osimhen');
+        $team = $season->getMainTeam();
 
         self::assertNull($season->getStats(StatsScope::League));
-        self::assertSame(7.0, $season->getStats(StatsScope::ChampionsLeague)->value('goals'));
-        self::assertSame('Galatasaray', $season->getMainTeam()->getName());
-        self::assertNull($season->getMainTeam()->getDomesticLeague());
+        self::assertSame(7.0, $this->statsOf('Victor Osimhen', StatsScope::ChampionsLeague)->value('goals'));
+        self::assertNotNull($team);
+        self::assertSame('Galatasaray', $team->getName());
+        self::assertNull($team->getDomesticLeague());
     }
 
     public function testNewDatasetVersionUpdatesStatsButNotIdentity(): void
@@ -90,10 +92,10 @@ final class SeasonBuilderTest extends KernelTestCase
         $this->importTop5([F::top5Row(['player' => 'Kylian Mbappé', 'born' => '1998', 'team' => 'Real Madrid', 'league' => 'ESP-La Liga', 'fb_gls' => '26', 'ss_player_id' => '826643.0'])]);
         $this->build();
 
-        $season = $this->seasonOf('Kylian Mbappé');
-        self::assertSame($id, $season->getPlayer()->getId());
-        self::assertSame(26.0, $season->getStats(StatsScope::League)->value('goals'));
-        self::assertSame(3, $season->getStats(StatsScope::League)->getBatch()->getId(), 'batches 1 and 2 are the default sources');
+        $stats = $this->statsOf('Kylian Mbappé', StatsScope::League);
+        self::assertSame($id, $stats->getPlayerSeason()->getPlayer()->getId());
+        self::assertSame(26.0, $stats->value('goals'));
+        self::assertSame(3, $stats->getBatch()->getId(), 'batches 1 and 2 are the default sources');
     }
 
     public function testTransferBetweenLeaguesKeepsProviderMinutesForPer90(): void
@@ -105,7 +107,7 @@ final class SeasonBuilderTest extends KernelTestCase
         $this->importCl([]);
         $this->build();
 
-        $stats = $this->seasonOf('Piero Hincapié')->getStats(StatsScope::League);
+        $stats = $this->statsOf('Piero Hincapié', StatsScope::League);
         self::assertSame(1882.0, $stats->getMinutes());
         self::assertSame(OriginStatus::Partial, $stats->originStatus(Origin::Sofascore));
         self::assertEqualsWithDelta(3.0, $stats->per90('tackles'), 0.001, '3 tackles in 90 SofaScore minutes, not in 1882');
@@ -142,7 +144,7 @@ final class SeasonBuilderTest extends KernelTestCase
         foreach ($records as $record) {
             $payloads[$record['player']['id'] . '|' . $record['team']['id']] = $record;
         }
-        $this->rawImporter()->import(new ImportBatch(SofascoreClient::SOURCE, ImportSofascoreCommand::DATASET, '2025/26', 'test', '1', 'CL'), $payloads);
+        $this->rawImporter()->import(new ImportBatch(SofascoreClient::SOURCE, SofascoreClient::DATASET, '2025/26', 'test', '1', 'CL'), $payloads);
     }
 
     private function rawImporter(): RawImporter
@@ -164,7 +166,7 @@ final class SeasonBuilderTest extends KernelTestCase
     {
         $ids = [];
         foreach ($this->em->getRepository(Player::class)->findAll() as $player) {
-            $ids[$player->getName()] = $player->getId();
+            $ids[$player->getName()] = (int) $player->getId();
         }
         ksort($ids);
 
@@ -174,7 +176,17 @@ final class SeasonBuilderTest extends KernelTestCase
     private function seasonOf(string $name): PlayerSeason
     {
         $player = $this->em->getRepository(Player::class)->findOneBy(['name' => $name]);
+        $season = $this->em->getRepository(PlayerSeason::class)->findOneBy(['player' => $player]);
+        self::assertNotNull($season, "{$name} has no season");
 
-        return $this->em->getRepository(PlayerSeason::class)->findOneBy(['player' => $player]);
+        return $season;
+    }
+
+    private function statsOf(string $name, StatsScope $scope): PlayerCompetitionStats
+    {
+        $stats = $this->seasonOf($name)->getStats($scope);
+        self::assertNotNull($stats, "{$name} has no {$scope->value} stats");
+
+        return $stats;
     }
 }

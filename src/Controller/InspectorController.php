@@ -66,6 +66,8 @@ final class InspectorController extends AbstractController
         $search = trim($request->query->getString('q'));
         $filter = $request->query->getString('filter', 'all');
         $sort = $request->query->getString('sort', 'league_goals');
+        $filter = in_array($filter, InspectorQueries::FILTERS, true) ? $filter : 'all';
+        $sort = in_array($sort, InspectorQueries::SORTS, true) ? $sort : 'league_goals';
 
         return $this->render('inspector/players.html.twig', [
             'players' => $this->queries->players($search, $filter, $sort),

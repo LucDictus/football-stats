@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\DataQuality;
 
-use App\Football\Data\OriginStatus;
-
 use App\DataQuality\OriginConsistency;
+use App\Football\Data\OriginStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

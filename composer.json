@@ -29,7 +29,8 @@
         "allow-plugins": {
             "php-http/discovery": true,
             "symfony/flex": true,
-            "symfony/runtime": true
+            "symfony/runtime": true,
+            "phpstan/extension-installer": true
         },
         "bump-after-update": true,
         "sort-packages": true
@@ -64,7 +65,17 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
-        ]
+        ],
+        "qa": [
+            "@php vendor/bin/php-cs-fixer fix --dry-run --diff",
+            "@php vendor/bin/phpstan analyse --no-progress --memory-limit=1G",
+            "@php bin/console lint:container",
+            "@php bin/console lint:twig templates",
+            "@php bin/console lint:yaml config",
+            "@php bin/console doctrine:schema:validate",
+            "@php bin/phpunit"
+        ],
+        "fix": "@php vendor/bin/php-cs-fixer fix"
     },
     "conflict": {
         "symfony/symfony": "*"
@@ -76,9 +87,19 @@
         }
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.3",
+        "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.1",
+        "phpstan/phpstan-symfony": "^2.1",
         "phpunit/phpunit": "^12.5",
         "symfony/browser-kit": "7.4.*",
         "symfony/css-selector": "7.4.*",
         "symfony/maker-bundle": "^1.68"
+    },
+    "scripts-descriptions": {
+        "qa": "All quality checks: code style, static analysis, linters, schema, tests",
+        "fix": "Apply code style fixes"
     }
 }

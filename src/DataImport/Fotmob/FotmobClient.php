@@ -13,6 +13,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 final readonly class FotmobClient
 {
     public const SOURCE = 'fotmob';
+    public const DATASET = 'player_stat_lists';
     private const BASE_URL = 'https://data.fotmob.com/stats';
 
     public function __construct(private HttpClientInterface $httpClient)

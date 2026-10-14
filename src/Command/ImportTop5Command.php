@@ -44,12 +44,12 @@ final class ImportTop5Command extends Command
                 sourceVersion: $version,
             ),
             $result['rows'],
-            count($result['duplicates']),
-            ['file' => 'data/master/player_seasons.csv', 'duplicates' => $result['duplicates']],
+            count($result['rejected']),
+            ['file' => 'data/master/player_seasons.csv', 'rejected' => $result['rejected']],
         );
 
         $io->success(sprintf(
-            'Batch #%d: %d stint rows for %s (dataset commit %s), %d duplicates rejected.',
+            'Batch #%d: %d stint rows for %s (dataset commit %s), %d rows rejected.',
             $batch->getId(),
             $batch->getRecordCount(),
             $this->scope->season,

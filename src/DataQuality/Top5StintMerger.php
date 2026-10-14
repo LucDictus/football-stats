@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\DataQuality;
 
-use App\Football\Data\OriginCheck;
-
-use App\Football\Data\OriginStatus;
-
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
+use App\Football\Data\OriginCheck;
+use App\Football\Data\OriginStatus;
 
 /**
  * Turns Top-5 dataset stint rows (one per player per club) into one season per player.
@@ -70,7 +68,7 @@ final class Top5StintMerger
 
     /**
      * @param list<array<string, string>> $stints
-     * @param string|null                 $identityConflict why the providers' records cannot be attributed
+     * @param string|null                 $identityConflict  why the providers' records cannot be attributed
      * @param bool                        $sharedSofascoreId the SofaScore id also belongs to another player
      */
     public function mergePlayer(string $key, array $stints, ?string $identityConflict = null, bool $sharedSofascoreId = false): MergedPlayerSeason

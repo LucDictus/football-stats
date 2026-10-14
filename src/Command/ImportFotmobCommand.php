@@ -17,7 +17,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand('app:import:fotmob-cl', 'Import Champions League minutes, goals and assists from FotMob (cross-check source)')]
 final class ImportFotmobCommand extends Command
 {
-    public const DATASET = 'player_stat_lists';
     public const STATS = ['mins_played', 'goals', 'goal_assist'];
     private const TRANSFORM_VERSION = '1';
 
@@ -45,7 +44,7 @@ final class ImportFotmobCommand extends Command
         $batch = $this->importer->import(
             new ImportBatch(
                 FotmobClient::SOURCE,
-                self::DATASET,
+                FotmobClient::DATASET,
                 $this->scope->season,
                 $this->client->statUrl($league, $season, '{stat}'),
                 self::TRANSFORM_VERSION,

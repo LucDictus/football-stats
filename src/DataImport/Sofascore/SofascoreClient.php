@@ -17,6 +17,7 @@ use Symfony\Component\Process\Process;
 final readonly class SofascoreClient
 {
     public const SOURCE = 'sofascore';
+    public const DATASET = 'player_season_statistics';
     private const BASE_URL = 'https://api.sofascore.com/api/v1';
     private const PAGE_SIZE = 100;
 

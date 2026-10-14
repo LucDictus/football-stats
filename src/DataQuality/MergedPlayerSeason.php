@@ -4,21 +4,19 @@ declare(strict_types=1);
 
 namespace App\DataQuality;
 
-use App\Football\Data\OriginCheck;
-
-use App\Football\Data\OriginStatus;
-
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
+use App\Football\Data\OriginCheck;
+use App\Football\Data\OriginStatus;
 
 /** One player's league season after merging club stints, with a trust check per provider. */
 final readonly class MergedPlayerSeason
 {
     /**
-     * @param list<string>               $teams
-     * @param list<string>               $leagues  league names as in the source
-     * @param array<string, float|null>  $values   field key => value (null = unknown)
-     * @param array<string, OriginCheck> $checks   Origin value => check
+     * @param list<string>                                                                              $teams
+     * @param list<string>                                                                              $leagues      league names as in the source
+     * @param array<string, float|null>                                                                 $values       field key => value (null = unknown)
+     * @param array<string, OriginCheck>                                                                $checks       Origin value => check
      * @param list<array{team: string, league: string, appearances: ?int, starts: ?int, minutes: ?int}> $stintDetails most minutes first
      */
     public function __construct(

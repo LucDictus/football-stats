@@ -10,7 +10,7 @@ final readonly class ClMatchResult
 {
     /**
      * @param array<string, array{player: MergedPlayerSeason, method: string}> $links CL external id => league player
-     * @param array<string, string>                                             $clubs CL club name => league club name
+     * @param array<string, string>                                            $clubs CL club name => league club name
      */
     public function __construct(
         public array $links,

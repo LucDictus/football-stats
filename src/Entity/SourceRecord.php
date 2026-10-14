@@ -19,7 +19,7 @@ class SourceRecord
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::BIGINT)]
-    private ?string $id = null;
+    private int|string|null $id = null; // DBAL returns a bigint as int, or as string beyond PHP_INT_MAX
 
     /** @param array<string, mixed> $payload */
     public function __construct(
@@ -33,7 +33,7 @@ class SourceRecord
     ) {
     }
 
-    public function getId(): ?string
+    public function getId(): int|string|null
     {
         return $this->id;
     }

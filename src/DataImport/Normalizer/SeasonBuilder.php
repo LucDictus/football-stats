@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\DataImport\Normalizer;
 
-use App\Command\ImportSofascoreCommand;
 use App\DataImport\Identity\ClMatchResult;
 use App\DataImport\Identity\ClPlayerMatcher;
 use App\DataImport\Identity\IdentityOverrides;
@@ -21,8 +20,8 @@ use App\Entity\PlayerIdentifier;
 use App\Entity\PlayerSeason;
 use App\Entity\PlayerSeasonStint;
 use App\Entity\Season;
-use App\Entity\Team;
 use App\Entity\StatsScope;
+use App\Entity\Team;
 use App\Football\Assessment\AssessmentScope;
 use App\Football\Assessment\CompetitionCatalog;
 use App\Football\Data\FieldCatalog;
@@ -62,7 +61,7 @@ final class SeasonBuilder
     {
         $top5Batch = $this->batches->latest(Top5CsvReader::SOURCE, Top5CsvReader::DATASET, $this->scope->season)
             ?? throw new \RuntimeException('No Top-5 dataset import yet: run app:import:top5');
-        $clBatch = $this->batches->latest(SofascoreClient::SOURCE, ImportSofascoreCommand::DATASET, $this->scope->season)
+        $clBatch = $this->batches->latest(SofascoreClient::SOURCE, SofascoreClient::DATASET, $this->scope->season)
             ?? throw new \RuntimeException('No SofaScore CL import yet: run app:import:sofascore-cl');
 
         $league = $this->merger->merge($this->records->payloads($top5Batch));

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\DataQuality;
 
 use App\Football\Data\OriginCheck;
-
 use App\Football\Data\OriginStatus;
 
 /**

@@ -8,10 +8,14 @@ use App\Entity\ImportBatch;
 use App\Football\Assessment\AssessmentScope;
 use App\Football\Data\Field;
 
-/** Renders the DataAudit result as the Markdown data coverage report (docs/data-coverage.md). */
+/**
+ * Renders the DataAudit result as the Markdown data coverage report (docs/data-coverage.md).
+ *
+ * @phpstan-import-type AuditResult from DataAudit
+ */
 final class DataAuditMarkdown
 {
-    /** @param array<string, mixed> $audit */
+    /** @param AuditResult $audit */
     public function render(array $audit): string
     {
         /** @var AssessmentScope $scope */

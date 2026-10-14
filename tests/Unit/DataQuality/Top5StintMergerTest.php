@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\DataQuality;
 
-use App\Football\Data\OriginStatus;
-
 use App\DataQuality\Top5StintMerger;
 use App\Football\Data\Origin;
+use App\Football\Data\OriginStatus;
 use PHPUnit\Framework\TestCase;
 
 final class Top5StintMergerTest extends TestCase

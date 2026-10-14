@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Inspector;
 
-use App\Entity\StatsScope;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -13,6 +12,9 @@ use Doctrine\DBAL\Connection;
  */
 final readonly class InspectorQueries
 {
+    public const FILTERS = ['all', 'league', 'cl', 'cl_only', 'flagged'];
+    public const SORTS = ['league_goals', 'cl_goals', 'league_minutes', 'name'];
+
     public function __construct(private Connection $db)
     {
     }
@@ -44,13 +46,15 @@ final readonly class InspectorQueries
      */
     public function originStatuses(int $minMinutes): array
     {
-        return $this->db->fetchAllAssociative(
+        $rows = $this->db->fetchAllAssociative(
             "SELECT o.key AS origin, o.value->>'status' AS status, count(*) AS players
              FROM player_competition_stats s, jsonb_each(s.origin_checks) o
              WHERE s.scope = 'league' AND s.minutes >= ?
              GROUP BY 1, 2 ORDER BY 1, 2",
             [$minMinutes]
         );
+
+        return array_map(static fn (array $r) => ['origin' => (string) $r['origin'], 'status' => (string) $r['status'], 'players' => (int) $r['players']], $rows);
     }
 
     /** @return list<array<string, mixed>> */
@@ -64,7 +68,8 @@ final readonly class InspectorQueries
     /**
      * One row per player season with headline league and CL numbers.
      *
-     * @param 'all'|'league'|'cl'|'cl_only'|'flagged' $filter
+     * @param value-of<self::FILTERS> $filter
+     * @param value-of<self::SORTS>   $sort
      *
      * @return list<array<string, mixed>>
      */
@@ -74,8 +79,8 @@ final readonly class InspectorQueries
             'league' => 'league_minutes IS NOT NULL',
             'cl' => 'cl_minutes IS NOT NULL',
             'cl_only' => 'league_minutes IS NULL',
-            'flagged' => "league_checks::text ~ '\"status\": \"(partial|suspect|missing)\"'",
-            default => 'TRUE',
+            'flagged' => "EXISTS (SELECT 1 FROM jsonb_each(league_checks) o WHERE o.value->>'status' <> 'ok')",
+            'all' => 'TRUE',
         };
         $params = [];
         if ($search !== '') {
@@ -86,7 +91,7 @@ final readonly class InspectorQueries
             'cl_goals' => 'cl_goals DESC NULLS LAST',
             'league_minutes' => 'league_minutes DESC NULLS LAST',
             'name' => 'name ASC',
-            default => 'league_goals DESC NULLS LAST',
+            'league_goals' => 'league_goals DESC NULLS LAST',
         };
 
         $sql = <<<SQL

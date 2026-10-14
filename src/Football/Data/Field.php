@@ -8,11 +8,11 @@ namespace App\Football\Data;
 final readonly class Field
 {
     /**
-     * @param string      $leagueColumn column in the Top-5 dataset (null for derived fields)
-     * @param string|null $clColumn     field in SofaScore's CL statistics (null = no CL source)
-     * @param bool        $goalkeeper   only meaningful for goalkeepers
-     * @param bool        $per90        can be expressed per 90 minutes
-     * @param list<Origin> $inputs      for derived fields: the providers they are calculated from
+     * @param string       $leagueColumn column in the Top-5 dataset (null for derived fields)
+     * @param string|null  $clColumn     field in SofaScore's CL statistics (null = no CL source)
+     * @param bool         $goalkeeper   only meaningful for goalkeepers
+     * @param bool         $per90        can be expressed per 90 minutes
+     * @param list<Origin> $inputs       for derived fields: the providers they are calculated from
      */
     public function __construct(
         public string $key,

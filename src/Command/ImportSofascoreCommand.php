@@ -12,14 +12,13 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 #[AsCommand('app:import:sofascore-cl', 'Import Champions League player season stats from SofaScore as raw records')]
 final class ImportSofascoreCommand extends Command
 {
-    public const DATASET = 'player_season_statistics';
     private const TRANSFORM_VERSION = '1';
 
     public function __construct(
@@ -59,7 +58,7 @@ final class ImportSofascoreCommand extends Command
         $batch = $this->importer->import(
             new ImportBatch(
                 SofascoreClient::SOURCE,
-                self::DATASET,
+                SofascoreClient::DATASET,
                 $this->scope->season,
                 $this->client->statisticsUrl($tournament, $season),
                 self::TRANSFORM_VERSION,

@@ -14,9 +14,9 @@ namespace App\Football\Assessment;
 final readonly class AssessmentScope
 {
     /**
-     * @param list<string>                           $leagues           competition codes
-     * @param array{tournament: int, season: int}    $sofascoreCl       SofaScore ids of the CL season
-     * @param array{league: int, season: int}        $fotmobCl          FotMob ids of the CL season
+     * @param list<string>                        $leagues     competition codes
+     * @param array{tournament: int, season: int} $sofascoreCl SofaScore ids of the CL season
+     * @param array{league: int, season: int}     $fotmobCl    FotMob ids of the CL season
      */
     public function __construct(
         public string $season,

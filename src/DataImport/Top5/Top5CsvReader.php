@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\DataImport\Top5;
 
+use App\Football\Data\FieldCatalog;
+use App\Football\Data\Origin;
+
 /**
  * Reads data/master/player_seasons.csv from the Top-5 Football Dataset
  * (https://github.com/m-mahadi/top5-football-dataset): FBref + Understat + SofaScore,
@@ -47,7 +50,7 @@ final readonly class Top5CsvReader
      *
      * @param string $seasonCode season value used in the CSV, e.g. '2526'
      *
-     * @return array{rows: array<string, array<string, string>>, duplicates: list<string>}
+     * @return array{rows: array<string, array<string, string>>, rejected: list<string>}
      */
     public function read(string $seasonCode): array
     {
@@ -56,26 +59,58 @@ final readonly class Top5CsvReader
             throw new \RuntimeException(sprintf('Cannot open %s. Clone the dataset first: git clone %s %s', $this->csvPath(), self::URL, $this->directory));
         }
 
-        $header = fgetcsv($fh, escape: '');
-        $rows = [];
-        $duplicates = [];
-        while (($line = fgetcsv($fh, escape: '')) !== false) {
-            if ($line === [null]) {
-                continue;
+        try {
+            $header = fgetcsv($fh, escape: '');
+            if ($header === false) {
+                throw new \RuntimeException("{$this->csvPath()} is empty");
             }
-            $row = array_combine($header, $line);
-            if ($row['season'] !== $seasonCode) {
-                continue;
+            $header = array_map('strval', $header);
+            $missing = array_diff(self::requiredColumns(), $header);
+            if ($missing !== []) {
+                throw new \RuntimeException(sprintf('%s lacks columns the pipeline needs: %s. Did the dataset change?', $this->csvPath(), implode(', ', $missing)));
             }
-            $key = implode('|', [$row['player'], $row['born'], $row['team'], $row['league']]);
-            if (isset($rows[$key])) {
-                $duplicates[] = $key;
-                continue;
-            }
-            $rows[$key] = $row;
-        }
-        fclose($fh);
 
-        return ['rows' => $rows, 'duplicates' => $duplicates];
+            $rows = [];
+            $rejected = [];
+            for ($lineNumber = 2; ($line = fgetcsv($fh, escape: '')) !== false; ++$lineNumber) {
+                if ($line === [null]) {
+                    continue;
+                }
+                if (count($line) !== count($header)) {
+                    $rejected[] = sprintf('line %d: %d columns instead of %d', $lineNumber, count($line), count($header));
+                    continue;
+                }
+                $row = array_combine($header, array_map('strval', $line));
+                if ($row['season'] !== $seasonCode) {
+                    continue;
+                }
+                $key = implode('|', [$row['player'], $row['born'], $row['team'], $row['league']]);
+                if (isset($rows[$key])) {
+                    $rejected[] = "line {$lineNumber}: duplicate of {$key}";
+                    continue;
+                }
+                $rows[$key] = $row;
+            }
+        } finally {
+            fclose($fh);
+        }
+
+        return ['rows' => $rows, 'rejected' => $rejected];
+    }
+
+    /** @return list<string> identity columns plus every league column in the field catalog */
+    public static function requiredColumns(): array
+    {
+        $columns = ['season', 'league', 'team', 'player', 'born', 'pos', 'ss_player_id', 'ss_goals'];
+        foreach (Origin::providers() as $origin) {
+            $columns[] = (string) $origin->leagueMinutesColumn();
+        }
+        foreach (FieldCatalog::all() as $field) {
+            if ($field->leagueColumn !== null) {
+                $columns[] = $field->leagueColumn;
+            }
+        }
+
+        return array_values(array_unique($columns));
     }
 }

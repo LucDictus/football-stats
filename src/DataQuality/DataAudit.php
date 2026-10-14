@@ -4,24 +4,36 @@ declare(strict_types=1);
 
 namespace App\DataQuality;
 
-use App\Football\Data\OriginStatus;
-
-use App\Command\ImportFotmobCommand;
-use App\Command\ImportSofascoreCommand;
 use App\DataImport\Fotmob\FotmobClient;
 use App\DataImport\Identity\ClMatchResult;
 use App\DataImport\Identity\ClPlayerMatcher;
 use App\DataImport\Identity\IdentityOverrides;
 use App\DataImport\Sofascore\SofascoreClient;
 use App\DataImport\Top5\Top5CsvReader;
+use App\Entity\ImportBatch;
 use App\Football\Assessment\AssessmentScope;
+use App\Football\Data\Field;
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
+use App\Football\Data\OriginStatus;
 use App\Repository\ImportBatchRepository;
 use App\Repository\SourceRecordRepository;
 
 /**
  * Phase 1 audit: what the imported data can and cannot tell us.
+ *
+ * @phpstan-type StatusCounts array<string, int>
+ * @phpstan-type Example array{player: string, teams: string, minutes: float, reason: ?string}
+ * @phpstan-type LeagueSummary array{players: int, regular: int, stint_rows: int, transferred: int, goalkeepers: int, regular_goalkeepers: int}
+ * @phpstan-type OriginSummary array{counts: StatusCounts, regular_counts: StatusCounts, examples: array<string, list<Example>>}
+ * @phpstan-type ClCoverage array{population: int, missing: int}
+ * @phpstan-type FieldRow array{field: Field, population: int, present_pct: ?float, trusted_pct: ?float, partial: int, cl: ?ClCoverage, verdict: string}
+ * @phpstan-type ClPlayer array{player: string, team: string, minutes: int|float}
+ * @phpstan-type ClLinkedPlayer array{player: string, team: string, minutes: int|float, method: string, match: string}
+ * @phpstan-type ClSummary array{players: int, regular: int, teams: int, top5_teams: int, top5_players: int, methods: array<string, int>, linked_by_name: list<ClLinkedPlayer>, other_teams: list<string>, other_players: int, other_linked: int, unlinked_at_top5: list<ClPlayer>, xg_null_no_shots: int, xg_null_with_shots: int, goals: int|float, assists: int|float, minutes: int|float}
+ * @phpstan-type Disagreement array{player: string, team: string, sofascore: string, fotmob: string, gap: float}
+ * @phpstan-type FotmobCheck array{totals: array{minutes: int, goals: int, assists: int}, matched: int, ambiguous: int, unmatched: int, minutes_ok: int, minutes_exact: int, goals_ok: int, assists_ok: int, disagreements: list<Disagreement>, disagreement_count: int}
+ * @phpstan-type AuditResult array{scope: AssessmentScope, generated_at: \DateTimeImmutable, batches: list<ImportBatch>, league: LeagueSummary, origins: array<string, OriginSummary>, fields: list<FieldRow>, cl: ClSummary, fotmob: ?FotmobCheck, unavailable: array<string, string>}
  *
  * Checks actual records, not just columns: presence (NULL = missing, never zero),
  * agreement between providers, and the link between league and Champions League players.
@@ -43,15 +55,15 @@ final readonly class DataAudit
     ) {
     }
 
-    /** @return array<string, mixed> */
+    /** @return AuditResult */
     public function run(): array
     {
         $season = $this->scope->season;
         $top5Batch = $this->batches->latest(Top5CsvReader::SOURCE, Top5CsvReader::DATASET, $season)
             ?? throw new \RuntimeException('No Top-5 dataset import yet: run app:import:top5');
-        $clBatch = $this->batches->latest(SofascoreClient::SOURCE, ImportSofascoreCommand::DATASET, $season)
+        $clBatch = $this->batches->latest(SofascoreClient::SOURCE, SofascoreClient::DATASET, $season)
             ?? throw new \RuntimeException('No SofaScore CL import yet: run app:import:sofascore-cl');
-        $fotmobBatch = $this->batches->latest(FotmobClient::SOURCE, ImportFotmobCommand::DATASET, $season);
+        $fotmobBatch = $this->batches->latest(FotmobClient::SOURCE, FotmobClient::DATASET, $season);
 
         $league = $this->merger->merge($this->records->payloads($top5Batch));
         $clById = $this->records->payloads($clBatch);
@@ -61,7 +73,7 @@ final readonly class DataAudit
         return [
             'scope' => $this->scope,
             'generated_at' => new \DateTimeImmutable(),
-            'batches' => array_values(array_filter([$top5Batch, $clBatch, $fotmobBatch])),
+            'batches' => $fotmobBatch !== null ? [$top5Batch, $clBatch, $fotmobBatch] : [$top5Batch, $clBatch],
             'league' => $this->leagueSummary($league),
             'origins' => $this->originSummary($league),
             'fields' => $this->fieldMatrix($league, $clById, $matches),
@@ -71,7 +83,11 @@ final readonly class DataAudit
         ];
     }
 
-    /** @param list<MergedPlayerSeason> $league */
+    /**
+     * @param list<MergedPlayerSeason> $league
+     *
+     * @return LeagueSummary
+     */
     private function leagueSummary(array $league): array
     {
         $regular = array_filter($league, static fn ($p) => $p->minutes >= self::LEAGUE_MIN_MINUTES);
@@ -90,6 +106,8 @@ final readonly class DataAudit
      * Status counts per provider, and the most important affected players (most minutes first).
      *
      * @param list<MergedPlayerSeason> $league
+     *
+     * @return array<string, OriginSummary>
      */
     private function originSummary(array $league): array
     {
@@ -128,6 +146,8 @@ final readonly class DataAudit
      *
      * @param list<MergedPlayerSeason>            $league
      * @param array<string, array<string, mixed>> $cl
+     *
+     * @return list<FieldRow>
      */
     private function fieldMatrix(array $league, array $cl, ClMatchResult $matches): array
     {
@@ -167,7 +187,7 @@ final readonly class DataAudit
         return $rows;
     }
 
-    /** @param array{population: int, missing: int}|null $cl */
+    /** @param ClCoverage|null $cl */
     private static function verdict(?float $trustedPct, ?array $cl, bool $derived): string
     {
         $league = match (true) {
@@ -187,7 +207,11 @@ final readonly class DataAudit
         return "{$league}; {$clText}";
     }
 
-    /** @param array<string, array<string, mixed>> $clById */
+    /**
+     * @param array<string, array<string, mixed>> $clById
+     *
+     * @return ClSummary
+     */
     private function clSummary(array $clById, ClMatchResult $matches): array
     {
         $teams = [];
@@ -252,6 +276,8 @@ final readonly class DataAudit
      *
      * @param list<array<string, mixed>>          $cl
      * @param array<string, array<string, mixed>> $fotmob raw stat-list entries
+     *
+     * @return FotmobCheck
      */
     private function fotmobCrossCheck(array $cl, array $fotmob): array
     {
@@ -318,5 +344,4 @@ final readonly class DataAudit
             'disagreement_count' => count($disagreements),
         ];
     }
-
 }
