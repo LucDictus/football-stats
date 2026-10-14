@@ -103,6 +103,50 @@ level of comparable Understat players: Cherki #15, Gabriel Magalhães #24.
 - **Credit shares** (50/30/20), **shrinkage priors** and the **replacement percentile** are
   judgement calls, to be tested for sensitivity in phase 8.
 - **Scope**: domestic league only; the Champions League enters in phase 6.
+- **Goalkeepers are measured twice on goals prevented** (see the overlap check below).
+
+### Overlap check (roadmap 5.2)
+
+`php bin/console app:analyse:overlap` (`OverlapAnalysis`) breaks the final score down, per role,
+into the share of its variance each part explains, and groups the parts that measure the same
+thing in both halves into families. The full generated report is in [overlap.md](overlap.md).
+
+| Role | Positional ↔ contribution r | Final score SD | Largest family |
+|---|---|---|---|
+| Forwards | 0.93 | 10.6 | scoring 87% |
+| Midfielders | 0.72 | 9.6 | scoring 37%, creation 36%, build-up 22% |
+| Defenders | 0.58 | 8.3 | defending 34%, build-up 29%, scoring 18% |
+| Goalkeepers | 0.89 | 8.8 | goalkeeping (goals prevented) 88% |
+
+Findings:
+
+- **Forwards: overlap, but not double-counting to remove.** Both halves measure scoring:
+  goals + assists and xG + xA per 90 (r 0.80 with each other) in the positional half, and
+  shooting and creation in goals in the contribution. For a forward, scoring *is* positional
+  excellence, and the data has nothing else to measure him by (no dribbles, carries or
+  pressing). The **counterfactual** proves it: when the positional half counts only what it
+  adds beyond the contribution, midfielders take 9 of the top 10 again, and Kane and Haaland
+  drop out of the top 20. Removing the overlap would bring back the bias that mvp-v1 fixed.
+- **Wider spread for forwards is mostly intended.** Their contribution varies most (SD 11.6
+  against 8.1 to 10.6 for the other roles): a goal counts the same in every role, and forwards
+  differ most in goals. The agreement between the halves adds some spread on top of that.
+- **Midfielders: creation is counted in both halves** (positional creation ↔ contribution
+  creation r 0.85; inside the positional component xA ↔ big chances 0.92, xA ↔ key passes
+  0.85). The metrics share one component with a fixed weight, so they do not add weight to
+  each other; across the halves the overlap is agreement between two views, as for forwards.
+- **Defenders are the most balanced role** (r 0.58): the halves add different information.
+- **Goalkeepers: real double-counting.** Goals prevented is 70% of the positional half and
+  almost all of the contribution (r 0.90), so 88% of a goalkeeper's final score is one
+  statistic. Most of that statistic over one season is chance. The contribution half shrinks it
+  hard (a prior of 300 shots on target); the positional half shrinks it only by a prior worth
+  10 matches, so the noise still comes through. The data has no other goalkeeping measure that
+  is not also driven by the team (save % repeats goals prevented; clean sheets are team
+  outcomes). **For the next model version:** shrink the positional shot stopping like the
+  contribution's goalkeeping. That needs a new version, because released models are never
+  edited. The effect on the top of the ranking today is small (best goalkeeper #36).
+- **Minutes**: availability (20% of the positional half) and the season totals of the
+  contribution both reward volume. The final score correlates 0.36 to 0.44 with minutes,
+  similarly in every role, so volume favours no position.
 
 ## positional-v2 (roadmap phase 4, released)
 

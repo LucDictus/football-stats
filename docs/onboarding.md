@@ -61,6 +61,7 @@ src/
     Assessment/       what is being assessed: season, competitions (AssessmentScope)
     Data/             the vocabulary: Field, FieldCatalog, Origin, OriginStatus
     Scoring/          models (ModelCatalog), the pure ScoreCalculator, ScoreRunner
+    Analysis/         checks on a model's results (OverlapAnalysis → docs/overlap.md)
   Inspector/          read-only SQL for the inspector pages
   Repository/
 config/
@@ -144,6 +145,7 @@ php bin/console app:build-season              # domain: rebuild players/stats (i
 php bin/console app:data:audit                # docs/data-coverage.md
 php bin/console app:score                     # ranking run with the default model (mvp-v1)
 php bin/console app:score -m baseline-v1      # or any released model
+php bin/console app:analyse:overlap           # docs/overlap.md: what drives the score per position
 php -S 127.0.0.1:8010 -t public               # API + inspector at http://127.0.0.1:8010
 npm --prefix frontend run dev                 # the app at http://127.0.0.1:5173
 php bin/phpunit                               # all tests (needs the test DB, see README)
@@ -199,7 +201,9 @@ so older models keep reproducing. The API and the methodology page read the defi
 automatically. Role models (`roles:` per position group) compare each group only with itself;
 see `docs/methodology.md` for why the composite is standardised again within the role.
 Contribution in goals lives in `Football/Scoring/Impact/` (`ImpactModel`, `ImpactCalculator`);
-a model with `impact:` blends it with the positional score.
+a model with `impact:` blends it with the positional score. `app:analyse:overlap` shows, per
+position, which information drives a model's final score (`Football/Analysis/`); rerun it for
+every new model version.
 
 ## 10. Gotchas
 
