@@ -41,6 +41,8 @@ export interface ScoringModel {
   normalization?: 'percentile' | 'standard'
   reference?: string
   z_cap?: number
+  /** Blended models: contribution in goals and its weight in the final score. */
+  impact?: { shooter_share: number; passer_share: number; build_up_share: number; weight: number }
 }
 
 export interface ScoreRun {
@@ -62,6 +64,9 @@ export interface RankingRow {
   position: PositionGroup | null
   minutes: number
   components: Record<string, number | null>
+  /** Blended models only. */
+  positional: number | null
+  impact_goals: number | null
 }
 
 export interface RankingResponse {
@@ -132,6 +137,19 @@ export interface ScoreBreakdown {
   normalization: 'percentile' | 'standard'
   confidence: number
   components: BreakdownComponent[]
+  positional: number | null
+  impact: ImpactBreakdown | null
+}
+
+export type ImpactKey = 'shooting' | 'finishing' | 'creation' | 'build_up' | 'goalkeeping' | 'defence'
+
+export interface ImpactBreakdown {
+  components: { key: ImpactKey; goals: number | null; evidence: 'strong' | 'moderate' | 'weak' }[]
+  total: number | null
+  replacement: number | null
+  above: number | null
+  score: number | null
+  weight: number
 }
 
 export interface PlayerProfile {

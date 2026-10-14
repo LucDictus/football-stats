@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Football\Scoring;
 
 use App\Entity\StatsScope;
+use App\Football\Scoring\Impact\ImpactModel;
 
 /**
  * A versioned, fully explicit scoring model. A model never changes once released: a change
@@ -38,7 +39,14 @@ final readonly class ScoringModel
         public bool $referenceRankedOnly = false,
         /** Standard scores: deviations beyond ±zCap count as ±zCap at metric level. */
         public ?float $zCap = null,
+        /** Contribution in goals (roadmap phase 5), blended with the positional score. */
+        public ?ImpactModel $impact = null,
+        /** Weight of the contribution in the final score; the positional score gets the rest. */
+        public float $impactWeight = 0.0,
     ) {
+        if (($impact === null) !== ($impactWeight === 0.0) || $impactWeight < 0 || $impactWeight > 1) {
+            throw new \InvalidArgumentException("Model {$key}-v{$version}: an impact model needs a weight between 0 and 1, and a weight needs an impact model");
+        }
         foreach ($positionGroups as $group) {
             if ($this->componentsFor($group) === []) {
                 throw new \InvalidArgumentException("Model {$key}-v{$version} has no components for {$group}");
@@ -85,7 +93,8 @@ final readonly class ScoringModel
             ] : [])
             + ($this->normalization !== Normalization::Percentile ? ['normalization' => $this->normalization->value] : [])
             + ($this->referenceRankedOnly ? ['reference' => 'ranked players'] : [])
-            + ($this->zCap !== null ? ['z_cap' => $this->zCap] : []);
+            + ($this->zCap !== null ? ['z_cap' => $this->zCap] : [])
+            + ($this->impact !== null ? ['impact' => $this->impact->toArray() + ['weight' => $this->impactWeight]] : []);
     }
 
     /**

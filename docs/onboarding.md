@@ -12,7 +12,7 @@ trusted, and what was missing. Most of the code so far exists to make that possi
 
 The roadmap has 10 phases (see the README). Done: 1 (data audit), 2 (domain model),
 3 (baseline score, JSON API, React frontend), 4 (positional models: every position on one
-ranking; positional-v2 is the default). Next: 5 (impact model).
+ranking), 5 in progress (contribution in goals; mvp-v1 is the default).
 
 ## 2. The mental model: three layers
 
@@ -142,7 +142,7 @@ php bin/console app:import:sofascore-cl       # raw: CL stats (--no-fetch to reu
 php bin/console app:import:fotmob-cl          # raw: cross-check data
 php bin/console app:build-season              # domain: rebuild players/stats (idempotent)
 php bin/console app:data:audit                # docs/data-coverage.md
-php bin/console app:score                     # ranking run with the default model (positional-v2)
+php bin/console app:score                     # ranking run with the default model (mvp-v1)
 php bin/console app:score -m baseline-v1      # or any released model
 php -S 127.0.0.1:8010 -t public               # API + inspector at http://127.0.0.1:8010
 npm --prefix frontend run dev                 # the app at http://127.0.0.1:5173
@@ -198,6 +198,8 @@ appears in the definition only when used (like `shrinkage`, `sqrt`, `referenceRa
 so older models keep reproducing. The API and the methodology page read the definition, so they follow
 automatically. Role models (`roles:` per position group) compare each group only with itself;
 see `docs/methodology.md` for why the composite is standardised again within the role.
+Contribution in goals lives in `Football/Scoring/Impact/` (`ImpactModel`, `ImpactCalculator`);
+a model with `impact:` blends it with the positional score.
 
 ## 10. Gotchas
 

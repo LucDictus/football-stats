@@ -312,3 +312,33 @@
     text-align: left;
   }
 }
+
+.blend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.blendPart {
+  padding: 18px 20px;
+  display: grid;
+  gap: 8px;
+  cursor: help;
+}
+
+.blendValue {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.impactCard {
+  padding: 20px 22px;
+}
+
+@media (max-width: 640px) {
+  .blend {
+    grid-template-columns: 1fr;
+  }
+}

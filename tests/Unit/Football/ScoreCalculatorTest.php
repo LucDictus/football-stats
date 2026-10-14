@@ -11,6 +11,7 @@ use App\Entity\PlayerSeason;
 use App\Entity\Season;
 use App\Entity\StatsScope;
 use App\Football\Scoring\Component;
+use App\Football\Scoring\Impact\ImpactModel;
 use App\Football\Scoring\Metric;
 use App\Football\Scoring\MetricMode;
 use App\Football\Scoring\ModelCatalog;
@@ -245,6 +246,29 @@ final class ScoreCalculatorTest extends TestCase
         self::assertGreaterThan(80.0, $free[40]);
     }
 
+    public function testBlendedModelsCombinePositionalScoreAndContribution(): void
+    {
+        $model = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['FW'], 0.6, [], [
+            'FW' => [new Component('output', 'Output', '', 1.0, [new Metric('goals', 'Goals', ['goals'], MetricMode::Total, 1.0)])],
+        ], Normalization::Percentile, impact: new ImpactModel(), impactWeight: 0.5);
+
+        $results = (new ScoreCalculator())->score($model, [
+            $this->candidate(1, 'A', goals: 10.0, extra: ['np_xg' => 4.0, 'xa' => 1.0, 'xg_buildup' => 1.0], understat: 'ok'),
+            $this->candidate(2, 'B', goals: 20.0, extra: ['np_xg' => 12.0, 'xa' => 2.0, 'xg_buildup' => 1.0], understat: 'ok'),
+            $this->candidate(3, 'No attacking data', goals: 30.0),
+        ]);
+        $byName = array_column(array_map(static fn ($r) => ['name' => $r->candidate->name, 'r' => $r], $results), 'r', 'name');
+
+        foreach (['A', 'B'] as $name) {
+            $r = $byName[$name];
+            self::assertNotNull($r->impact);
+            self::assertEqualsWithDelta(0.5 * (float) $r->positional + 0.5 * (float) $r->impact['score'], $r->score, 1e-9);
+        }
+        self::assertSame(1, $byName['B']->rank);
+        self::assertNull($byName['No attacking data']->rank, 'half the model unmeasured: not ranked');
+        self::assertSame(0.5, $byName['No attacking data']->confidence);
+    }
+
     public function testReleasedModelsAreUnchanged(): void
     {
         // A released model must never change: their hashes are pinned (and match their stored runs).
@@ -289,7 +313,7 @@ final class ScoreCalculatorTest extends TestCase
     }
 
     /** @param array<string, float> $extra */
-    private function candidate(int $id, string $name, ?float $goals, string $group = 'FW', float $minutes = 2000.0, array $extra = [], string $sofascore = 'ok'): ScoringCandidate
+    private function candidate(int $id, string $name, ?float $goals, string $group = 'FW', float $minutes = 2000.0, array $extra = [], string $sofascore = 'ok', ?string $understat = null): ScoringCandidate
     {
         $values = ['minutes' => $minutes] + ($goals !== null ? ['goals' => $goals] : []) + $extra;
         $season = new PlayerSeason(new Player($name), new Season('2025/26', new \DateTimeImmutable(), new \DateTimeImmutable()));
@@ -303,7 +327,7 @@ final class ScoreCalculatorTest extends TestCase
             [
                 'FBref' => ['status' => 'ok', 'minutes' => $minutes, 'reason' => null],
                 'SofaScore' => ['status' => $sofascore, 'minutes' => $minutes, 'reason' => null],
-            ],
+            ] + ($understat !== null ? ['Understat' => ['status' => $understat, 'minutes' => $minutes, 'reason' => null]] : []),
         );
 
         return new ScoringCandidate($id, $name, $group, 'Club', $stats);

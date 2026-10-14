@@ -66,6 +66,8 @@ final readonly class ScoreRunner
                     $result->candidate->stats->getMinutes(),
                     $result->components,
                     $result->composite,
+                    $result->positional,
+                    $result->impact,
                 ));
             }
             $run->setCounts($ranked, count($results) - $ranked);
@@ -84,6 +86,8 @@ final readonly class ScoreRunner
             ->join('s.playerSeason', 'ps')
             ->join('ps.player', 'p')
             ->leftJoin('ps.mainTeam', 't')
+            ->leftJoin('t.domesticLeague', 'l')
+            ->addSelect('l')
             ->where('ps.season = :season AND s.scope = :scope')
             ->setParameter('season', $season)
             ->setParameter('scope', $model->scope)
@@ -96,6 +100,7 @@ final readonly class ScoreRunner
             $s->getPlayerSeason()->getPositionGroup(),
             $s->getPlayerSeason()->getMainTeam()?->getName(),
             $s,
+            $s->getPlayerSeason()->getMainTeam()?->getDomesticLeague()?->getCode(),
         ), $stats);
     }
 
@@ -113,14 +118,14 @@ final readonly class ScoreRunner
         }
         $stored = [];
         foreach ($this->scores->findBy(['run' => $latest]) as $score) {
-            $stored[(int) $score->getPlayer()->getId()] = [$score->getRank(), $score->getScore(), $score->getConfidence(), $score->getComponents(), $score->getComposite()];
+            $stored[(int) $score->getPlayer()->getId()] = [$score->getRank(), $score->getScore(), $score->getConfidence(), $score->getComponents(), $score->getComposite(), $score->getPositional(), $score->getImpact()];
         }
         if (count($stored) !== count($results)) {
             return false;
         }
         foreach ($results as $result) {
             $previous = $stored[$result->candidate->playerId] ?? null;
-            if ($previous === null || !self::same($previous, [$result->rank, $result->score, $result->confidence, $result->components, $result->composite])) {
+            if ($previous === null || !self::same($previous, [$result->rank, $result->score, $result->confidence, $result->components, $result->composite, $result->positional, $result->impact])) {
                 return false;
             }
         }

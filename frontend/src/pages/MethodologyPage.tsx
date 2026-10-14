@@ -139,6 +139,9 @@ function ModelSection({ model }: { model: ScoringModel }) {
         )}
       </ul>
 
+      {model.impact && <ImpactSection impact={model.impact} />}
+
+      {model.impact && <h3 className={styles.subhead}>Positional excellence ({Math.round((1 - model.impact.weight) * 100)}%)</h3>}
       {roles.length > 0 && (
         <div className={styles.roleTabs} role="group" aria-label="Position">
           {roles.map((r) => (
@@ -180,6 +183,39 @@ function ModelSection({ model }: { model: ScoringModel }) {
         </div>
       </motion.div>
     </section>
+  )
+}
+
+function ImpactSection({ impact }: { impact: NonNullable<ScoringModel['impact']> }) {
+  const pct = (v: number) => `${Math.round(v * 100)}%`
+  return (
+    <div className={styles.impact}>
+      <h3 className={styles.subhead}>Contribution in goals ({pct(impact.weight)})</h3>
+      <p>
+        Every position measured in the same unit: goals added. Each expected goal a team creates is shared out, so the
+        credits add up to the team’s xG and no chance is counted twice: {pct(impact.shooter_share)} to the shooter,{' '}
+        {pct(impact.passer_share)} to the last passer, {pct(impact.build_up_share)} to the players who built the attack (and the
+        passer’s share too when there was no assist). Then:
+      </p>
+      <ul className={styles.limits}>
+        <li>
+          <strong>Finishing</strong>: goals scored above the expected goals of his shots, pulled toward zero for small numbers of
+          shots. <span className="muted">Moderate evidence.</span>
+        </li>
+        <li>
+          <strong>Goalkeeping</strong>: goals prevented, pulled toward zero by the number of shots on target faced (most of one
+          season’s goals prevented is chance). <span className="muted">Moderate evidence.</span>
+        </li>
+        <li>
+          <strong>Defence</strong>: the team’s goals prevented against the league average, shared among outfield players by their
+          share of the team’s defensive actions. <span className="muted">Weak evidence: it is a team measure.</span>
+        </li>
+        <li>
+          <strong>Above replacement</strong>: minus what a low-level player in his position (20th percentile) adds in the same
+          minutes, so playing time counts. The contribution score compares this across all positions.
+        </li>
+      </ul>
+    </div>
   )
 }
 

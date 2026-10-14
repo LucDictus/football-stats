@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace App\Football\Scoring;
 
 use App\Entity\StatsScope;
+use App\Football\Scoring\Impact\ImpactModel;
 
 /** All released scoring models. Add a new version; never edit a released one. */
 final class ModelCatalog
 {
-    public const DEFAULT = 'positional-v2';
+    public const DEFAULT = 'mvp-v1';
 
     /** @return array<string, ScoringModel> model id => model */
     public static function all(): array
     {
         // Released (hashes pinned in ScoreCalculatorTest): baseline-v1, positional-v1, positional-v2.
-        $models = [self::baselineV1(), self::positionalV1(), self::positionalV2()];
+        // Release candidate: mvp-v1.
+        $models = [self::baselineV1(), self::positionalV1(), self::positionalV2(), self::mvpV1()];
 
         return array_combine(array_map(static fn (ScoringModel $m) => $m->id(), $models), $models);
     }
@@ -23,6 +25,34 @@ final class ModelCatalog
     public static function get(string $id): ScoringModel
     {
         return self::all()[$id] ?? throw new \InvalidArgumentException(sprintf('Unknown model %s. Known: %s', $id, implode(', ', array_keys(self::all()))));
+    }
+
+    /**
+     * Roadmap phase 5: half how far a player stands above his positional peers (positional-v2,
+     * unchanged), half his contribution in goals above replacement (ImpactModel), measured in
+     * the same unit for every position. Positional excellence alone favoured midfielders: the
+     * biggest and most varied group produces the most extreme scores (docs/methodology.md).
+     */
+    private static function mvpV1(): ScoringModel
+    {
+        $positional = self::positionalV2();
+
+        return new ScoringModel(
+            key: 'mvp',
+            version: '1',
+            label: 'MVP v1',
+            description: 'Half positional excellence (how far a player stands above others in his position), half contribution: the goals he added above a replacement-level player, measured the same way for every position.',
+            scope: $positional->scope,
+            minMinutes: $positional->minMinutes,
+            positionGroups: $positional->positionGroups,
+            minConfidence: $positional->minConfidence,
+            components: [],
+            roles: $positional->roles,
+            normalization: $positional->normalization,
+            referenceRankedOnly: $positional->referenceRankedOnly,
+            impact: new ImpactModel(),
+            impactWeight: 0.5,
+        );
     }
 
     /**

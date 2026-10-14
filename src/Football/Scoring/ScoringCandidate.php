@@ -15,6 +15,8 @@ final readonly class ScoringCandidate
         public ?string $positionGroup,
         public ?string $team,
         public PlayerCompetitionStats $stats,
+        /** Domestic league code of the main team (league averages in the impact model). */
+        public ?string $league = null,
     ) {
     }
 }

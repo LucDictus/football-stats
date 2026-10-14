@@ -51,7 +51,29 @@ class PlayerScore
         /** Weighted mean of the components (before normalising within the role). */
         #[ORM\Column(nullable: true)]
         private ?float $composite = null,
+        /** The positional score, when the final score also blends in contribution. */
+        #[ORM\Column(nullable: true)]
+        private ?float $positional = null,
+        /**
+         * Contribution in goals: per component, total, replacement level, above replacement,
+         * its score and its weight in the final score.
+         *
+         * @var array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, score: ?float, weight: float}|null
+         */
+        #[ORM\Column(type: Types::JSON, nullable: true, options: ['jsonb' => true])]
+        private ?array $impact = null,
     ) {
+    }
+
+    public function getPositional(): ?float
+    {
+        return $this->positional;
+    }
+
+    /** @return array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, score: ?float, weight: float}|null */
+    public function getImpact(): ?array
+    {
+        return $this->impact;
     }
 
     public function getComposite(): ?float

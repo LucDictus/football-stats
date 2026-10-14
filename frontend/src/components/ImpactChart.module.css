@@ -1,0 +1,99 @@
+.chart ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.chart li {
+  display: grid;
+  grid-template-columns: 200px 1fr 64px;
+  align-items: center;
+  gap: 14px;
+  cursor: help;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.evidence {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.evidence[data-evidence='weak'] {
+  color: var(--partial);
+}
+
+.track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-3);
+}
+
+.zero {
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--line-strong);
+}
+
+.bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: var(--c1);
+}
+
+.bar[data-negative] {
+  background: var(--suspect);
+}
+
+.value {
+  text-align: right;
+  font-weight: 600;
+}
+
+.sum {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.sum div {
+  display: flex;
+  flex-direction: column;
+}
+
+.sum dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sum dd {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.above dd {
+  color: var(--accent-text);
+}
+
+@media (max-width: 640px) {
+  .chart li {
+    grid-template-columns: 110px 1fr 52px;
+    gap: 10px;
+  }
+}

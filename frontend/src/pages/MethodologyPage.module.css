@@ -153,3 +153,12 @@
   border-radius: 2px;
   background: var(--accent);
 }
+
+.subhead {
+  font-size: 18px;
+  margin: 28px 0 12px;
+}
+
+.impact p {
+  margin: 0 0 12px;
+}

@@ -193,6 +193,15 @@ function PodiumCard({ row, place, model }: { row: RankingRow; place: number; mod
           <span className="num">{row.score !== null ? <AnimatedNumber value={row.score} /> : '–'}</span>
           <span className="muted">score</span>
         </div>
+        {row.impact_goals !== null && (
+          <p className={styles.podiumGoals}>
+            <strong className="num">
+              {row.impact_goals > 0 ? '+' : ''}
+              {row.impact_goals.toFixed(1)}
+            </strong>{' '}
+            goals contributed · positional {formatScore(row.positional)}
+          </p>
+        )}
         <div className={styles.podiumBars}>
           {components.map((c, i) => (
             <div key={c.key} className={styles.podiumBar}>
@@ -240,6 +249,12 @@ function Row({ row, model, compare }: { row: RankingRow; model: ScoringModel; co
         </span>
       )}
       <span className={styles.score}>
+        {row.impact_goals !== null && (
+          <span className={styles.goals} title="Goals contributed above a replacement-level player in his position">
+            {row.impact_goals > 0 ? '+' : ''}
+            {row.impact_goals.toFixed(1)} goals
+          </span>
+        )}
         <span className="num">{formatScore(row.score)}</span>
         {row.confidence < 1 && (
           <span className={styles.confidence} title={`Only ${Math.round(row.confidence * 100)}% of the model could be measured for this player`}>

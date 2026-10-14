@@ -13,7 +13,78 @@ a new version. Every `ScoreRun` stores the full definition, its SHA-256 hash and
 batches its statistics came from, so any published ranking can be explained and reproduced.
 `app:score` does not store a run that would be identical to the latest one.
 
-## positional-v2 (roadmap phase 4, released, the current model)
+## mvp-v1 (roadmap phase 5, release candidate, the current model)
+
+**Final score = 50% positional excellence (positional-v2, unchanged) + 50% contribution in goals.**
+
+### Why: positional excellence alone favoured midfielders
+
+positional-v2 answers "how far does a player stand above others in his position?". On the
+2025/26 data that put 8 midfielders in the top 10 (run #7). The analysis:
+
+| Position | Ranked players | Share | Top 10 | Top 100 | Composite skew |
+|---|---|---|---|---|---|
+| Forwards | 226 | 15% | 2 | 13 | 0.58 |
+| Midfielders | 683 | 45% | 8 | 44 | 0.79 |
+| Defenders | 501 | 33% | 0 | 37 | 0.24 |
+| Goalkeepers | 113 | 7% | 0 | 6 | −0.48 |
+
+- Per player the model was fair (midfielders: 45% of players, 44% of the top 100), but at the
+  very top the biggest group with the longest right tail wins: elite midfielders are strong on
+  creation, build-up and output at once.
+- Re-labelling wingers (Olise, Díaz, Yamal are "MF" in the source) as attackers did **not**
+  fix it: the remaining central midfielders then stood out further (6–7 of the top 10 stayed
+  midfielders under every rule tried).
+- A Ballon d'Or-style ranking asks "who contributed most?" instead. Contribution needs a unit
+  that is the same for every position: goals.
+
+### Contribution in goals (`ImpactCalculator`, `ImpactModel`)
+
+| Component | Measure | Evidence |
+|---|---|---|
+| Shooting | 50% of his non-penalty xG | strong |
+| Creation | 30% of his xA | strong |
+| Build-up | the team's build-up pool (20% of team xG, plus the passer's 30% of unassisted xG), shared by xGBuildup | moderate |
+| Finishing | 50% × (non-penalty goals − npxG) × shots / (shots + 60) | moderate |
+| Goalkeeping | goals prevented × shots on target faced / (faced + 150) | moderate |
+| Defence | the team's goals prevented against the league average (expected goals on target conceded per 90, from its goalkeepers' goals conceded + goals prevented), shared among outfield players by their share of the team's defensive actions | weak |
+
+- The attack credits of a team add up exactly to its xG: an assisted chance is not counted
+  for both shooter and passer in full (tested).
+- Shrinkage of finishing and goals prevented: most of one season's over- or under-performance
+  is chance. Without it, goalkeepers took 12 of the top 25 places (experiment).
+- **Above replacement**: minus what the role's 20th-percentile player adds per 90, for the same
+  minutes; playing time counts naturally.
+- The contribution score standardises goals above replacement across **all** ranked players
+  (not within the role), so a goal counts the same whoever adds it. Contribution has a long
+  tail (Kane +12 goals, a typical player +1 to +2), so the elite exceed 100 on that part; the
+  page shows 100, the ranking uses the exact value, and the goals are always shown.
+- Providers covering part of a season (transfer between leagues) are extrapolated from their
+  rate; a player without attacking data (Understat) has no contribution and is not ranked.
+
+### Result (run #9)
+
+| | positional-v2 | mvp-v1 |
+|---|---|---|
+| Top 10 by position | 8 MF, 2 FW | **5 FW, 5 MF** |
+| Kane / Haaland / Mbappé | #3 / #9 / #26 | **#2 / #5 / #10** |
+| Kimmich (build-up, 10 G+A) | #6 | #14 |
+| Declan Rice | #30 | #13 |
+| Saliba (team defence) | #270 | #89 |
+| Best defender / goalkeeper | Orban #15 / Koffi #28 | Orban #20 / Nübel #11 |
+
+Top 10: Olise, Kane, Yamal, Luis Díaz, Haaland, Dimarco, Bruno Fernandes, Undav, Lautaro
+Martínez, Mbappé. Olise #1 holds in both views: +12.1 goals above replacement, the same as Kane.
+
+### Known limitations of mvp-v1
+
+- **Defence in goals is weak evidence**: a team measure, shared by defensive actions; its numbers
+  are small (a few goals), so defenders reach the top mainly through positional excellence.
+- **Credit shares** (50/30/20) and **shrinkage priors** are judgement calls, to be tested for
+  sensitivity in phase 8.
+- **Scope**: domestic league only; the Champions League enters in phase 6.
+
+## positional-v2 (roadmap phase 4, released)
 
 Every position group has its own components and is compared only with its own group:
 

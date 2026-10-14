@@ -41,7 +41,7 @@ final class ApiTest extends WebTestCase
     {
         $data = $this->getJson('/api/models');
 
-        self::assertSame('positional-v2', $data['default']);
+        self::assertSame('mvp-v1', $data['default']);
         $byId = array_column($data['models'], null, 'id');
         self::assertSame('Attacking output', $byId['baseline-v1']['components'][0]['label']);
         self::assertSame('Shot stopping', $byId['positional-v1']['roles']['GK'][0]['label']);

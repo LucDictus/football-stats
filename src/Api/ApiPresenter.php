@@ -10,6 +10,7 @@ use App\Entity\PlayerSeason;
 use App\Entity\ScoreRun;
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
+use App\Football\Scoring\Impact\ImpactCalculator;
 
 /**
  * Turns domain objects into the JSON the frontend reads. The API is shaped for the
@@ -43,6 +44,9 @@ final class ApiPresenter
             'position' => $score->getPositionGroup(),
             'minutes' => (int) $score->getMinutes(),
             'components' => array_map(static fn (array $c) => self::round($c['score']), $score->getComponents()),
+            // Blended models: the positional part, and the goals contributed above replacement.
+            'positional' => $score->getImpact() !== null ? self::round($score->getPositional()) : null,
+            'impact_goals' => self::round($score->getImpact()['above'] ?? null),
         ];
     }
 
@@ -89,6 +93,34 @@ final class ApiPresenter
             'normalization' => $definition['normalization'] ?? 'percentile',
             'confidence' => round($score->getConfidence(), 3),
             'components' => $components,
+            'positional' => $score->getImpact() !== null ? self::round($score->getPositional()) : null,
+            'impact' => self::impact($score),
+        ];
+    }
+
+    /**
+     * Contribution in goals per component, with how strong the evidence for each is.
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function impact(PlayerScore $score): ?array
+    {
+        $impact = $score->getImpact();
+        if ($impact === null) {
+            return null;
+        }
+
+        return [
+            'components' => array_map(static fn (string $key) => [
+                'key' => $key,
+                'goals' => self::round($impact['goals'][$key] ?? null, 2),
+                'evidence' => ImpactCalculator::EVIDENCE[$key],
+            ], ImpactCalculator::COMPONENTS), // fixed order (jsonb sorts keys)
+            'total' => self::round($impact['total'], 2),
+            'replacement' => self::round($impact['replacement'], 2),
+            'above' => self::round($impact['above'], 2),
+            'score' => self::round($impact['score']),
+            'weight' => $impact['weight'],
         ];
     }
 

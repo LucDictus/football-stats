@@ -7,6 +7,7 @@ import type { PlayerProfile, ScopeStats, ScoreBreakdown } from '../api/types'
 import { AnimatedNumber } from '../components/AnimatedNumber'
 import { Bar } from '../components/Bar'
 import { ErrorState } from '../components/ErrorState'
+import { ImpactChart } from '../components/ImpactChart'
 import { TrustBadge } from '../components/TrustBadge'
 import { POSITION_LABELS, formatNumber, formatScore, formatValue, ordinal } from '../lib/format'
 import { POSITION_PLURAL, describeScale } from '../lib/model'
@@ -106,11 +107,65 @@ function Header({ profile }: { profile: PlayerProfile }) {
 }
 
 function Breakdown({ score }: { score: ScoreBreakdown }) {
-  const { components, normalization, role } = score
+  const { components, normalization, role, impact } = score
   const peers = role ? POSITION_PLURAL[role] : 'eligible players'
   return (
+    <>
+      {impact && <Blend score={score} />}
+      {impact && (
+        <section className={styles.section} aria-labelledby="contribution">
+          <h2 id="contribution">Contribution in goals</h2>
+          <p className={styles.sectionLead}>
+            What he added to his team’s goal difference, in the same unit for every position. Each expected goal a team creates is
+            shared: half to the shooter, 30% to the last passer, the rest to the players who built the attack. Hover a row for
+            how it is measured.
+          </p>
+          <div className={`card ${styles.impactCard}`}>
+            <ImpactChart impact={impact} />
+          </div>
+        </section>
+      )}
+      <Positional score={score} components={components} normalization={normalization} role={role} peers={peers} />
+    </>
+  )
+}
+
+/** Blended models: how the final score is put together. */
+function Blend({ score }: { score: ScoreBreakdown }) {
+  const impact = score.impact
+  if (!impact) return null
+  const parts = [
+    { label: 'Positional excellence', value: score.positional, weight: 1 - impact.weight, hint: 'How far he stands above others in his position' },
+    { label: 'Contribution', value: impact.score, weight: impact.weight, hint: 'Goals added above a replacement-level player, compared across all positions' },
+  ]
+  return (
+    <section className={styles.section} aria-labelledby="blend">
+      <h2 id="blend">How the score is built</h2>
+      <div className={styles.blend}>
+        {parts.map((part, i) => (
+          <div key={part.label} className={`card ${styles.blendPart}`} title={part.hint}>
+            <span className="muted">
+              {part.label} · {Math.round(part.weight * 100)}%
+            </span>
+            <span className={`num ${styles.blendValue}`}>{formatScore(part.value)}</span>
+            <Bar value={part.value} color={componentColor(i)} height={6} delay={0.1 + i * 0.1} />
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function Positional({ score, components, normalization, role, peers }: {
+  score: ScoreBreakdown
+  components: ScoreBreakdown['components']
+  normalization: ScoreBreakdown['normalization']
+  role: ScoreBreakdown['role']
+  peers: string
+}) {
+  return (
     <section className={styles.section} aria-labelledby="breakdown">
-      <h2 id="breakdown">Why this score</h2>
+      <h2 id="breakdown">{score.impact ? 'Positional excellence' : 'Why this score'}</h2>
       <p className={styles.sectionLead}>
         Every metric is compared with other {peers} (900+ league minutes): {describeScale(normalization)}. A component averages
         its metrics, and the components are weighed into a combined score
@@ -122,8 +177,9 @@ function Breakdown({ score }: { score: ScoreBreakdown }) {
         ) : role && score.composite !== null ? (
           <>
             {' '}
-            of <strong className="num">{formatScore(score.composite)}</strong>. The final score says how far that stands above
-            other {peers}, so every position can share one ranking.
+            of <strong className="num">{formatScore(score.composite)}</strong>.{' '}
+            {score.impact ? 'The positional score' : 'The final score'} says how far that stands above other {peers}, so every
+            position can share one ranking.
           </>
         ) : (
           '.'
