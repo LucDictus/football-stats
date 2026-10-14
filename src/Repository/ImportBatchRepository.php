@@ -16,15 +16,9 @@ class ImportBatchRepository extends ServiceEntityRepository
         parent::__construct($registry, ImportBatch::class);
     }
 
-    /** The current batch: the most recent complete import of this dataset. */
+    /** The current batch: the most recent import of this dataset (imports are all-or-nothing). */
     public function latest(string $source, string $dataset, string $season): ?ImportBatch
     {
-        return $this->createQueryBuilder('b')
-            ->where('b.source = :source AND b.dataset = :dataset AND b.season = :season AND b.recordCount > 0')
-            ->setParameters(['source' => $source, 'dataset' => $dataset, 'season' => $season])
-            ->orderBy('b.id', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
+        return $this->findOneBy(['source' => $source, 'dataset' => $dataset, 'season' => $season], ['id' => 'DESC']);
     }
 }

@@ -1,5 +1,10 @@
 # Codebase & data audit — 14 Oct 2026
 
+> **Status (Phase 1 complete, 14 Oct 2026):** decisions in section 4 are made (top-5 + CL,
+> Symfony 7.4, PostgreSQL, SofaScore for CL). Issues 3.1–3.6 are handled by the import
+> layer and `app:data:audit`; the measured results are in [data-coverage.md](data-coverage.md).
+> Issue 3.7 (stable identity) is Phase 2. The plain-PHP code described below now lives in `legacy/`.
+
 Baseline audit before starting the Ballon d'Or / MVP roadmap. Everything below was
 checked against the actual database (`var/data.sqlite`) and source CSV, not just the code.
 
@@ -141,7 +146,19 @@ reference a player durably (scores, awards, comparisons). The roadmap's
 4. **CL data:** accept goals/assists-only for CL in v1, or look for a richer source?
 5. **Transfers (3.1):** per-source minutes for per-90s (recommended), or exclude partial rows?
 
-## 5. Suggested immediate next steps
+## 5. Resolution in Phase 1
+
+| Issue | Resolution |
+|---|---|
+| 3.1 Transfers | Each provider keeps its own minutes; `partial` status; per-90s on provider minutes (`Top5StintMerger`, `OriginConsistency`) |
+| 3.2 Wrong merges | `suspect` status from minutes/goals disagreement and shared SofaScore ids. New finding: the dataset also merges *different players* with the same name and birth year (two Vitinhas, 64 appearances). Groups above 42 appearances are split again |
+| 3.3 Missing Understat | `missing` status; never zero; listed in the report |
+| 3.4 Penalties | `np_goals` derived, only from trusted inputs |
+| 3.5 Thin CL data | Replaced by SofaScore CL season stats for all 878 players (FotMob agrees on totals: 634 goals, 441 assists) |
+| 3.6 NULL semantics | football-data no longer used for the model; SofaScore CL xG is NULL only without shots (= 0) |
+| 3.7 Identity | Phase 2. Note: 25 CL players at top-5 clubs still need a manual identity mapping (Fabián Ruiz, Estêvão, ...) |
+
+## 6. Original next steps
 
 1. `git init` and a first commit (before any refactoring).
 2. Fix 3.1 and add the consistency checks (3.2, 3.3) to the coverage report — this is the
