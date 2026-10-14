@@ -4,6 +4,13 @@ import { NavLink, useLocation, useNavigationType, useOutlet } from 'react-router
 import { SearchBox } from './SearchBox'
 import styles from './Layout.module.css'
 
+const EASE = [0.22, 1, 0.36, 1] as const
+const PAGE = {
+  hidden: { opacity: 0, y: 12 },
+  shown: { opacity: 1, y: 0, transition: { duration: 0.28, ease: EASE } },
+  gone: { opacity: 0, y: -8, transition: { duration: 0.28, ease: EASE } },
+}
+
 /** Keeps the outgoing page on screen while it animates out. */
 function FrozenOutlet() {
   const outlet = useOutlet()
@@ -42,21 +49,28 @@ function useScrollMemory() {
     return () => window.removeEventListener('scroll', save)
   }, [])
 
-  return () => {
-    // Two frames: the first lets React render the incoming page, the second runs after layout.
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        const { key, navigationType: type } = current.current
-        window.scrollTo({ top: type === 'POP' ? (positions.current.get(key) ?? 0) : 0 })
-        transitioning.current = false
-      }),
-    )
+  return {
+    restore: () => {
+      // Two frames: the first lets React render the incoming page, the second runs after layout.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const { key, navigationType: type } = current.current
+          window.scrollTo({ top: type === 'POP' ? (positions.current.get(key) ?? 0) : 0 })
+          transitioning.current = false
+        }),
+      )
+    },
+    // Safety net: an interrupted exit (A → B → back to A within the animation) never calls
+    // onExitComplete; once a page has fully entered, positions are saved again.
+    entered: () => {
+      transitioning.current = false
+    },
   }
 }
 
 export function Layout() {
   const location = useLocation()
-  const restoreScroll = useScrollMemory()
+  const scroll = useScrollMemory()
 
   return (
     <>
@@ -80,13 +94,14 @@ export function Layout() {
           <SearchBox />
         </div>
       </header>
-      <AnimatePresence mode="wait" initial={false} onExitComplete={restoreScroll}>
+      <AnimatePresence mode="wait" initial={false} onExitComplete={scroll.restore}>
         <motion.div
           key={location.pathname}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          variants={PAGE}
+          initial="hidden"
+          animate="shown"
+          exit="gone"
+          onAnimationComplete={(variant) => variant === 'shown' && scroll.entered()}
         >
           <FrozenOutlet />
         </motion.div>
