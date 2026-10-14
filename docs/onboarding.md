@@ -10,8 +10,8 @@ The rule that drives every design decision is: **every score must be explainable
 That means we must always be able to say where a number came from, whether it can be
 trusted, and what was missing. Most of the code so far exists to make that possible.
 
-The roadmap has 10 phases (see the README). Done: 1 (data audit), 2 (domain model).
-Next: 3 (baseline score), with a React frontend on a JSON API.
+The roadmap has 10 phases (see the README). Done: 1 (data audit), 2 (domain model),
+3 (baseline score, JSON API, React frontend). Next: 4 (comparable across positions).
 
 ## 2. The mental model: three layers
 
@@ -33,8 +33,9 @@ Next: 3 (baseline score), with a React frontend on a JSON API.
    reproducibility for free.
 2. **Domain layer.** `app:build-season` reads the latest batches, merges, checks and
    links them, and writes clean entities. It can be re-run at any time.
-3. **Output.** Everything downstream (audit report, inspector, later the scoring engine
-   and API) reads the domain layer, or for the audit, the raw layer.
+3. **Output.** Everything downstream reads the domain layer: the scoring engine
+   (`app:score` → `ScoreRun`), the JSON API, the React app and the inspector. The audit
+   reads the raw layer.
 
 Why the split: sources are messy and change. If interpretation bugs are found (and we
 found several), you fix the code and rebuild; you never need to re-download anything.
@@ -54,15 +55,18 @@ src/
     Normalizer/       SeasonBuilder: raw batches → domain entities
   DataQuality/        stint merging, provider consistency checks, the data audit
   Entity/             Doctrine entities (raw layer + domain layer)
+  Api/                JSON presenters (shape of every API response)
   Football/
     Assessment/       what is being assessed: season, competitions (AssessmentScope)
     Data/             the vocabulary: Field, FieldCatalog, Origin, OriginStatus
+    Scoring/          models (ModelCatalog), the pure ScoreCalculator, ScoreRunner
   Inspector/          read-only SQL for the inspector pages
   Repository/
 config/
   services.yaml       assessment scope values + dataset path
   identity/players.yaml   manual identity links
 docs/                 audit, coverage report (generated), data model, this file
+frontend/             React + TypeScript app (see frontend/README.md)
 legacy/               the original plain-PHP app; reference only, will be deleted
 tests/                Unit/ (pure logic), Integration/ (real DB), Functional/ (HTTP)
 ```
@@ -137,7 +141,9 @@ php bin/console app:import:sofascore-cl       # raw: CL stats (--no-fetch to reu
 php bin/console app:import:fotmob-cl          # raw: cross-check data
 php bin/console app:build-season              # domain: rebuild players/stats (idempotent)
 php bin/console app:data:audit                # docs/data-coverage.md
-php -S 127.0.0.1:8010 -t public               # inspector at http://127.0.0.1:8010
+php bin/console app:score                     # ranking run with baseline-v1
+php -S 127.0.0.1:8010 -t public               # API + inspector at http://127.0.0.1:8010
+npm --prefix frontend run dev                 # the app at http://127.0.0.1:5173
 php bin/phpunit                               # all tests (needs the test DB, see README)
 composer qa                                   # everything below must pass before a commit
 composer fix                                  # apply code style
@@ -175,7 +181,14 @@ moved ("relinked").
 
 **Change the season or competitions.** `AssessmentScope` in `config/services.yaml`.
 
-## 9. Gotchas
+## 9. Scoring
+
+Read `docs/methodology.md`, then `ModelCatalog` → `ScoreCalculator` → `ScoreRunner`.
+The calculator is pure (no database), so model ideas are tested with unit tests first.
+**Never edit a released model**: add a new version to `ModelCatalog`. The API and the
+methodology page read the definition, so they follow automatically.
+
+## 10. Gotchas
 
 - **SofaScore blocks PHP's HTTP stack** (TLS fingerprinting → 403) but accepts the `curl`
   binary. That is why `SofascoreClient` shells out to curl and works from snapshot files
@@ -183,6 +196,8 @@ moved ("relinked").
 - **Rebuilding recreates `PlayerSeason` rows**, so their ids change; `Player` ids don't.
   Link to players, never to player seasons.
 - **League and CL xG are different models** (Understat vs SofaScore). Don't add them.
+- **Per-90 needs 450 provider minutes** (`PlayerCompetitionStats::MIN_PER90_MINUTES`); fewer
+  gives null, because 90 minutes of data is not a rate.
 - **Container cache.** After changing a constructor, run `php bin/console cache:clear` if a
   command complains about arguments.
 - **Empty imports are refused**, and so is a build from an empty batch: an empty "latest"
@@ -193,15 +208,13 @@ moved ("relinked").
   The inspector reads the domain layer.
 - **`legacy/`** has its own SQLite database and `.env`. Nothing in `src/` uses it.
 
-## 10. Known rough edges (good first tasks)
+## 11. Known rough edges (good first tasks)
 
 - `DataAudit` returns large (typed) arrays; small result objects would read better.
-- No minimum minutes per provider yet: a `partial` provider can rest on 90 minutes.
-  Phase 3 needs a threshold before a per-90 counts.
 - A player listed for two CL clubs is rejected at import, not combined (none this season).
 - The 15 unlinked CL youngsters, and position data for CL-only players, are unknown.
 
-## 11. Your first hour
+## 12. Your first hour
 
 1. Start the inspector and open Hincapié, a Vitinha, and Osimhen (CL only).
 2. Read `FieldCatalog`, then `Top5StintMerger`, then `OriginConsistency`, with their unit tests.

@@ -17,6 +17,9 @@ Player ──< PlayerIdentifier               stable identity; source ids point 
 
 Team ──< TeamIdentifier                   "PSG" (Top-5 dataset), 1644 (SofaScore)
 Competition, Season
+
+ScoreRun ──< PlayerScore ──> Player        app:score: model definition + hash, source batches;
+                                           rank, score, confidence and full breakdown per player
 ```
 
 ## Identity
@@ -46,4 +49,5 @@ Ask it, not the raw arrays:
 - `trusted($field)`: value exists and its provider covers the whole scope
 - `per90($field)`: rate on the supplying provider's own minutes; null when not usable
 
-Not modelled yet: awards, trophies (phase 7) and score runs (phase 3).
+`PlayerScore` points to `Player` (stable), not to `PlayerSeason` (rebuilt every build), so old
+score runs stay readable. Not modelled yet: awards and trophies (phase 7).

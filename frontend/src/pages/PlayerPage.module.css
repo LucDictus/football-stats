@@ -1,0 +1,302 @@
+.back {
+  display: inline-block;
+  margin: 8px 0 18px;
+  color: var(--muted);
+  font-weight: 500;
+  transition: color 0.2s, transform 0.2s var(--ease);
+}
+
+.back:hover {
+  color: var(--text);
+  transform: translateX(-3px);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.header h1 {
+  font-size: clamp(34px, 5vw, 56px);
+  margin: 8px 0 6px;
+}
+
+.sub {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.stints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.stints li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.scoreCard {
+  min-width: 220px;
+  padding: 20px 24px;
+  display: grid;
+  gap: 4px;
+  text-align: right;
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
+.bigScore {
+  font-size: 64px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: var(--accent-text);
+}
+
+.rankLine {
+  font-size: 15px;
+  color: var(--text-2);
+}
+
+.rankLine strong {
+  color: var(--text);
+}
+
+.confidenceLine {
+  font-size: 12px;
+  color: var(--muted);
+  cursor: help;
+}
+
+.section {
+  margin-top: 44px;
+}
+
+.section > h2,
+.statsHead h2 {
+  font-size: 24px;
+}
+
+.sectionLead {
+  color: var(--muted);
+  margin: 6px 0 18px;
+  max-width: 680px;
+}
+
+.components {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.component {
+  padding: 20px;
+}
+
+.componentHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.componentHead h3 {
+  font-size: 17px;
+}
+
+.componentScore {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 10px;
+}
+
+.componentScore .num {
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.description {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 14px;
+}
+
+.metrics {
+  list-style: none;
+  margin: 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 14px;
+}
+
+.metrics li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px 10px;
+  font-size: 13px;
+}
+
+.metrics li > div {
+  grid-column: 1 / -1;
+}
+
+.metricLabel {
+  color: var(--text-2);
+}
+
+.percentile {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.notRanked {
+  margin-top: 32px;
+  padding: 20px 24px;
+}
+
+.notRanked h2 {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.notRanked p {
+  margin: 0;
+}
+
+.statsHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tabs button {
+  position: relative;
+  border: 0;
+  background: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.tabs button[aria-selected='true'] {
+  color: var(--text);
+}
+
+.tabLine {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.providers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.provider {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.statCard {
+  padding: 16px 18px 10px;
+}
+
+.statCard h3 {
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--text-2);
+}
+
+.statCard table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.statCard th,
+.statCard td {
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  font-weight: 400;
+}
+
+.statCard thead th {
+  border-top: 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statCard td + td,
+.statCard th + th {
+  padding-left: 10px;
+}
+
+.statCard tr[data-missing] {
+  color: var(--muted);
+}
+
+.right {
+  text-align: right !important;
+}
+
+.source {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (max-width: 860px) {
+  .components {
+    grid-template-columns: 1fr;
+  }
+  .scoreCard {
+    width: 100%;
+    text-align: left;
+  }
+}

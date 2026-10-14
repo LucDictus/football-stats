@@ -1,0 +1,32 @@
+.position {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: var(--surface-3);
+}
+
+.position[data-position='FW'] { color: var(--pos-fw); background: color-mix(in srgb, var(--pos-fw) 14%, transparent); }
+.position[data-position='MF'] { color: var(--pos-mf); background: color-mix(in srgb, var(--pos-mf) 14%, transparent); }
+.position[data-position='DF'] { color: var(--pos-df); background: color-mix(in srgb, var(--pos-df) 16%, transparent); }
+.position[data-position='GK'] { color: var(--pos-gk); background: color-mix(in srgb, var(--pos-gk) 16%, transparent); }
+
+.trust {
+  display: inline-block;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+  cursor: help;
+}
+
+.trust[data-status='ok'] { color: var(--ok); background: var(--ok-soft); }
+.trust[data-status='partial'] { color: var(--partial); background: var(--partial-soft); }
+.trust[data-status='suspect'] { color: var(--suspect); background: var(--suspect-soft); }
+.trust[data-status='missing'] { color: var(--missing); background: var(--missing-soft); }

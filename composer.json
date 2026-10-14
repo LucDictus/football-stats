@@ -73,7 +73,8 @@
             "@php bin/console lint:twig templates",
             "@php bin/console lint:yaml config",
             "@php bin/console doctrine:schema:validate",
-            "@php bin/phpunit"
+            "@php bin/phpunit",
+            "npm --prefix frontend run check"
         ],
         "fix": "@php vendor/bin/php-cs-fixer fix"
     },
@@ -99,7 +100,7 @@
         "symfony/maker-bundle": "^1.68"
     },
     "scripts-descriptions": {
-        "qa": "All quality checks: code style, static analysis, linters, schema, tests",
+        "qa": "All quality checks: code style, static analysis, linters, schema, backend and frontend tests",
         "fix": "Apply code style fixes"
     }
 }

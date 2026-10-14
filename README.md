@@ -6,9 +6,10 @@ Every score should be explainable from data, rules and evidence.
 
 - Data coverage report (what the data can and cannot tell): [docs/data-coverage.md](docs/data-coverage.md)
 - New to the code? Start with [docs/onboarding.md](docs/onboarding.md)
+- How scores are made: [docs/methodology.md](docs/methodology.md)
 - Data model and identity rules: [docs/data-model.md](docs/data-model.md)
 - Baseline code and data audit: [docs/audit.md](docs/audit.md)
-- Stack: Symfony 7.4 LTS, Doctrine ORM, PostgreSQL 16, PHPUnit
+- Stack: Symfony 7.4 LTS, Doctrine ORM, PostgreSQL 16, PHPUnit; React 19 + TypeScript + Vite frontend
 
 ## Setup
 
@@ -37,7 +38,9 @@ php bin/console app:import:sofascore-cl    # needs the curl binary (SofaScore bl
 php bin/console app:import:fotmob-cl
 php bin/console app:data:audit             # writes docs/data-coverage.md
 php bin/console app:build-season           # players, teams, season stats (safe to re-run)
-php -S 127.0.0.1:8010 -t public            # data inspector: http://127.0.0.1:8010
+php bin/console app:score                  # ranking with the default model (baseline-v1), stored as a score run
+php -S 127.0.0.1:8010 -t public            # API + data inspector: http://127.0.0.1:8010
+npm --prefix frontend install && npm --prefix frontend run dev   # the app: http://127.0.0.1:5173
 ```
 
 Every import is stored unchanged as a new `import_batch` with its `source_record`s
@@ -45,19 +48,30 @@ Every import is stored unchanged as a new `import_batch` with its `source_record
 reproduced after a source changes. The assessment scope (season, competitions) is set
 in `config/services.yaml`.
 
+## API
+
+| Endpoint | What |
+|---|---|
+| `GET /api/models` | Released scoring models and their full definitions |
+| `GET /api/rankings?model=&position=&limit=&offset=&unranked=` | Latest ranking of a model |
+| `GET /api/players?q=` | Accent-insensitive name search |
+| `GET /api/players/{id}` | Season, statistics per scope with source and trust per value, score breakdown |
+
 ## Structure
 
 ```
 src/
   Command/       console commands (thin: they call services)
-  Controller/    HTTP: the data inspector (developer tool)
+  Controller/    HTTP: JSON API (Api/) and the data inspector (developer tool)
   DataImport/    source readers and clients, raw import, identity matching, season builder
   DataQuality/   stint merging, provider consistency checks, data audit
   Entity/        raw layer and domain model (see docs/data-model.md)
-  Football/      assessment scope, field catalog (later: metrics, scoring, ranking)
+  Api/           JSON presenters for the API
+  Football/      assessment scope, field catalog, scoring models and engine
   Inspector/     read-only SQL for the inspector pages
   Repository/    Doctrine repositories
 tests/           Unit/ (pure logic), Integration/ (pipeline on the test DB), Functional/ (HTTP)
+frontend/   React app (see frontend/README.md)
 legacy/     the original plain-PHP importer and viewer, kept as a reference
             until the Symfony version replaces it (see legacy/README.md)
 docs/       audit and methodology

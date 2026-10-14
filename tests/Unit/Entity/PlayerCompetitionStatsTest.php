@@ -21,13 +21,21 @@ final class PlayerCompetitionStatsTest extends TestCase
         $stats = $this->stats(
             ['goals' => 9.0, 'tackles' => 3.0],
             ['goals' => 'FBref', 'tackles' => 'SofaScore'],
-            ['FBref' => ['ok', 1800.0], 'SofaScore' => ['partial', 90.0]],
+            ['FBref' => ['ok', 1800.0], 'SofaScore' => ['partial', 900.0]],
         );
 
         self::assertSame(0.45, $stats->per90('goals'));
-        self::assertSame(3.0, $stats->per90('tackles'));
+        self::assertEqualsWithDelta(0.3, $stats->per90('tackles'), 1e-9, '3 tackles in SofaScore\'s 900 minutes, not in 1800');
         self::assertTrue($stats->trusted('goals'));
         self::assertFalse($stats->trusted('tackles'));
+    }
+
+    public function testTooFewProviderMinutesGiveNoPer90(): void
+    {
+        $stats = $this->stats(['tackles' => 3.0], ['tackles' => 'SofaScore'], ['FBref' => ['ok', 1882.0], 'SofaScore' => ['partial', 90.0]]);
+
+        self::assertNull($stats->per90('tackles'), '90 minutes is not a rate');
+        self::assertSame(3.0, $stats->value('tackles'));
     }
 
     public function testSuspectOrMissingProviderGivesNoPer90(): void

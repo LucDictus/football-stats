@@ -33,7 +33,7 @@ League data: 2,839 stint rows → **2,691 players** (148 transferred during the 
 | **Attacking** | | | | | | | |
 | Goals | FBref `fb_gls` | 100% | 100% |  | 0 / 636 | use; CL: use | Includes penalties |
 | Penalty goals | SofaScore `ss_penaltyGoals` | 96.6% | 93.8% | 38 | 0 / 636 | use, handle missing; CL: use |  |
-| Non-penalty goals | derived | 93.8% | 93.8% |  | – | use, handle missing; CL: derived the same way | Goals minus penalty goals; only when both are trusted |
+| Non-penalty goals | derived | 96.2% | 96.2% |  | – | use; CL: derived the same way | FBref goals minus SofaScore penalty goals when SofaScore is trusted; otherwise Understat's own non-penalty goals |
 | Assists | FBref `fb_ast` | 100% | 100% |  | 0 / 636 | use; CL: use |  |
 | Shots | FBref `fb_sh` | 100% | 100% |  | 0 / 636 | use; CL: use |  |
 | Shots on target | FBref `fb_sot` | 100% | 100% |  | 0 / 636 | use; CL: use |  |

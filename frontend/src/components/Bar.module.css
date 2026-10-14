@@ -1,0 +1,16 @@
+.track {
+  position: relative;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.track[data-unknown] {
+  background: repeating-linear-gradient(135deg, var(--surface-3) 0 4px, transparent 4px 8px);
+}
+
+.fill {
+  height: 100%;
+  border-radius: inherit;
+}

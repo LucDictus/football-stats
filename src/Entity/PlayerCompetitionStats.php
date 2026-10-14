@@ -21,6 +21,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(columns: ['player_season_id', 'scope'])]
 class PlayerCompetitionStats
 {
+    /** Below this many minutes of its own, a provider's per-90 rate is noise (five full matches). */
+    public const MIN_PER90_MINUTES = 450;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -139,7 +142,7 @@ class PlayerCompetitionStats
     /**
      * Per-90 rate on the supplying provider's own minutes. Null when the field is not a
      * per-90 statistic (minutes, percentages), the value is unknown, the provider is not
-     * usable (suspect/missing), or it has no minutes.
+     * usable (suspect/missing), or it covers fewer than MIN_PER90_MINUTES.
      */
     public function per90(string $field): ?float
     {
@@ -153,6 +156,6 @@ class PlayerCompetitionStats
         }
         $minutes = $origin === Origin::Derived ? $this->minutes : $this->originMinutes($origin);
 
-        return $minutes !== null && $minutes > 0 ? $value / $minutes * 90 : null;
+        return $minutes !== null && $minutes >= self::MIN_PER90_MINUTES ? $value / $minutes * 90 : null;
     }
 }

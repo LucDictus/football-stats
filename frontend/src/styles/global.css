@@ -1,0 +1,173 @@
+/* Design tokens. Dark is the default theme; light follows the system setting. */
+:root {
+  color-scheme: dark;
+  --bg: #0a0c0f;
+  --bg-glow: radial-gradient(1200px 600px at 15% -10%, rgba(227, 179, 65, 0.09), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(90, 120, 255, 0.07), transparent 60%);
+  --surface: #11141a;
+  --surface-2: #171b22;
+  --surface-3: #1e232c;
+  --line: #242a34;
+  --line-strong: #2f3642;
+  --text: #eef0f4;
+  --text-2: #b6bdc9;
+  --muted: #7d8696;
+  --accent: #e3b341;
+  --accent-soft: rgba(227, 179, 65, 0.14);
+  --accent-text: #f0c75e;
+  --focus: #8ab4ff;
+
+  --ok: #4fd18b;
+  --ok-soft: rgba(79, 209, 139, 0.14);
+  --partial: #f2b84b;
+  --partial-soft: rgba(242, 184, 75, 0.15);
+  --suspect: #ff7a6b;
+  --suspect-soft: rgba(255, 122, 107, 0.15);
+  --missing: #8d95a4;
+  --missing-soft: rgba(141, 149, 164, 0.14);
+
+  --pos-fw: #ff8a65;
+  --pos-mf: #4dd0c4;
+  --pos-df: #8c9eff;
+  --pos-gk: #ce93d8;
+
+  --c1: #e3b341; /* component colours: output, quality, availability */
+  --c2: #6ea8ff;
+  --c3: #4dd0c4;
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  --font: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk Variable', var(--font);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --bg: #f6f5f1;
+    --bg-glow: radial-gradient(1200px 600px at 15% -10%, rgba(227, 179, 65, 0.16), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(90, 120, 255, 0.08), transparent 60%);
+    --surface: #ffffff;
+    --surface-2: #fafaf8;
+    --surface-3: #f0efea;
+    --line: #e6e4dd;
+    --line-strong: #d6d3ca;
+    --text: #15171c;
+    --text-2: #3d434f;
+    --muted: #6b7280;
+    --accent: #b8860b;
+    --accent-soft: rgba(184, 134, 11, 0.12);
+    --accent-text: #8a6408;
+    --focus: #2f5bd3;
+    --ok: #16834a;
+    --ok-soft: rgba(22, 131, 74, 0.1);
+    --partial: #9a6400;
+    --partial-soft: rgba(154, 100, 0, 0.1);
+    --suspect: #c0392b;
+    --suspect-soft: rgba(192, 57, 43, 0.1);
+    --missing: #6b7280;
+    --missing-soft: rgba(107, 114, 128, 0.1);
+    --pos-fw: #d9532f;
+    --pos-mf: #0f8f84;
+    --pos-df: #4255d4;
+    --pos-gk: #9334a8;
+    --c1: #b8860b;
+    --c2: #2f6fe0;
+    --c3: #0f8f84;
+    --shadow: 0 1px 2px rgba(20, 20, 30, 0.04), 0 10px 28px -18px rgba(20, 20, 30, 0.25);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 var(--font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-height: 100vh;
+  background-image: var(--bg-glow);
+  background-attachment: fixed;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.num {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 24px 96px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 20px 16px 72px;
+  }
+}

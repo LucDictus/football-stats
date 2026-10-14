@@ -102,7 +102,8 @@ final class SeasonBuilderTest extends KernelTestCase
         $stats = $this->statsOf('Piero Hincapié', StatsScope::League);
         self::assertSame(1882.0, $stats->getMinutes());
         self::assertSame(OriginStatus::Partial, $stats->originStatus(Origin::Sofascore));
-        self::assertEqualsWithDelta(3.0, $stats->per90('tackles'), 0.001, '3 tackles in 90 SofaScore minutes, not in 1882');
+        self::assertSame(90.0, $stats->originMinutes(Origin::Sofascore), 'the minutes SofaScore covers');
+        self::assertNull($stats->per90('tackles'), '90 SofaScore minutes are too few for a rate');
         self::assertFalse($stats->trusted('tackles'));
         self::assertCount(2, $this->seasonOf('Piero Hincapié')->getStints());
     }

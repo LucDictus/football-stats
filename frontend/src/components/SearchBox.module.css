@@ -1,0 +1,80 @@
+.box {
+  position: relative;
+  margin-left: auto;
+  width: min(300px, 100%);
+}
+
+.icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.box input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.box input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.results {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: max(100%, 340px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.5);
+  transform-origin: top right;
+}
+
+.results li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.results li.active {
+  background: var(--surface-3);
+}
+
+.name {
+  font-weight: 600;
+}
+
+.team {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .box {
+    width: 100%;
+    order: 3;
+  }
+  .results {
+    width: 100%;
+  }
+}
