@@ -269,6 +269,27 @@ final class ScoreCalculatorTest extends TestCase
         self::assertSame(0.5, $byName['No attacking data']->confidence);
     }
 
+    public function testAKnownContributionDoesNotLiftThinPositionalData(): void
+    {
+        $model = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['FW'], 0.6, [], [
+            'FW' => [
+                new Component('output', 'Output', '', 0.5, [new Metric('goals', 'Goals', ['goals'], MetricMode::Total, 1.0)]),
+                new Component('duels', 'Duels', '', 0.5, [new Metric('aerial', 'Aerial %', ['aerial_win_pct'], MetricMode::Rate, 1.0)]),
+            ],
+        ], Normalization::Percentile, impact: new ImpactModel(), impactWeight: 0.5);
+        $attack = ['np_xg' => 5.0, 'xa' => 1.0, 'xg_buildup' => 1.0];
+
+        $results = (new ScoreCalculator())->score($model, [
+            $this->candidate(1, 'Complete', goals: 10.0, extra: $attack + ['aerial_win_pct' => 50.0], understat: 'ok'),
+            // Half the positional model unmeasured (no duel data): 0.5 < 0.6, even though 0.5 × 0.5 + 0.5 × 1 = 0.75.
+            $this->candidate(2, 'Thin positional data', goals: 12.0, extra: $attack, understat: 'ok'),
+        ]);
+        $byName = array_column(array_map(static fn ($r) => ['name' => $r->candidate->name, 'r' => $r], $results), 'r', 'name');
+
+        self::assertSame(1, $byName['Complete']->rank);
+        self::assertNull($byName['Thin positional data']->rank);
+    }
+
     public function testReleasedModelsAreUnchanged(): void
     {
         // A released model must never change: their hashes are pinned (and match their stored runs).

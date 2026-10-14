@@ -1,5 +1,6 @@
 import { motion } from 'motion/react'
 import type { ImpactBreakdown, ImpactKey } from '../api/types'
+import { formatSigned } from '../lib/format'
 import styles from './ImpactChart.module.css'
 
 const LABELS: Record<ImpactKey, { label: string; hint: string }> = {
@@ -16,6 +17,17 @@ export function ImpactChart({ impact }: { impact: ImpactBreakdown }) {
   const rows = impact.components.filter((c) => c.goals !== null)
   const scale = Math.max(1, ...rows.map((c) => Math.abs(c.goals ?? 0)))
 
+  if (impact.total === null) {
+    return (
+      <p className={styles.unknown}>
+        Contribution unknown: neither Understat nor SofaScore has expected-goals data for him, and the attack is the largest
+        part of a contribution. Known parts are listed below for information.
+        {rows.length > 0 && ' '}
+        {rows.map((c) => `${LABELS[c.key].label} ${formatSigned(c.goals)}`).join(', ')}
+      </p>
+    )
+  }
+
   return (
     <div className={styles.chart}>
       <ul>
@@ -23,7 +35,7 @@ export function ImpactChart({ impact }: { impact: ImpactBreakdown }) {
           const goals = c.goals ?? 0
           const width = (Math.abs(goals) / scale) * 50
           return (
-            <li key={c.key} title={LABELS[c.key].hint}>
+            <li key={c.key}>
               <span className={styles.label}>
                 {LABELS[c.key].label}
                 <span className={styles.evidence} data-evidence={c.evidence}>
@@ -41,10 +53,7 @@ export function ImpactChart({ impact }: { impact: ImpactBreakdown }) {
                   transition={{ duration: 0.8, delay: 0.15 + i * 0.06, ease: [0.22, 1, 0.36, 1] }}
                 />
               </span>
-              <span className={`num ${styles.value}`}>
-                {goals > 0 ? '+' : ''}
-                {goals.toFixed(1)}
-              </span>
+              <span className={`num ${styles.value}`}>{formatSigned(goals)}</span>
             </li>
           )
         })}
@@ -54,15 +63,33 @@ export function ImpactChart({ impact }: { impact: ImpactBreakdown }) {
           <dt>Total contribution</dt>
           <dd className="num">{impact.total === null ? '–' : impact.total.toFixed(1)} goals</dd>
         </div>
-        <div title="What a low-level player in his position (20th percentile) contributes in the same minutes">
-          <dt>Replacement level</dt>
-          <dd className="num">−{impact.replacement === null ? '–' : impact.replacement.toFixed(1)}</dd>
+        <div>
+          <dt>Minus replacement level</dt>
+          <dd className="num">{formatSigned(impact.replacement === null ? null : -impact.replacement)}</dd>
         </div>
         <div className={styles.above}>
           <dt>Above replacement</dt>
-          <dd className="num">{impact.above === null ? '–' : `${impact.above > 0 ? '+' : ''}${impact.above.toFixed(1)}`} goals</dd>
+          <dd className="num">{formatSigned(impact.above)} goals</dd>
         </div>
       </dl>
+      {impact.attack_source === 'SofaScore' && (
+        <p className={styles.note}>xG and xA from SofaScore: Understat has no record of him.</p>
+      )}
+      <details className={styles.how}>
+        <summary>How each part is measured</summary>
+        <dl>
+          {rows.map((c) => (
+            <div key={c.key}>
+              <dt>{LABELS[c.key].label}</dt>
+              <dd>{LABELS[c.key].hint}</dd>
+            </div>
+          ))}
+          <div>
+            <dt>Replacement level</dt>
+            <dd>What a low-level player in his position (20th percentile) adds in the same minutes.</dd>
+          </div>
+        </dl>
+      </details>
     </div>
   )
 }

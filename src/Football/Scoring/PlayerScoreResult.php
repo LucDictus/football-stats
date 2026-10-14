@@ -9,7 +9,7 @@ namespace App\Football\Scoring;
  *
  * @phpstan-type MetricBreakdown array{value: ?float, percentile: ?float, weight: float, adjusted?: ?float}
  * @phpstan-type ComponentBreakdown array{score: ?float, weight: float, coverage: float, metrics: array<string, MetricBreakdown>}
- * @phpstan-type ImpactBreakdown array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, score: ?float, weight: float}
+ * @phpstan-type ImpactBreakdown array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, attack_source: ?string, score: ?float, weight: float}
  */
 final readonly class PlayerScoreResult
 {

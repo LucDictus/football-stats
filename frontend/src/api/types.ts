@@ -148,6 +148,8 @@ export interface ImpactBreakdown {
   total: number | null
   replacement: number | null
   above: number | null
+  /** Where npxG and xA come from: Understat, or SofaScore when Understat has no record of him. */
+  attack_source: 'Understat' | 'SofaScore' | null
   score: number | null
   weight: number
 }

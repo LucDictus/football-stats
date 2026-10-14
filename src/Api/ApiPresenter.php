@@ -119,6 +119,8 @@ final class ApiPresenter
             'total' => self::round($impact['total'], 2),
             'replacement' => self::round($impact['replacement'], 2),
             'above' => self::round($impact['above'], 2),
+            // Understat, or SofaScore when Understat has no record of the player.
+            'attack_source' => $impact['attack_source'] ?? null,
             'score' => self::round($impact['score']),
             'weight' => $impact['weight'],
         ];

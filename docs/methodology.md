@@ -46,42 +46,54 @@ positional-v2 answers "how far does a player stand above others in his position?
 | Creation | 30% of his xA | strong |
 | Build-up | the team's build-up pool (20% of team xG, plus the passer's 30% of unassisted xG), shared by xGBuildup | moderate |
 | Finishing | 50% × (non-penalty goals − npxG) × shots / (shots + 60) | moderate |
-| Goalkeeping | goals prevented × shots on target faced / (faced + 150) | moderate |
-| Defence | the team's goals prevented against the league average (expected goals on target conceded per 90, from its goalkeepers' goals conceded + goals prevented), shared among outfield players by their share of the team's defensive actions | weak |
+| Goalkeeping | goals prevented × shots on target faced / (faced + 300) | moderate |
+| Defence | the team's goals prevented against the league average, shared among outfield players by their share of the team's defensive actions | weak |
 
-- The attack credits of a team add up exactly to its xG: an assisted chance is not counted
-  for both shooter and passer in full (tested).
-- Shrinkage of finishing and goals prevented: most of one season's over- or under-performance
-  is chance. Without it, goalkeepers took 12 of the top 25 places (experiment).
-- **Above replacement**: minus what the role's 20th-percentile player adds per 90, for the same
-  minutes; playing time counts naturally.
-- The contribution score standardises goals above replacement across **all** ranked players
-  (not within the role), so a goal counts the same whoever adds it. Contribution has a long
-  tail (Kane +12 goals, a typical player +1 to +2), so the elite exceed 100 on that part; the
-  page shows 100, the ranking uses the exact value, and the goals are always shown.
-- Providers covering part of a season (transfer between leagues) are extrapolated from their
-  rate; a player without attacking data (Understat) has no contribution and is not ranked.
+- **The attack credits of a team add up exactly to its xG**: 0.5·xG + 0.3·xA + 0.2·xG +
+  0.3·(xG − xA) = xG, so an assisted chance is not counted in full for both shooter and passer
+  (tested). xGBuildup excludes only the player's own shots and key passes, so a passer still
+  gets some build-up credit for other chances in the same possessions: mild overlap.
+- **npxG and xA** come from Understat, or from SofaScore for the 89 players Understat has no
+  record of (name-matching gaps): npxG = SofaScore xG − 0.76 per penalty taken. The player page
+  says when this fallback is used.
+- **Shrinkage**: most of one season's finishing and goals prevented is chance. Goals prevented
+  is shrunk with a prior of 300 shots on target (more than a season); with 150, three
+  goalkeepers were in the top 18 on noise.
+- **Team defence**: expected goals on target conceded per 90 (goalkeepers' goals conceded +
+  goals prevented), measured over the minutes the team's goalkeeping data covers (at least
+  900) and applied to the whole season (38 or 34 matches). It uses post-shot xG (shot
+  placement included), not the chances conceded: pre-shot xG against is not in the data.
+- **Above replacement**: minus what the role's 20th-percentile player adds per 90 (among players
+  who will be ranked), for the same minutes. This re-centres each role at its replacement
+  level: a positional adjustment inside the contribution, by design.
+- **Both halves must stand**: a player is ranked only when his positional part meets the
+  minimum confidence on its own and his contribution is known.
+- **No clamping** of blended scores: the parts shown add up to the total, and a runaway season
+  can go above 100 (Olise: 50% × 93.2 + 50% × 112.8 = 103.0).
+- Players who moved within a league are credited to their main club in team totals (small
+  effect on team pools).
 
-### Result (run #9)
+### Result (run #10)
 
 | | positional-v2 | mvp-v1 |
 |---|---|---|
 | Top 10 by position | 8 MF, 2 FW | **5 FW, 5 MF** |
 | Kane / Haaland / Mbappé | #3 / #9 / #26 | **#2 / #5 / #10** |
-| Kimmich (build-up, 10 G+A) | #6 | #14 |
-| Declan Rice | #30 | #13 |
-| Saliba (team defence) | #270 | #89 |
-| Best defender / goalkeeper | Orban #15 / Koffi #28 | Orban #20 / Nübel #11 |
+| Kimmich (build-up, 10 G+A) | #6 | #13 |
+| Declan Rice | #30 | #12 |
+| Saliba (team defence) | #270 | #88 |
+| Best defender / goalkeeper | Orban #15 / Koffi #28 | Orban #16 / Nübel #36 |
 
 Top 10: Olise, Kane, Yamal, Luis Díaz, Haaland, Dimarco, Bruno Fernandes, Undav, Lautaro
-Martínez, Mbappé. Olise #1 holds in both views: +12.1 goals above replacement, the same as Kane.
+Martínez, Mbappé. Olise #1 holds in both views: +12.3 goals above replacement, Kane +12.2.
+mvp-v1 ranks the same 1,523 players as positional-v2.
 
 ### Known limitations of mvp-v1
 
-- **Defence in goals is weak evidence**: a team measure, shared by defensive actions; its numbers
-  are small (a few goals), so defenders reach the top mainly through positional excellence.
-- **Credit shares** (50/30/20) and **shrinkage priors** are judgement calls, to be tested for
-  sensitivity in phase 8.
+- **Defence in goals is weak evidence**: a team measure, shared by defensive actions, with small
+  numbers (about ±3 goals), so defenders reach the top mainly through positional excellence.
+- **Credit shares** (50/30/20), **shrinkage priors** and the **replacement percentile** are
+  judgement calls, to be tested for sensitivity in phase 8.
 - **Scope**: domestic league only; the Champions League enters in phase 6.
 
 ## positional-v2 (roadmap phase 4, released)

@@ -171,7 +171,7 @@ final class Top5StintMergerTest extends TestCase
         foreach (['ss_penaltyGoals', 'ss_keyPasses', 'ss_bigChancesCreated', 'ss_accurateFinalThirdPasses', 'ss_accuratePasses',
             'ss_accuratePassesPercentage', 'ss_tackles', 'ss_tacklesWon', 'ss_interceptions', 'ss_outfielderBlocks', 'ss_clearances',
             'ss_ballRecovery', 'ss_aerialDuelsWon', 'ss_aerialLost', 'ss_errorLeadToGoal', 'ss_saves', 'ss_goalsConceded',
-            'ss_goalsPrevented', 'ss_cleanSheet'] as $column) {
+            'ss_goalsPrevented', 'ss_cleanSheet', 'ss_expectedGoals', 'ss_expectedAssists', 'ss_penaltiesTaken'] as $column) {
             $row[$column] = $column === 'ss_tackles' ? '40' : '1';
         }
 

@@ -324,7 +324,18 @@
   padding: 18px 20px;
   display: grid;
   gap: 8px;
-  cursor: help;
+}
+
+.blendHint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: -4px;
+}
+
+.blendSum {
+  margin: 12px 0 0;
+  color: var(--text-2);
+  font-size: 14px;
 }
 
 .blendValue {

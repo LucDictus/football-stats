@@ -81,7 +81,7 @@ final class ScoreCalculator
 
         // Ranked players first, best score first; ties broken by the unclamped score (comparable
         // across roles: both are relative to their role), minutes, then player id.
-        $ranked = static fn (array $s) => $s['score'] !== null && $s['confidence'] >= $model->minConfidence - self::EPSILON;
+        $ranked = static fn (array $s) => $s['rankable'] ?? ($s['score'] !== null && $s['confidence'] >= $model->minConfidence - self::EPSILON);
         usort($scored, static fn (array $a, array $b) => [$ranked($b), $b['score'], $b['raw'], $b['candidate']->stats->getMinutes(), $a['candidate']->playerId]
             <=> [$ranked($a), $a['score'], $a['raw'], $a['candidate']->stats->getMinutes(), $b['candidate']->playerId]);
 
@@ -96,8 +96,14 @@ final class ScoreCalculator
 
     /**
      * Final score = (1 − w) × positional score + w × contribution score. The contribution is
-     * the goals above replacement, standardised over the players who will be ranked. Without a
-     * known contribution that part of the model is unmeasured: it lowers the confidence.
+     * the goals above replacement, standardised over the players who will be ranked.
+     *
+     * A player is ranked only when both halves stand: the positional part meets the model's
+     * minimum confidence on its own, and the contribution is known. A known contribution must
+     * not lift a player whose positional data is too thin.
+     *
+     * Blended scores are not clamped to 0–100: the shown parts must add up to the shown total,
+     * and a runaway season (e.g. contribution 112) is real information.
      *
      * @param list<ScoringCandidate>     $candidates
      * @param list<array<string, mixed>> $scored
@@ -107,33 +113,36 @@ final class ScoreCalculator
     private function blendImpact(ScoringModel $model, ImpactModel $impactModel, array $candidates, array $scored): array
     {
         $w = $model->impactWeight;
-        $impact = $this->impact->calculate($impactModel, $candidates, array_map(static fn (array $s) => $s['candidate'], $scored));
+        $positionalOk = array_map(static fn (array $s) => $s['score'] !== null && $s['confidence'] >= $model->minConfidence - self::EPSILON, $scored);
+        $impact = $this->impact->calculate(
+            $impactModel,
+            $candidates,
+            array_map(static fn (array $s) => $s['candidate'], $scored),
+            array_values(array_map(static fn (array $s) => $s['candidate']->playerId, array_filter($scored, static fn (array $s, int $i) => $positionalOk[$i], ARRAY_FILTER_USE_BOTH))),
+        );
 
         $above = [];
-        $confidence = [];
+        $rankable = [];
         foreach ($scored as $i => $s) {
             $above[$i] = $impact[$s['candidate']->playerId]['above'];
-            $confidence[$i] = (1 - $w) * $s['confidence'] + $w * ($above[$i] !== null ? 1.0 : 0.0);
+            $rankable[$i] = $positionalOk[$i] && $above[$i] !== null;
         }
-        $reference = array_keys(array_filter($confidence, static fn (float $c) => $c >= $model->minConfidence - self::EPSILON));
-        $impactRaw = $model->normalization->scores($above, reference: $reference, clamp: false);
+        $impactScore = $model->normalization->scores($above, reference: array_keys(array_filter($rankable)), clamp: false);
 
         foreach ($scored as $i => $s) {
             $positional = $s['raw'];
             $raw = match (true) {
                 $positional === null => null,
-                $impactRaw[$i] === null => $positional,
-                default => (1 - $w) * $positional + $w * $impactRaw[$i],
+                $impactScore[$i] === null => $positional,
+                default => (1 - $w) * $positional + $w * $impactScore[$i],
             };
             $scored[$i] = [
-                'positional' => $s['score'],
-                'impact' => $impact[$s['candidate']->playerId] + [
-                    'score' => $impactRaw[$i] === null ? null : max(0.0, min(100.0, $impactRaw[$i])),
-                    'weight' => $w,
-                ],
-                'confidence' => $confidence[$i],
+                'positional' => $positional,
+                'impact' => $impact[$s['candidate']->playerId] + ['score' => $impactScore[$i], 'weight' => $w],
+                'confidence' => (1 - $w) * $s['confidence'] + $w * ($above[$i] !== null ? 1.0 : 0.0),
+                'rankable' => $rankable[$i],
                 'raw' => $raw,
-                'score' => $raw === null ? null : max(0.0, min(100.0, $raw)),
+                'score' => $raw,
             ] + $s;
         }
 

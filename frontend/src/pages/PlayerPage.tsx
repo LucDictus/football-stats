@@ -117,8 +117,7 @@ function Breakdown({ score }: { score: ScoreBreakdown }) {
           <h2 id="contribution">Contribution in goals</h2>
           <p className={styles.sectionLead}>
             What he added to his team’s goal difference, in the same unit for every position. Each expected goal a team creates is
-            shared: half to the shooter, 30% to the last passer, the rest to the players who built the attack. Hover a row for
-            how it is measured.
+            shared: half to the shooter, 30% to the last passer, the rest to the players who built the attack.
           </p>
           <div className={`card ${styles.impactCard}`}>
             <ImpactChart impact={impact} />
@@ -143,15 +142,21 @@ function Blend({ score }: { score: ScoreBreakdown }) {
       <h2 id="blend">How the score is built</h2>
       <div className={styles.blend}>
         {parts.map((part, i) => (
-          <div key={part.label} className={`card ${styles.blendPart}`} title={part.hint}>
+          <div key={part.label} className={`card ${styles.blendPart}`}>
             <span className="muted">
               {part.label} · {Math.round(part.weight * 100)}%
             </span>
+            <span className={styles.blendHint}>{part.hint}</span>
             <span className={`num ${styles.blendValue}`}>{formatScore(part.value)}</span>
             <Bar value={part.value} color={componentColor(i)} height={6} delay={0.1 + i * 0.1} />
           </div>
         ))}
       </div>
+      <p className={styles.blendSum}>
+        {Math.round((1 - impact.weight) * 100)}% × {formatScore(score.positional)} + {Math.round(impact.weight * 100)}% ×{' '}
+        {formatScore(impact.score)} = <strong className="num">{formatScore(score.score)}</strong>
+        {score.score !== null && score.score > 100 && ' (exceptional seasons can go above 100)'}
+      </p>
     </section>
   )
 }

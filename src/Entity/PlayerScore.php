@@ -58,7 +58,7 @@ class PlayerScore
          * Contribution in goals: per component, total, replacement level, above replacement,
          * its score and its weight in the final score.
          *
-         * @var array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, score: ?float, weight: float}|null
+         * @var array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, attack_source?: ?string, score: ?float, weight: float}|null
          */
         #[ORM\Column(type: Types::JSON, nullable: true, options: ['jsonb' => true])]
         private ?array $impact = null,
@@ -70,7 +70,7 @@ class PlayerScore
         return $this->positional;
     }
 
-    /** @return array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, score: ?float, weight: float}|null */
+    /** @return array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, attack_source?: ?string, score: ?float, weight: float}|null */
     public function getImpact(): ?array
     {
         return $this->impact;

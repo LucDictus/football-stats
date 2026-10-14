@@ -52,7 +52,7 @@ final class ImpactCalculatorTest extends TestCase
 
         $result = (new ImpactCalculator())->calculate(new ImpactModel(), [$keeper], [$keeper]);
 
-        self::assertEqualsWithDelta(10.0 * 150 / 300, $result[1]['goals']['goalkeeping'], 1e-9);
+        self::assertEqualsWithDelta(10.0 * 150 / (150 + 300), $result[1]['goals']['goalkeeping'], 1e-9);
     }
 
     public function testTeamDefenceIsSharedByDefensiveActions(): void
@@ -67,10 +67,33 @@ final class ImpactCalculatorTest extends TestCase
 
         $result = (new ImpactCalculator())->calculate($model, $all, $all);
 
-        // League average 25 per team season; team A prevents 5, shared 60 : 20.
-        self::assertEqualsWithDelta(3.75, $result[3]['goals']['defence'], 1e-9);
-        self::assertEqualsWithDelta(1.25, $result[4]['goals']['defence'], 1e-9);
+        // Per 90 over the 2000 covered minutes: A 0.9, B 1.35, league average 1.125. Over a 38-match
+        // Premier League season A prevents (1.125 − 0.9) × 38 = 8.55 goals, shared 60 : 20.
+        self::assertEqualsWithDelta(8.55 * 0.75, $result[3]['goals']['defence'], 1e-9);
+        self::assertEqualsWithDelta(8.55 * 0.25, $result[4]['goals']['defence'], 1e-9);
         self::assertNull($result[1]['goals']['defence'], 'keepers are measured by goals prevented instead');
+    }
+
+    public function testUnderstatGapsFallBackToSofascore(): void
+    {
+        // No Understat record; SofaScore has 9.0 xG including 3 penalties, and 2.5 xA.
+        $player = $this->player(1, 'FW', ['xg_sofascore' => 9.0, 'penalties_taken' => 3.0, 'xa_sofascore' => 2.5], understat: 'missing');
+
+        $result = (new ImpactCalculator())->calculate(new ImpactModel(), [$player], [$player]);
+
+        self::assertEqualsWithDelta(0.5 * (9.0 - 3 * 0.76), $result[1]['goals']['shooting'], 1e-9);
+        self::assertEqualsWithDelta(0.3 * 2.5, $result[1]['goals']['creation'], 1e-9);
+        self::assertSame('SofaScore', $result[1]['attack_source']);
+    }
+
+    public function testReplacementLevelComesFromTheReferencePlayers(): void
+    {
+        $players = array_map(fn (int $i) => $this->player($i, 'FW', ['np_xg' => (float) $i]), range(1, 5));
+
+        $all = (new ImpactCalculator())->calculate(new ImpactModel(), $players, $players);
+        $topOnly = (new ImpactCalculator())->calculate(new ImpactModel(), $players, $players, reference: [4, 5]);
+
+        self::assertGreaterThan($all[5]['replacement'], $topOnly[5]['replacement']);
     }
 
     public function testContributionIsMeasuredAboveTheRolesReplacementLevel(): void
@@ -87,7 +110,7 @@ final class ImpactCalculatorTest extends TestCase
 
     public function testWithoutAttackingDataTheContributionIsUnknownNotZero(): void
     {
-        $player = $this->player(1, 'FW', [], understat: 'missing');
+        $player = $this->player(1, 'FW', [], understat: 'missing', sofascore: 'missing');
 
         $result = (new ImpactCalculator())->calculate(new ImpactModel(), [$player], [$player]);
 
@@ -112,7 +135,7 @@ final class ImpactCalculatorTest extends TestCase
     }
 
     /** @param array<string, float> $values */
-    private function player(int $id, string $group, array $values, string $team = 'Club', string $understat = 'ok', float $understatMinutes = 2000.0): ScoringCandidate
+    private function player(int $id, string $group, array $values, string $team = 'Club', string $understat = 'ok', float $understatMinutes = 2000.0, string $sofascore = 'ok'): ScoringCandidate
     {
         $values += ['np_xg' => 0.0, 'xa' => 0.0, 'xg_buildup' => 0.0];
         if ($understat === 'missing') {
@@ -129,7 +152,7 @@ final class ImpactCalculatorTest extends TestCase
             [
                 'FBref' => ['status' => 'ok', 'minutes' => 2000.0, 'reason' => null],
                 'Understat' => ['status' => $understat, 'minutes' => $understat === 'missing' ? null : $understatMinutes, 'reason' => null],
-                'SofaScore' => ['status' => 'ok', 'minutes' => 2000.0, 'reason' => null],
+                'SofaScore' => ['status' => $sofascore, 'minutes' => 2000.0, 'reason' => null],
             ],
         );
 

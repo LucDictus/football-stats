@@ -19,6 +19,9 @@ final class CompetitionCatalog
         'CL' => ['UEFA Champions League', Competition::TYPE_CUP, null],
     ];
 
+    /** Matches per team in a league season. */
+    public const LEAGUE_MATCHES = ['PL' => 38, 'PD' => 38, 'SA' => 38, 'BL1' => 34, 'FL1' => 34];
+
     /** League names in the Top-5 dataset => code */
     public const TOP5_LEAGUES = [
         'ENG-Premier League' => 'PL',

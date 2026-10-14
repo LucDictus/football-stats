@@ -66,6 +66,10 @@ final class FieldCatalog
             new Field('xg', 'Expected goals (xG)', 'Attacking quality', $us, 'us_xg', 'expectedGoals', note: self::XG_MODELS),
             new Field('np_xg', 'Non-penalty xG', 'Attacking quality', $us, 'us_np_xg', null),
             new Field('xa', 'Expected assists (xA)', 'Attacking quality', $us, 'us_xa', 'expectedAssists', note: self::XG_MODELS),
+            // SofaScore's own expected goals, in the league data: a fallback for players Understat has no record of.
+            new Field('xg_sofascore', 'Expected goals (SofaScore)', 'Attacking quality', $ss, 'ss_expectedGoals', null, note: 'Fallback when Understat has no record; includes penalties; empty when he did not shoot'),
+            new Field('xa_sofascore', 'Expected assists (SofaScore)', 'Attacking quality', $ss, 'ss_expectedAssists', null, note: 'Fallback when Understat has no record'),
+            new Field('penalties_taken', 'Penalties taken', 'Attacking', $ss, 'ss_penaltiesTaken', null, per90: false),
             // Creation and passing
             new Field('key_passes', 'Key passes', 'Creation and passing', $ss, 'ss_keyPasses', 'keyPasses'),
             new Field('big_chances_created', 'Big chances created', 'Creation and passing', $ss, 'ss_bigChancesCreated', 'bigChancesCreated'),

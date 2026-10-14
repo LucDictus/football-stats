@@ -9,7 +9,7 @@ import { ErrorState } from '../components/ErrorState'
 import { PositionBadge } from '../components/PositionBadge'
 import { PositionFilter } from '../components/PositionFilter'
 import { componentColor } from '../lib/colors'
-import { formatNumber, formatScore } from '../lib/format'
+import { formatNumber, formatScore, formatSigned } from '../lib/format'
 import { POSITION_PLURAL, componentsFor, isRoleModel } from '../lib/model'
 import styles from './RankingPage.module.css'
 
@@ -195,11 +195,8 @@ function PodiumCard({ row, place, model }: { row: RankingRow; place: number; mod
         </div>
         {row.impact_goals !== null && (
           <p className={styles.podiumGoals}>
-            <strong className="num">
-              {row.impact_goals > 0 ? '+' : ''}
-              {row.impact_goals.toFixed(1)}
-            </strong>{' '}
-            goals contributed · positional {formatScore(row.positional)}
+            <strong className="num">{formatSigned(row.impact_goals)}</strong> goals above replacement · positional{' '}
+            {formatScore(row.positional)}
           </p>
         )}
         <div className={styles.podiumBars}>
@@ -250,10 +247,7 @@ function Row({ row, model, compare }: { row: RankingRow; model: ScoringModel; co
       )}
       <span className={styles.score}>
         {row.impact_goals !== null && (
-          <span className={styles.goals} title="Goals contributed above a replacement-level player in his position">
-            {row.impact_goals > 0 ? '+' : ''}
-            {row.impact_goals.toFixed(1)} goals
-          </span>
+          <span className={styles.goals}>{formatSigned(row.impact_goals)} goals above replacement</span>
         )}
         <span className="num">{formatScore(row.score)}</span>
         {row.confidence < 1 && (

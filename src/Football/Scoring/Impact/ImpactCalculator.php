@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Football\Scoring\Impact;
 
 use App\Entity\PlayerCompetitionStats;
+use App\Football\Assessment\CompetitionCatalog;
 use App\Football\Data\Origin;
 use App\Football\Data\OriginStatus;
 use App\Football\Scoring\ScoringCandidate;
@@ -33,10 +34,11 @@ final class ImpactCalculator
     /**
      * @param list<ScoringCandidate> $candidates all players of the scope (team totals)
      * @param list<ScoringCandidate> $scored     the players to calculate contribution for
+     * @param list<int>|null         $reference  player ids that define the replacement level (default: all scored)
      *
-     * @return array<int, array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float}> by player id
+     * @return array<int, array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, attack_source: ?string}> by player id
      */
-    public function calculate(ImpactModel $model, array $candidates, array $scored): array
+    public function calculate(ImpactModel $model, array $candidates, array $scored, ?array $reference = null): array
     {
         $teams = $this->teams($model, $candidates);
         $leagueAverage = $this->leagueAverages($model, $teams);
@@ -46,9 +48,13 @@ final class ImpactCalculator
             $raw[$candidate->playerId] = $this->player($model, $candidate, $teams[self::teamKey($candidate)] ?? null, $leagueAverage);
         }
 
-        // Replacement level per role: a low percentile of contribution per 90.
+        // Replacement level per role: a low percentile of contribution per 90 among the reference players.
+        $referenceIds = $reference === null ? null : array_flip($reference);
         $perNinety = [];
         foreach ($scored as $candidate) {
+            if ($referenceIds !== null && !isset($referenceIds[$candidate->playerId])) {
+                continue;
+            }
             $total = $raw[$candidate->playerId]['total'];
             if ($total !== null && $candidate->stats->getMinutes() > 0) {
                 $perNinety[(string) $candidate->positionGroup][] = $total / $candidate->stats->getMinutes() * 90;
@@ -76,15 +82,14 @@ final class ImpactCalculator
      * @param array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, psxg_faced: float, gk_minutes: float, league: ?string}|null $team
      * @param array<string, float>                                                                                                                 $leagueAverage league => expected goals on target conceded per 90
      *
-     * @return array{goals: array<string, ?float>, total: ?float}
+     * @return array{goals: array<string, ?float>, total: ?float, attack_source: ?string}
      */
     private function player(ImpactModel $model, ScoringCandidate $c, ?array $team, array $leagueAverage): array
     {
         $s = $c->stats;
         $goals = array_fill_keys(self::COMPONENTS, null);
 
-        $npxg = self::seasonTotal($s, 'np_xg');
-        $xa = self::seasonTotal($s, 'xa');
+        [$npxg, $xa, $source] = self::attack($model, $s);
         $buildUp = self::seasonTotal($s, 'xg_buildup');
         if ($npxg !== null && $xa !== null) {
             $goals['shooting'] = $model->shooterShare * $npxg;
@@ -103,23 +108,50 @@ final class ImpactCalculator
 
         if ($c->positionGroup === 'GK') {
             $prevented = self::seasonTotal($s, 'goals_prevented');
-            $faced = ($s->value('saves') ?? 0.0) + ($s->value('goals_conceded') ?? 0.0);
+            $faced = (self::seasonTotal($s, 'saves') ?? 0.0) + (self::seasonTotal($s, 'goals_conceded') ?? 0.0);
             if ($prevented !== null) {
                 $goals['goalkeeping'] = $prevented * $faced / ($faced + $model->goalkeepingPriorShotsOnTarget);
             }
         } elseif ($team !== null && $team['defensive_actions'] > 0 && $team['gk_minutes'] >= $model->minTeamGoalkeeperMinutes
-            && isset($leagueAverage[(string) $team['league']])) {
+            && isset($leagueAverage[(string) $team['league']], CompetitionCatalog::LEAGUE_MATCHES[(string) $team['league']])) {
             $mine = self::defensiveActions($model, $s);
             if ($mine !== null) {
-                $teamPrevented = ($leagueAverage[(string) $team['league']] - $team['psxg_faced'] / $team['gk_minutes'] * 90) * $team['gk_minutes'] / 90;
+                // Rate over the minutes the team's goalkeeping data covers, applied to the whole season.
+                $rate = $team['psxg_faced'] / $team['gk_minutes'] * 90;
+                $teamPrevented = ($leagueAverage[(string) $team['league']] - $rate) * CompetitionCatalog::LEAGUE_MATCHES[(string) $team['league']];
                 $goals['defence'] = $teamPrevented * $mine / $team['defensive_actions'];
             }
         }
 
-        // Shooting and creation come together (Understat); without them the attack is unknown.
+        // Without npxG and xA the attack is unknown, so the contribution is unknown (never zero).
         $known = array_filter($goals, static fn (?float $g) => $g !== null);
 
-        return ['goals' => $goals, 'total' => $goals['shooting'] === null ? null : array_sum($known)];
+        return ['goals' => $goals, 'total' => $goals['shooting'] === null ? null : array_sum($known), 'attack_source' => $source];
+    }
+
+    /**
+     * Non-penalty xG and xA: Understat when it has the player, otherwise SofaScore (whose xG
+     * includes penalties, and which leaves xG/xA empty when there was nothing to measure).
+     *
+     * @return array{0: ?float, 1: ?float, 2: ?string} npxG, xA, source
+     */
+    private static function attack(ImpactModel $model, PlayerCompetitionStats $s): array
+    {
+        $npxg = self::seasonTotal($s, 'np_xg');
+        $xa = self::seasonTotal($s, 'xa');
+        if ($npxg !== null && $xa !== null) {
+            return [$npxg, $xa, Origin::Understat->value];
+        }
+        if (!$s->originStatus(Origin::Sofascore)->usable()) {
+            return [null, null, null];
+        }
+        $xg = self::seasonTotal($s, 'xg_sofascore') ?? (self::seasonTotal($s, 'shots') === 0.0 ? 0.0 : null);
+        $xaSofascore = self::seasonTotal($s, 'xa_sofascore') ?? (self::seasonTotal($s, 'key_passes') === 0.0 ? 0.0 : null);
+        if ($xg === null || $xaSofascore === null) {
+            return [null, null, null];
+        }
+
+        return [max(0.0, $xg - $model->penaltyXg * (self::seasonTotal($s, 'penalties_taken') ?? 0.0)), $xaSofascore, Origin::Sofascore->value];
     }
 
     /**
@@ -138,12 +170,14 @@ final class ImpactCalculator
                 continue;
             }
             $teams[$key] ??= ['xg' => 0.0, 'xa' => 0.0, 'xg_buildup' => 0.0, 'defensive_actions' => 0.0, 'psxg_faced' => 0.0, 'gk_minutes' => 0.0, 'league' => $c->league];
-            $teams[$key]['xg'] += self::seasonTotal($c->stats, 'np_xg') ?? 0.0;
-            $teams[$key]['xa'] += self::seasonTotal($c->stats, 'xa') ?? 0.0;
+            [$npxg, $xa] = self::attack($model, $c->stats);
+            $teams[$key]['xg'] += $npxg ?? 0.0;
+            $teams[$key]['xa'] += $xa ?? 0.0;
             $teams[$key]['xg_buildup'] += self::seasonTotal($c->stats, 'xg_buildup') ?? 0.0;
             if ($c->positionGroup === 'GK') {
                 $conceded = $c->stats->value('goals_conceded');
                 $prevented = $c->stats->value('goals_prevented');
+                // Only full-season goalkeeping data: the team rate is taken over the minutes it covers.
                 if ($conceded !== null && $prevented !== null && $c->stats->originStatus(Origin::Sofascore) === OriginStatus::Ok) {
                     $teams[$key]['psxg_faced'] += $conceded + $prevented;
                     $teams[$key]['gk_minutes'] += (float) $c->stats->originMinutes(Origin::Sofascore);

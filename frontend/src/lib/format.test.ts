@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatScore, formatValue, ordinal } from './format'
+import { formatScore, formatSigned, formatValue, ordinal } from './format'
 
 describe('ordinal', () => {
   it.each([
@@ -28,5 +28,17 @@ describe('missing values', () => {
     expect(formatValue(25)).toBe('25')
     expect(formatValue(2.536)).toBe('2.54')
     expect(formatValue(0)).toBe('0')
+  })
+})
+
+describe('formatSigned', () => {
+  it.each([
+    [1.24, '+1.2'],
+    [-0.44, '−0.4'],
+    [0.04, '0.0'],
+    [-0.04, '0.0'],
+    [null, '–'],
+  ])('%s → %s', (value, expected) => {
+    expect(formatSigned(value)).toBe(expected)
   })
 })

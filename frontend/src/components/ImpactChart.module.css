@@ -11,7 +11,6 @@
   grid-template-columns: 200px 1fr 64px;
   align-items: center;
   gap: 14px;
-  cursor: help;
 }
 
 .label {
@@ -96,4 +95,41 @@
     grid-template-columns: 110px 1fr 52px;
     gap: 10px;
   }
+}
+
+.unknown {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--partial);
+}
+
+.how {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.how summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.how dl {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.how dt {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.how dd {
+  margin: 0;
 }
