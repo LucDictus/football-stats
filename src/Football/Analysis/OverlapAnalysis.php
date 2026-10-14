@@ -102,7 +102,7 @@ final class OverlapAnalysis
      */
     private function counterfactuals(ScoringModel $model, array $byRole): array
     {
-        $variants = [self::variant('model', 'mvp-v1 as is', $byRole, static fn (PlayerScoreResult $r) => (float) $r->score)];
+        $variants = [self::variant('model', $model->id() . ' as is', $byRole, static fn (PlayerScoreResult $r) => (float) $r->score)];
 
         $w = $model->impactWeight;
         $residual = [];

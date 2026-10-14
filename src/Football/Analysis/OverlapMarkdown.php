@@ -70,7 +70,7 @@ final class OverlapMarkdown
             foreach ($a['shares'] as $part => $share) {
                 $md .= sprintf("| `%s` | %s | %s |\n", $part, OverlapAnalysis::FAMILIES[$part] ?? $part, self::pct($share));
             }
-            $md .= sprintf("\nNot explained by the parts (clamping only): %s.\n", self::pct($a['residual']));
+            $md .= sprintf("\nNot explained by the parts (clamping; 100%% when a role has no spread): %s.\n", self::pct($a['residual']));
             $md .= self::pairs('Overlapping parts (|r| ≥ ' . OverlapAnalysis::OVERLAP_THRESHOLD . ')', $a['overlaps']);
             $md .= self::pairs('Overlapping metrics within the positional half', $a['metric_overlaps']);
         }

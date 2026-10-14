@@ -156,6 +156,8 @@ Findings:
 - **Minutes**: availability (20% of the positional half) and the season totals of the
   contribution both reward volume; the final score correlates 0.36 to 0.44 with minutes in
   every role.
+- Without the overlap altogether (the residual counterfactual) goalkeepers leave the top 100
+  entirely: their positional half adds almost nothing beyond goals prevented.
 
 ## positional-v2 (roadmap phase 4, released)
 

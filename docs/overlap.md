@@ -51,7 +51,7 @@ the counterfactuals at the end show that.
 | `impact.goalkeeping` | goalkeeping | 0.0% |
 | `impact.replacement` | volume | -10.8% |
 
-Not explained by the parts (clamping only): 0.0%.
+Not explained by the parts (clamping; 100% when a role has no spread): 0.0%.
 
 Overlapping parts (|r| ≥ 0.6):
 
@@ -94,7 +94,7 @@ Overlapping metrics within the positional half:
 | `defending` | defending | -1.3% |
 | `impact.replacement` | volume | -6.2% |
 
-Not explained by the parts (clamping only): 0.0%.
+Not explained by the parts (clamping; 100% when a role has no spread): 0.0%.
 
 Overlapping parts (|r| ≥ 0.6):
 
@@ -147,7 +147,7 @@ Overlapping metrics within the positional half:
 | `impact.finishing` | attack | -0.3% |
 | `impact.replacement` | volume | -3.5% |
 
-Not explained by the parts (clamping only): -0.0%.
+Not explained by the parts (clamping; 100% when a role has no spread): -0.0%.
 
 Overlapping parts (|r| ≥ 0.6):
 
@@ -195,7 +195,7 @@ Overlapping metrics within the positional half:
 | `impact.finishing` | attack | -0.0% |
 | `impact.shooting` | attack | -0.0% |
 
-Not explained by the parts (clamping only): 0.0%.
+Not explained by the parts (clamping; 100% when a role has no spread): 0.0%.
 
 Overlapping parts (|r| ≥ 0.6):
 
