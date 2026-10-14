@@ -36,7 +36,7 @@ final class ApiPresenter
     {
         return [
             'rank' => $score->getRank(),
-            'score' => self::round($score->getScore()),
+            'score' => self::finalScore($score),
             'confidence' => round($score->getConfidence(), 3),
             'player' => ['id' => $score->getPlayer()->getId(), 'name' => $score->getPlayer()->getName()],
             'team' => $score->getTeam(),
@@ -83,7 +83,7 @@ final class ApiPresenter
             'model_id' => $score->getRun()->getModelId(),
             'rank' => $score->getRank(),
             'ranked_players' => $score->getRun()->getRankedCount(),
-            'score' => self::round($score->getScore()),
+            'score' => self::finalScore($score),
             'composite' => self::round($score->getComposite()),
             'role' => isset($definition['roles']) ? $score->getPositionGroup() : null,
             'normalization' => $definition['normalization'] ?? 'percentile',
@@ -146,6 +146,15 @@ final class ApiPresenter
             'providers' => $providers,
             'fields' => $fields,
         ];
+    }
+
+    /**
+     * Unranked players get no final score: built on a small part of the model, it is not
+     * comparable with the ranked players' scores (their components are still shown).
+     */
+    private static function finalScore(PlayerScore $score): ?float
+    {
+        return $score->getRank() === null ? null : self::round($score->getScore());
     }
 
     private static function round(?float $value, int $precision = 1): ?float

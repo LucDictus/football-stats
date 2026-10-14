@@ -13,7 +13,7 @@ a new version. Every `ScoreRun` stores the full definition, its SHA-256 hash and
 batches its statistics came from, so any published ranking can be explained and reproduced.
 `app:score` does not store a run that would be identical to the latest one.
 
-## positional-v2 (roadmap phase 4, the current model)
+## positional-v2 (roadmap phase 4, released, the current model)
 
 Every position group has its own components and is compared only with its own group:
 

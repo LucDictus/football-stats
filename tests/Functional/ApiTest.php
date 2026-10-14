@@ -106,6 +106,13 @@ final class ApiTest extends WebTestCase
         self::assertSame([], $this->getJson('/api/players?q=m')['players'], 'at least 2 characters');
     }
 
+    public function testUnrankedPlayersHaveNoComparableScore(): void
+    {
+        foreach ($this->getJson('/api/rankings?model=baseline-v1&unranked=1')['rows'] as $row) {
+            self::assertSame($row['rank'] === null, $row['score'] === null, $row['player']['name']);
+        }
+    }
+
     public function testUnrankedPagingIsDeterministicAndPinnedToARun(): void
     {
         $first = $this->getJson('/api/rankings?model=baseline-v1&unranked=1&limit=1');

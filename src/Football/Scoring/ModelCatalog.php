@@ -14,6 +14,7 @@ final class ModelCatalog
     /** @return array<string, ScoringModel> model id => model */
     public static function all(): array
     {
+        // Released (hashes pinned in ScoreCalculatorTest): baseline-v1, positional-v1, positional-v2.
         $models = [self::baselineV1(), self::positionalV1(), self::positionalV2()];
 
         return array_combine(array_map(static fn (ScoringModel $m) => $m->id(), $models), $models);
