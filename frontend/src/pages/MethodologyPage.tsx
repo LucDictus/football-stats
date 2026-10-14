@@ -58,9 +58,9 @@ export function MethodologyPage() {
           </li>
           {model && adjustsForPossession(model) && (
             <li>
-              <strong>Defending against opportunity.</strong> A team without the ball has more to defend, so clearances, blocks,
-              aerial duels, tackles and interceptions per 90 are adjusted for the team’s possession. How strongly each depends on
-              possession is measured from the data: clearances fully, tackles only a little.
+              <strong>Defending against opportunity.</strong> A team without the ball has more to defend, so defensive actions
+              per 90 are adjusted for the team’s possession (and goalkeepers’ passing, which rises with it). How strongly each
+              depends on possession is measured from the data, per position.
             </li>
           )}
           <li>
@@ -223,15 +223,13 @@ function ImpactSection({ impact }: { impact: NonNullable<ScoringModel['impact']>
         </li>
         <li>
           <strong>Defence</strong>: the team’s goals prevented against the league average, shared among outfield players by their
-          share of the team’s defensive actions
-          {impact.defence_sharing === 'per_type' &&
-            ' (of each kind, averaged, so frequent clearances do not outweigh tackles and interceptions)'}
-          . <span className="muted">Weak evidence: it is a team measure.</span>
+          share of the team’s defensive actions. <span className="muted">Weak evidence: it is a team measure.</span>
         </li>
         {impact.error_goals !== undefined && (
           <li>
-            <strong>Errors</strong>: an outfield player loses {impact.error_goals} goal for each error leading to a goal (a
-            goalkeeper’s errors are already in his goals prevented). <span className="muted">Moderate evidence.</span>
+            <strong>Errors</strong>: an outfield player loses {impact.error_goals} goal for each error leading to a goal, his
+            count pulled toward the rate for his position (errors are rare, so a single one says little). A goalkeeper’s errors
+            are already in his goals prevented. <span className="muted">Moderate evidence.</span>
           </li>
         )}
         <li>

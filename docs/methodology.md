@@ -16,59 +16,81 @@ batches its statistics came from, so any published ranking can be explained and 
 ## mvp-v2 (roadmap phase 5, release candidate, the current model)
 
 **Same blend as mvp-v1 (50% positional + 50% contribution in goals), with defending measured
-against opportunity and errors counted once, in goals.**
+against opportunity and errors counted in goals, for every outfield player.**
 
 | Change | Why |
 |---|---|
-| Defensive counts per 90 (tackles won, interceptions, aerial duels won, blocks, clearances) adjusted for team possession | A team without the ball has more to defend: across the 96 teams, clearances correlate −0.67 with possession, aerial duels won −0.52, blocks −0.42 |
-| How strongly each statistic depends on possession is fitted from the data | The full adjustment overcorrects: it turns tackles and interceptions into +0.61 / +0.47 correlations with possession |
-| Errors leading to a goal: −1 goal each in the contribution for outfield players, out of defenders' positional reliability | An error that leads to a goal is a goal given away. It was counted only for defenders and goalkeepers, as a 10% positional component; now every outfield player is measured, once |
-| Team defence shared by each kind of defensive action, averaged | By the sum, clearances (the most frequent action) decided most of the share |
-| Goalkeepers: distribution (accurate passes per 90, 15%) added to the positional half; shot stopping 50% (was 70%), shrunk by shots on target faced (prior 300, as in the contribution) | The overlap check found goals prevented counted in both halves; passing is unrelated to it (r 0.03) |
+| Defensive counts per 90 (tackles won, interceptions, recoveries; for defenders also aerial duels won, blocks, clearances) adjusted for team possession | A team without the ball has more to defend; defenders of teams that defend a lot had the edge |
+| How strongly each statistic depends on possession is fitted from the data, **per position** | A full adjustment (β = 1) overcorrects most statistics; one β over all outfield players overcorrected defenders |
+| Goalkeepers: distribution (accurate passes per 90, possession-adjusted, 15%) added; shot stopping 50% (was 70%) | The overlap check found goals prevented in both halves; passing adds what it does not (r 0.03) |
+| Errors leading to a goal: −1 goal each in the contribution for outfield players, the count shrunk toward the position's rate (prior 10 matches); out of defenders' positional reliability | An error that leads to a goal is a goal given away. It was a 10% positional component for defenders and goalkeepers only; midfielders' and forwards' errors were not counted |
 
-**Possession** is not in the data, so it is estimated from passing: a team's accurate passes
-per 90 over that plus its league's average (`PossessionAdjustment`). Each statistic's
-sensitivity β is the slope of ln(team rate / league average) on ln((1 − p) / (1 − league
-average p)); a player's count is multiplied by ((1 − p) / (1 − league average p))^−β. Fitted
-on 2025/26 (printed by `app:score`):
+**Possession** is not in the data, so it is estimated from passing: a team's outfield accurate
+passes per 90 over that plus its league's average, p (`PossessionAdjustment`). For each
+position and statistic, β is the slope of ln(the rate of the team's players in that position /
+league average) on ln((1 − p) / (1 − league average p)) over the 96 teams; a player's count is
+multiplied by ((1 − p) / (1 − league average p))^−β. `app:score` prints the fit:
 
-| Statistic | β |
-|---|---|
-| Clearances | 1.25 |
-| Aerial duels won | 1.08 |
-| Blocks | 0.89 |
-| Interceptions | 0.45 |
-| Tackles won | 0.30 |
+| Position | Statistic | β | r with time without the ball |
+|---|---|---|---|
+| Defenders | Clearances | 1.22 | 0.73 |
+| Defenders | Blocks | 0.87 | 0.40 |
+| Defenders | Aerial duels won | 0.40 | 0.19 |
+| Defenders | Interceptions | 0.32 | 0.21 |
+| Defenders | Tackles won | 0.05 | 0.04 |
+| Defenders | Ball recoveries | −0.62 | −0.56 |
+| Midfielders | Interceptions | 0.71 | 0.47 |
+| Midfielders | Tackles won | 0.49 | 0.34 |
+| Midfielders | Ball recoveries | 0.02 | 0.03 |
+| Goalkeepers | Accurate passes | −0.74 | −0.37 |
 
-Ball recoveries are not adjusted: they rise with possession (r +0.24; pressing), not against it.
-The player page shows the factor next to each adjusted count.
+Negative β: the statistic rises *with* possession (defenders of dominant teams win the ball
+back high up the pitch; their keepers pass more), so those players are scaled down. The player
+page shows the factor next to each adjusted count. Check at player level (correlation of the
+defending component with the team's estimated possession): defenders −0.11 → 0.00,
+midfielders −0.14 → −0.01.
 
-### Result (run #13)
+### Result (run #14)
 
-| | mvp-v1 (run #11) | mvp-v2 (run #13) |
+| | mvp-v1 (run #11) | mvp-v2 (run #14) |
 |---|---|---|
 | Top 10 FW / MF | 5 / 5 | 5 / 5 (same ten players) |
-| Top 100 FW / MF / DF / GK | 21 / 48 / 25 / 6 | 20 / 48 / 27 / 5 |
-| Best defender / goalkeeper | Schlotterbeck #17 / Koffi #36 | Schlotterbeck #15 / Nübel #33 |
-| Positional ↔ contribution r: DF / GK | 0.58 / 0.89 | 0.50 / 0.90 |
+| Top 100 FW / MF / DF / GK | 21 / 48 / 25 / 6 | 21 / 47 / 27 / 5 |
+| Best defender / goalkeeper | Schlotterbeck #17 / Koffi #36 | Orban #15 / Nübel #41 |
+| Positional ↔ contribution r: DF / GK | 0.58 / 0.89 | 0.50 / 0.85 |
 
-- **Defenders of dominant teams rise**: Konaté #189 → #146, Cubarsí #163 → #120, Pacho
-  #159 → #131, Upamecano #165 → #147.
-- **Errors cost places**: van Dijk #57 → #70 (positional up from 73 to 78, but 2 errors leading
-  to a goal); 334 ranked players made at least one error, at most 4.
-- **The goalkeeper change does little** (overlap report: [overlap-mvp-v2.md](overlap-mvp-v2.md)).
-  Each role's positional score is standardised again within the role, which undoes any extra
-  shrinkage of a role's dominant statistic; distribution lowers goalkeeping from 88% to 81% of a
-  keeper's final score. Counting goals prevented only once would take goalkeepers out of the top
-  100 (best #107). They are not over-represented as it is: 5 of 113 goalkeepers are in the top
-  100 (4.4%), against 5.4% of defenders, 7.0% of midfielders and 8.8% of forwards. For a
-  goalkeeper shot stopping *is* the role, as attack is for a forward.
+- **Errors move the replacement level.** With errors in the contribution, the 20th-percentile
+  player per position contributes less, so the replacement level falls (per 90: defenders
+  0.033 → 0.010, midfielders 0.082 → 0.068, forwards 0.169 → 0.160). A full-season defender with
+  an average or better error record therefore gains about a goal above replacement; this, not
+  the possession adjustment, is most of why several defenders rose (Konaté #189 → #164,
+  Cubarsí #163 → #147: positional scores slightly down, contribution up).
+- **Errors cost places**: van Dijk #57 → #63 (positional 73 → 77, but −1.75 goals for errors);
+  the worst error record costs 3.3 goals, and 59 ranked outfield players lose more than 1.
+- **Possession**: the defending component no longer favours teams that defend a lot (above). Its
+  net effect on the ranking is small, because defending is 15–25% of the positional half.
+- **Goalkeepers**: distribution lowers goalkeeping from 88% to 80% of a keeper's final score
+  (overlap report: [overlap-mvp-v2.md](overlap-mvp-v2.md)). Shrinking positional shot stopping
+  by shots on target (like the contribution) was tried and dropped: each position's score is
+  standardised again within the position, which undoes any extra shrinkage of its dominant
+  statistic, so it only made the two halves identical. Counting goals prevented once would take
+  goalkeepers out of the top 100 (best #107); as it is, 5 of 113 goalkeepers are in it (4.4%,
+  against 5.4% of defenders, 6.9% of midfielders and 9.3% of forwards).
 
 ### Known limitations of mvp-v2
 
-- Possession is estimated from passing, not measured.
-- Errors leading to a goal are a provider's judgement, and rare: one error moves a mid-table
-  player dozens of places (the middle of the ranking is dense).
+- **Possession is estimated from passing**, not measured, and a player who moved clubs gets the
+  factor of his main club (76 ranked players played for two).
+- **Build-up still follows possession**: the positional half correlates +0.39 (defenders) and
+  +0.54 (midfielders) with the team's estimated possession, through passing volume. Part of that
+  is real (better teams have the ball because they have better players) and cannot be separated
+  from style with this data.
+- **Goalkeepers**: 80% of a keeper's final score is goals prevented, a statistic that is noisy
+  over one season. Shot stopping is what the position is about, as attack is for a forward, so
+  it stays in both halves; the contribution shrinks it hard.
+- **Errors** are a provider's judgement and charged by outcome (a goal), while attack is credited
+  by expected goals. Goalkeepers keep a 10% reliability component, and their errors are also in
+  goals prevented.
 - The limitations of mvp-v1 below still apply, apart from what is listed here.
 
 ## mvp-v1 (roadmap phase 5, released)
@@ -211,7 +233,7 @@ Findings:
   measure that is not also driven by the team (save % repeats goals prevented; clean sheets are
   team outcomes). **For the next model version:** shrink the positional shot stopping like the
   contribution's goalkeeping. That needs a new version, because released models are never edited.
-  (mvp-v2 does, with little effect: see above.)
+  (Tried for mvp-v2 and dropped: see above.)
 - **Minutes**: availability (20% of the positional half) and the season totals of the
   contribution both reward volume; the final score correlates 0.36 to 0.44 with minutes in
   every role.

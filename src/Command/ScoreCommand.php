@@ -50,11 +50,13 @@ final class ScoreCommand extends Command
         $io->table(['#', 'Player', 'Pos', 'Club', 'Score', ...array_map(static fn ($c) => $c->label, $model->components), 'Confidence'], $rows);
 
         if ($possession !== null) {
-            $io->table(['Possession-adjusted statistic', 'Fitted sensitivity β'], array_map(
-                static fn (string $field, float $beta) => [$field, number_format($beta, 2)],
-                array_keys($possession->elasticities()),
-                $possession->elasticities(),
-            ));
+            $rows = [];
+            foreach ($possession->fits() as $role => $fields) {
+                foreach ($fields as $field => $fit) {
+                    $rows[] = [$role, $field, number_format($fit['beta'], 2), $fit['r'] === null ? '–' : number_format($fit['r'], 2), $fit['teams']];
+                }
+            }
+            $io->table(['Position', 'Possession-adjusted statistic', 'Sensitivity β', 'r with time without the ball', 'Teams'], $rows);
         }
 
         $io->success($created

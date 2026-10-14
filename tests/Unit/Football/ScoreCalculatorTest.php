@@ -200,6 +200,31 @@ final class ScoreCalculatorTest extends TestCase
         self::assertEqualsWithDelta((75 * 80 + 87.5 * 20) / 100, $adjusted['60 of 80'], 1e-9);
     }
 
+    public function testPossessionIsAdjustedForBeforeShrinkageAndTheMeasuredValueIsKept(): void
+    {
+        $model = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['DF'], 0.0, [
+            new Component('defending', 'Defending', '', 1.0, [new Metric('clearances_p90', 'Clearances per 90', ['clearances'], MetricMode::Per90, 1.0, shrinkage: 10.0, possessionAdjusted: true)]),
+        ]);
+        $candidates = array_map(fn (int $i) => $this->candidate($i, "Team {$i}", goals: null, group: 'DF', minutes: 10000.0, extra: [
+            'accurate_passes' => [1 => 6000.0, 2 => 4000.0, 3 => 2500.0][$i],
+            'clearances' => [1 => 200.0, 2 => 300.0, 3 => 450.0][$i],
+        ], team: "Team {$i}", league: 'PL'), [1, 2, 3]);
+
+        $results = (new ScoreCalculator())->score($model, $candidates);
+        $possession = ScoreCalculator::possessionAdjustment($model, $candidates);
+        self::assertNotNull($possession);
+
+        $byName = array_column(array_map(static fn ($r) => [$r->candidate->name, $r->components['defending']['metrics']['clearances_p90']], $results), 1, 0);
+        $factors = array_map(static fn ($c) => $possession->factor($c, 'clearances'), $candidates);
+        $adjusted = array_map(static fn ($c, float $f) => (float) $c->stats->value('clearances') / 10000 * 90 * $f, $candidates, $factors);
+        $average = array_sum($adjusted) / 3;
+        $matches = 10000 / 90;
+        self::assertEqualsWithDelta(200 / 10000 * 90, $byName['Team 1']['value'], 1e-9, 'the measured value is kept');
+        self::assertEqualsWithDelta($factors[0], $byName['Team 1']['possession_factor'] ?? null, 1e-12);
+        self::assertGreaterThan(1.0, $factors[0], 'the team with the most possession is scaled up');
+        self::assertEqualsWithDelta(($adjusted[0] * $matches + $average * 10) / ($matches + 10), $byName['Team 1']['adjusted'] ?? null, 1e-9);
+    }
+
     public function testTheReferenceGroupCanBeTheRankedPlayersOnly(): void
     {
         $model = static fn (bool $rankedOnly) => new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['FW'], 0.6, [
@@ -341,7 +366,7 @@ final class ScoreCalculatorTest extends TestCase
     }
 
     /** @param array<string, float> $extra */
-    private function candidate(int $id, string $name, ?float $goals, string $group = 'FW', float $minutes = 2000.0, array $extra = [], string $sofascore = 'ok', ?string $understat = null): ScoringCandidate
+    private function candidate(int $id, string $name, ?float $goals, string $group = 'FW', float $minutes = 2000.0, array $extra = [], string $sofascore = 'ok', ?string $understat = null, string $team = 'Club', ?string $league = null): ScoringCandidate
     {
         $values = ['minutes' => $minutes] + ($goals !== null ? ['goals' => $goals] : []) + $extra;
         $season = new PlayerSeason(new Player($name), new Season('2025/26', new \DateTimeImmutable(), new \DateTimeImmutable()));
@@ -358,6 +383,6 @@ final class ScoreCalculatorTest extends TestCase
             ] + ($understat !== null ? ['Understat' => ['status' => $understat, 'minutes' => $minutes, 'reason' => null]] : []),
         );
 
-        return new ScoringCandidate($id, $name, $group, 'Club', $stats);
+        return new ScoringCandidate($id, $name, $group, $team, $stats, $league);
     }
 }

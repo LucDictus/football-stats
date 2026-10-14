@@ -159,18 +159,18 @@ final class ScoreCalculator
      */
     public static function possessionAdjustment(ScoringModel $model, array $candidates): ?PossessionAdjustment
     {
-        $fields = [];
-        foreach ($model->roles === [] ? [$model->components] : $model->roles as $components) {
-            foreach ($components as $component) {
+        $fieldsByRole = [];
+        foreach ($model->positionGroups as $group) {
+            foreach ($model->componentsFor($model->comparesWithinRole() ? $group : null) as $component) {
                 foreach ($component->metrics as $metric) {
-                    if ($metric->possessionAdjusted) {
-                        $fields[$metric->fields[0]] = true;
+                    if ($metric->possessionAdjusted && !in_array($metric->fields[0], $fieldsByRole[$group] ?? [], true)) {
+                        $fieldsByRole[$group][] = $metric->fields[0];
                     }
                 }
             }
         }
 
-        return $fields === [] ? null : PossessionAdjustment::fit($candidates, array_keys($fields));
+        return $fieldsByRole === [] ? null : PossessionAdjustment::fit($candidates, $fieldsByRole);
     }
 
     /**

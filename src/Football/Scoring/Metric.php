@@ -25,10 +25,7 @@ final readonly class Metric
          * many barely move: 15 out of 15 tackles is not a perfect season.
          */
         public ?float $shrinkage = null,
-        /**
-         * The fields whose sum is the sample size for shrinkage: attempts for rates; for per-90
-         * metrics optionally an event count instead of matches (shots on target faced).
-         */
+        /** Rates: the fields whose sum is the number of attempts (the sample size for shrinkage). */
         public array $sampleFields = [],
         /**
          * Square-root transform before normalising: the variance-stabilising transform for

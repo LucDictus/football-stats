@@ -213,14 +213,19 @@ function Positional({ score, components, normalization, role, peers }: {
                 <li key={metric.key}>
                   <span className={styles.metricLabel}>{metric.label}</span>
                   <span className="num">{formatValue(metric.value)}</span>
-                  {metric.adjusted !== null && metric.value !== null && Math.abs(metric.adjusted - metric.value) >= 0.005 && (
-                    <span className={styles.adjusted}>
-                      {metric.possession_factor !== null
-                        ? `× ${metric.possession_factor.toFixed(2)} for his team’s possession, then for sample size: `
-                        : 'adjusted for sample size: '}
-                      {formatValue(metric.adjusted)}
-                    </span>
-                  )}
+                  {metric.adjusted !== null &&
+                    metric.value !== null &&
+                    (metric.possession_factor !== undefined || Math.abs(metric.adjusted - metric.value) >= 0.005) && (
+                      <span
+                        className={styles.adjusted}
+                        title="Values built on few matches or duels are pulled toward the average for the role; defensive counts are first adjusted for how much his team had the ball"
+                      >
+                        {metric.possession_factor !== undefined
+                          ? `× ${metric.possession_factor.toFixed(2)} for his team’s possession, then for sample size: `
+                          : 'adjusted for sample size: '}
+                        {formatValue(metric.adjusted)}
+                      </span>
+                    )}
                   <Bar value={metric.normalised} color={componentColor(ci)} height={4} delay={0.3 + ci * 0.08 + mi * 0.05} />
                   <span className={styles.percentile}>
                     {metric.normalised === null

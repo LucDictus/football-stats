@@ -34,9 +34,10 @@ final class ModelCatalog
      *   in one half while it is shrunk hard in the other;
      * - defensive counts per 90 adjusted for team possession, with each statistic's
      *   sensitivity fitted from the data (PossessionAdjustment);
-     * - team defence shared by each kind of defensive action instead of their sum, so frequent
-     *   clearances do not outweigh tackles and interceptions;
-     * - errors leading to a goal cost an outfield player a goal each in the contribution.
+     * - errors leading to a goal cost an outfield player a goal each in the contribution
+     *   (shrunk toward the role's rate, like other rare events), instead of a positional
+     *   reliability component for defenders only;
+     * - goalkeepers: distribution added, so goals prevented carries less of the positional half.
      */
     private static function mvpV2(): ScoringModel
     {
@@ -55,7 +56,7 @@ final class ModelCatalog
             roles: self::positionalRoles(v3: true),
             normalization: $v1->normalization,
             referenceRankedOnly: $v1->referenceRankedOnly,
-            impact: new ImpactModel(defenceSharing: 'per_type', errorGoals: 1.0),
+            impact: new ImpactModel(errorGoals: 1.0),
             impactWeight: $v1->impactWeight,
         );
     }
@@ -122,8 +123,8 @@ final class ModelCatalog
 
     /**
      * The roles of positional-v2, or with $v3 the positional half of mvp-v2: defensive counts
-     * adjusted for team possession, and goals prevented shrunk by shots on target faced (a
-     * prior of 300, like the contribution's goalkeeping) instead of matches.
+     * (and goalkeepers' passing) adjusted for team possession, errors moved to the
+     * contribution, and distribution for goalkeepers.
      *
      * @return array<string, non-empty-list<Component>>
      */
@@ -141,14 +142,11 @@ final class ModelCatalog
             self::shrunkPer90('accurate_passes_p90', 'Accurate passes per 90', ['accurate_passes'], 0.3),
         ]);
 
-        $defensive = static fn (string $key, string $label, string $field, float $weight) => new Metric(
+        $adjusted = static fn (string $key, string $label, string $field, float $weight) => new Metric(
             $key, $label, [$field], MetricMode::Per90, $weight, shrinkage: 10.0, sqrt: true, possessionAdjusted: $v3,
         );
-        // Recoveries are left as they are: they rise with possession (pressing), not against it.
-        $possession = $v3 ? ' Adjusted for team possession: a team without the ball has more to defend.' : '';
-        $shotStopping = $v3
-            ? new Metric('goals_prevented_p90', 'Goals prevented per 90', ['goals_prevented'], MetricMode::Per90, 1.0, shrinkage: 300.0, sampleFields: ['saves', 'goals_conceded'])
-            : self::shrunkPer90('goals_prevented_p90', 'Goals prevented per 90', ['goals_prevented'], 1.0, sqrt: false);
+        $possession = $v3 ? ' Adjusted for team possession: how much each depends on it is measured from the data.' : '';
+        $shotStopping = self::shrunkPer90('goals_prevented_p90', 'Goals prevented per 90', ['goals_prevented'], 1.0, sqrt: false);
 
         return [
             'FW' => [
@@ -175,20 +173,20 @@ final class ModelCatalog
                     self::shrunkPer90('np_ga_p90', 'Non-penalty goals + assists per 90', ['np_goals', 'assists'], 1.0),
                 ]),
                 new Component('defending', 'Defending', 'Winning the ball back: tackles won, interceptions and recoveries.' . $possession, 0.15, [
-                    $defensive('tackles_won_p90', 'Tackles won per 90', 'tackles_won', 0.4),
-                    $defensive('interceptions_p90', 'Interceptions per 90', 'interceptions', 0.3),
-                    self::shrunkPer90('recoveries_p90', 'Ball recoveries per 90', ['ball_recoveries'], 0.3),
+                    $adjusted('tackles_won_p90', 'Tackles won per 90', 'tackles_won', 0.4),
+                    $adjusted('interceptions_p90', 'Interceptions per 90', 'interceptions', 0.3),
+                    $adjusted('recoveries_p90', 'Ball recoveries per 90', 'ball_recoveries', 0.3),
                 ]),
                 $availability(),
             ],
             'DF' => [
                 new Component('defending', 'Defensive actions', 'Tackles won, interceptions, aerial duels won, blocks, recoveries and clearances per 90.' . $possession, $v3 ? 0.25 : 0.2, [
-                    $defensive('tackles_won_p90', 'Tackles won per 90', 'tackles_won', 0.2),
-                    $defensive('interceptions_p90', 'Interceptions per 90', 'interceptions', 0.2),
-                    $defensive('aerials_won_p90', 'Aerial duels won per 90', 'aerial_duels_won', 0.2),
-                    $defensive('blocks_p90', 'Blocks per 90', 'blocks', 0.15),
-                    self::shrunkPer90('recoveries_p90', 'Ball recoveries per 90', ['ball_recoveries'], 0.15),
-                    $defensive('clearances_p90', 'Clearances per 90', 'clearances', 0.1),
+                    $adjusted('tackles_won_p90', 'Tackles won per 90', 'tackles_won', 0.2),
+                    $adjusted('interceptions_p90', 'Interceptions per 90', 'interceptions', 0.2),
+                    $adjusted('aerials_won_p90', 'Aerial duels won per 90', 'aerial_duels_won', 0.2),
+                    $adjusted('blocks_p90', 'Blocks per 90', 'blocks', 0.15),
+                    $adjusted('recoveries_p90', 'Ball recoveries per 90', 'ball_recoveries', 0.15),
+                    $adjusted('clearances_p90', 'Clearances per 90', 'clearances', 0.1),
                 ]),
                 new Component('duels', 'Duel success', 'How often his aerial duels and tackles succeed: quality, not volume. Few duels are pulled toward the average.', $v3 ? 0.25 : 0.2, [
                     self::shrunkRate('aerial_win_pct', 'Aerial duels won %', 'aerial_win_pct', ['aerial_duels_won', 'aerial_duels_lost'], 0.6),
@@ -204,12 +202,12 @@ final class ModelCatalog
                 $availability(),
             ],
             'GK' => [
-                new Component('shot_stopping', 'Shot stopping', 'Goals prevented per 90: goals the shots he faced were expected to produce, minus the goals he conceded.' . ($v3 ? ' Pulled toward the average by shots on target faced, as in the contribution: over one season it is noisy.' : ''), $v3 ? 0.5 : 0.7, [
+                new Component('shot_stopping', 'Shot stopping', 'Goals prevented per 90: goals the shots he faced were expected to produce, minus the goals he conceded.', $v3 ? 0.5 : 0.7, [
                     $shotStopping,
                 ]),
                 // v3: distribution adds what goals prevented (also the contribution's goalkeeping) does not.
-                ...($v3 ? [new Component('distribution', 'Distribution', 'Accurate passes per 90: starting attacks from the back.', 0.15, [
-                    self::shrunkPer90('accurate_passes_p90', 'Accurate passes per 90', ['accurate_passes'], 1.0),
+                ...($v3 ? [new Component('distribution', 'Distribution', 'Accurate passes per 90: starting attacks from the back. Adjusted for team possession, which drives how much a goalkeeper gets to pass.', 0.15, [
+                    $adjusted('accurate_passes_p90', 'Accurate passes per 90', 'accurate_passes', 1.0),
                 ])] : []),
                 $reliability(0.1),
                 $availability($v3 ? 0.25 : 0.2),

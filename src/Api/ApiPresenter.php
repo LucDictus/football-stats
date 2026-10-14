@@ -75,12 +75,13 @@ final class ApiPresenter
                 // Stored as 'percentile' since v1; with standard normalisation it is a T-score.
                 'metrics' => array_map(static fn (array $metric) => $metric + [
                     'value' => self::round($result['metrics'][$metric['key']]['value'] ?? null, 2),
-                    // Possession-adjusted metrics: the multiplier for the team's possession.
-                    'possession_factor' => self::round($result['metrics'][$metric['key']]['possession_factor'] ?? null, 3),
-                    // After the possession factor and shrinkage toward the role average: what was normalised.
+                    // After the possession factor (if any) and shrinkage toward the role average: what was normalised.
                     'adjusted' => self::round($result['metrics'][$metric['key']]['adjusted'] ?? null, 2),
                     'normalised' => self::round($result['metrics'][$metric['key']]['percentile'] ?? null),
-                ], $component['metrics']),
+                ] + (isset($result['metrics'][$metric['key']]['possession_factor'])
+                    // Possession-adjusted metrics only: the multiplier for the team's possession.
+                    ? ['possession_factor' => self::round($result['metrics'][$metric['key']]['possession_factor'], 3)]
+                    : []), $component['metrics']),
             ];
         }
 
@@ -120,7 +121,10 @@ final class ApiPresenter
                 'goals' => self::round($impact['goals'][$key] ?? null, 2),
                 // Build-up estimated from passes (SofaScore fallback) is weaker evidence than xGBuildup.
                 'evidence' => $key === 'build_up' && $calibration !== null ? 'weak' : ImpactCalculator::EVIDENCE[$key],
-            ], ImpactCalculator::COMPONENTS), // fixed order (jsonb sorts keys)
+            ], array_values(array_filter(
+                ImpactCalculator::COMPONENTS, // fixed order (jsonb sorts keys)
+                static fn (string $key) => array_key_exists($key, $impact['goals']), // only the model's own parts
+            ))),
             'total' => self::round($impact['total'], 2),
             'replacement' => self::round($impact['replacement'], 2),
             'above' => self::round($impact['above'], 2),

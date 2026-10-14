@@ -95,6 +95,22 @@ final class ApiTest extends WebTestCase
         self::assertSame(3, $this->getJson('/api/rankings')['total'], 'the default model ranks every position');
     }
 
+    public function testEachModelShowsOnlyItsOwnParts(): void
+    {
+        $pedri = $this->playerId('Pedri');
+        $v1 = $this->getJson("/api/players/{$pedri}?model=mvp-v1")['score'];
+        $v2 = $this->getJson("/api/players/{$pedri}?model=mvp-v2")['score'];
+
+        $metrics = static fn (array $score) => array_merge(...array_map(static fn (array $c) => $c['metrics'], $score['components']));
+        self::assertNotContains('errors', array_column($v1['impact']['components'], 'key'), 'mvp-v1 has no errors part');
+        self::assertContains('errors', array_column($v2['impact']['components'], 'key'));
+        foreach ($metrics($v1) as $metric) {
+            self::assertArrayNotHasKey('possession_factor', $metric);
+        }
+        $tackles = array_values(array_filter($metrics($v2), static fn (array $m) => $m['key'] === 'tackles_won_p90'))[0];
+        self::assertTrue($tackles['possession_adjusted'] ?? false);
+    }
+
     public function testGoalkeeperIsNotScoredByTheBaselineModel(): void
     {
         self::assertNull($this->getJson('/api/players/' . $this->playerId('Thibaut Courtois') . '?model=baseline-v1')['score']);

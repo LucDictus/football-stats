@@ -48,10 +48,9 @@ export interface ScoringModel {
     passer_share: number
     build_up_share: number
     weight: number
-    /** Absent: shared by the sum of defensive actions. */
-    defence_sharing?: 'per_type'
     /** Goals an outfield player loses per error leading to a goal (absent: not counted). */
     error_goals?: number
+    error_prior_matches?: number
   }
 }
 
@@ -121,7 +120,7 @@ export interface ScopeStats {
 export interface BreakdownMetric extends ModelMetric {
   value: number | null
   /** Multiplier for the team's possession (possession-adjusted metrics only). */
-  possession_factor: number | null
+  possession_factor?: number
   /** After the possession factor and shrinkage toward the role average; this is what was normalised. */
   adjusted: number | null
   /** 0–100 within the comparison group: a percentile, or a T-score (50 = average) for standard models. */

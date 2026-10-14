@@ -51,10 +51,11 @@ final class ImpactCalculator
         $calibration = $this->calibration($model, $candidates);
         $teams = $this->teams($model, $candidates, $calibration);
         $leagueAverage = $this->leagueAverages($model, $teams);
+        $errorRate = $model->errorGoals !== null ? self::errorRates($scored) : [];
 
         $raw = [];
         foreach ($scored as $candidate) {
-            $raw[$candidate->playerId] = $this->player($model, $candidate, $teams[self::teamKey($candidate)] ?? null, $leagueAverage, $calibration);
+            $raw[$candidate->playerId] = $this->player($model, $candidate, $teams[self::teamKey($candidate)] ?? null, $leagueAverage, $calibration, $errorRate);
         }
 
         // Replacement level per role: a low percentile of contribution per 90 among the reference players.
@@ -88,13 +89,14 @@ final class ImpactCalculator
     }
 
     /**
-     * @param array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, by_type: array<string, float>, psxg_faced: float, gk_minutes: float, league: ?string}|null $team
-     * @param array<string, float>                                                                                                                                                $leagueAverage league => expected goals on target conceded per 90
-     * @param Calibration                                                                                                                                                         $calibration
+     * @param array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, psxg_faced: float, gk_minutes: float, league: ?string}|null $team
+     * @param array<string, float>                                                                                                                 $leagueAverage league => expected goals on target conceded per 90
+     * @param Calibration                                                                                                                          $calibration
+     * @param array<string, float>                                                                                                                 $errorRate     role => errors leading to a goal per 90
      *
      * @return array{goals: array<string, ?float>, total: ?float, attack_source: ?string, calibration?: array{xg: float, xa: float, build_up_per_pass: ?float}}
      */
-    private function player(ImpactModel $model, ScoringCandidate $c, ?array $team, array $leagueAverage, array $calibration): array
+    private function player(ImpactModel $model, ScoringCandidate $c, ?array $team, array $leagueAverage, array $calibration, array $errorRate): array
     {
         $s = $c->stats;
         $goals = array_fill_keys(self::COMPONENTS, null);
@@ -131,13 +133,12 @@ final class ImpactCalculator
                 // Rate over the minutes the team's goalkeeping data covers, applied to the whole season.
                 $rate = $team['psxg_faced'] / $team['gk_minutes'] * 90;
                 $teamPrevented = ($leagueAverage[(string) $team['league']] - $rate) * CompetitionCatalog::LEAGUE_MATCHES[(string) $team['league']];
-                $goals['defence'] = $teamPrevented * self::defenceShare($model, $c->stats, $team, $mine);
+                $goals['defence'] = $teamPrevented * $mine / $team['defensive_actions'];
             }
         }
         if ($model->errorGoals !== null && $c->positionGroup !== 'GK') {
             // A keeper's errors are already in his goals prevented.
-            $errors = self::seasonTotal($s, 'errors_leading_to_goal');
-            $goals['errors'] = $errors === null ? null : -$model->errorGoals * $errors;
+            $goals['errors'] = -$model->errorGoals * self::errors($model, $s, $errorRate[(string) $c->positionGroup] ?? 0.0);
         }
 
         // Without npxG and xA the attack is unknown, so the contribution is unknown (never zero).
@@ -256,7 +257,7 @@ final class ImpactCalculator
      * @param list<ScoringCandidate> $candidates
      * @param Calibration            $calibration
      *
-     * @return array<string, array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, by_type: array<string, float>, psxg_faced: float, gk_minutes: float, league: ?string}>
+     * @return array<string, array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, psxg_faced: float, gk_minutes: float, league: ?string}>
      */
     private function teams(ImpactModel $model, array $candidates, array $calibration): array
     {
@@ -266,7 +267,7 @@ final class ImpactCalculator
             if ($key === null) {
                 continue;
             }
-            $teams[$key] ??= ['xg' => 0.0, 'xa' => 0.0, 'xg_buildup' => 0.0, 'defensive_actions' => 0.0, 'by_type' => array_fill_keys($model->defensiveActions, 0.0), 'psxg_faced' => 0.0, 'gk_minutes' => 0.0, 'league' => $c->league];
+            $teams[$key] ??= ['xg' => 0.0, 'xa' => 0.0, 'xg_buildup' => 0.0, 'defensive_actions' => 0.0, 'psxg_faced' => 0.0, 'gk_minutes' => 0.0, 'league' => $c->league];
             [$npxg, $xa, $buildUp] = self::attack($model, $c, $calibration);
             $teams[$key]['xg'] += $npxg ?? 0.0;
             $teams[$key]['xa'] += $xa ?? 0.0;
@@ -279,11 +280,8 @@ final class ImpactCalculator
                     $teams[$key]['psxg_faced'] += $conceded + $prevented;
                     $teams[$key]['gk_minutes'] += (float) $c->stats->originMinutes(Origin::Sofascore);
                 }
-            } elseif (self::defensiveActions($model, $c->stats) !== null) {
-                $teams[$key]['defensive_actions'] += (float) self::defensiveActions($model, $c->stats);
-                foreach ($model->defensiveActions as $field) {
-                    $teams[$key]['by_type'][$field] += (float) self::seasonTotal($c->stats, $field);
-                }
+            } else {
+                $teams[$key]['defensive_actions'] += self::defensiveActions($model, $c->stats) ?? 0.0;
             }
         }
 
@@ -308,24 +306,37 @@ final class ImpactCalculator
     }
 
     /**
-     * The player's share of his team's defending: of all its defensive actions, or of each kind
-     * averaged over the kinds the team has any of.
-     *
-     * @param array{defensive_actions: float, by_type: array<string, float>} $team
+     * Errors leading to a goal over his minutes, shrunk toward the role's rate per 90:
+     * expected + (errors − expected) × matches / (matches + prior). Unknown: the role's rate.
      */
-    private static function defenceShare(ImpactModel $model, PlayerCompetitionStats $s, array $team, float $mine): float
+    private static function errors(ImpactModel $model, PlayerCompetitionStats $s, float $ratePer90): float
     {
-        if ($model->defenceSharing === 'actions') {
-            return $mine / $team['defensive_actions'];
-        }
-        $shares = [];
-        foreach ($model->defensiveActions as $field) {
-            if ($team['by_type'][$field] > 0) {
-                $shares[] = (float) self::seasonTotal($s, $field) / $team['by_type'][$field];
+        $matches = $s->getMinutes() / 90;
+        $expected = $ratePer90 * $matches;
+        $errors = self::seasonTotal($s, 'errors_leading_to_goal');
+
+        return $errors === null ? $expected : $expected + ($errors - $expected) * $matches / ($matches + $model->errorPriorMatches);
+    }
+
+    /**
+     * Errors leading to a goal per 90 per role, over the outfield players whose count is known.
+     *
+     * @param list<ScoringCandidate> $scored
+     *
+     * @return array<string, float>
+     */
+    private static function errorRates(array $scored): array
+    {
+        $sums = [];
+        foreach ($scored as $c) {
+            $errors = self::seasonTotal($c->stats, 'errors_leading_to_goal');
+            if ($errors !== null && $c->positionGroup !== null) {
+                $sums[$c->positionGroup]['errors'] = ($sums[$c->positionGroup]['errors'] ?? 0.0) + $errors;
+                $sums[$c->positionGroup]['minutes'] = ($sums[$c->positionGroup]['minutes'] ?? 0.0) + $c->stats->getMinutes();
             }
         }
 
-        return $shares === [] ? 0.0 : array_sum($shares) / count($shares);
+        return array_map(static fn (array $s) => $s['minutes'] > 0 ? $s['errors'] / $s['minutes'] * 90 : 0.0, $sums);
     }
 
     private static function defensiveActions(ImpactModel $model, PlayerCompetitionStats $s): ?float

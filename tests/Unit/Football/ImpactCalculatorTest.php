@@ -74,34 +74,25 @@ final class ImpactCalculatorTest extends TestCase
         self::assertNull($result[1]['goals']['defence'], 'keepers are measured by goals prevented instead');
     }
 
-    public function testTeamDefenceCanBeSharedByEachKindOfAction(): void
+    public function testErrorsLeadingToAGoalCostAGoalEachShrunkTowardTheRolesRate(): void
     {
-        // Same league as above: team A prevents 8.55 goals. The centre-back clears a lot, the
-        // midfielder makes all the tackles: by the sum the centre-back gets 80%, per kind 50/50.
-        $model = new ImpactModel(defenceSharing: 'per_type');
-        $keeperA = $this->player(1, 'GK', ['goals_conceded' => 20.0, 'goals_prevented' => 0.0, 'saves' => 60.0], team: 'A');
-        $keeperB = $this->player(2, 'GK', ['goals_conceded' => 30.0, 'goals_prevented' => 0.0, 'saves' => 60.0], team: 'B');
-        $actions = static fn (float $tackles, float $clearances) => ['tackles_won' => $tackles, 'interceptions' => 0.0, 'blocks' => 0.0, 'clearances' => $clearances, 'aerial_duels_won' => 0.0];
-        $centreBack = $this->player(3, 'DF', $actions(0.0, 80.0), team: 'A');
-        $midfielder = $this->player(4, 'MF', $actions(20.0, 0.0), team: 'A');
-        $all = [$keeperA, $keeperB, $centreBack, $midfielder];
+        // Two defenders of 2000 minutes (22.2 matches): 2 errors and none, so the role's rate is
+        // 1 per 22.2 matches; each count is pulled toward 1 with a prior of 10 matches.
+        $careless = $this->player(1, 'DF', ['errors_leading_to_goal' => 2.0]);
+        $careful = $this->player(2, 'DF', ['errors_leading_to_goal' => 0.0]);
+        $unknown = $this->player(3, 'DF', [], understat: 'missing', sofascore: 'missing');
+        $keeper = $this->player(4, 'GK', ['errors_leading_to_goal' => 3.0, 'goals_prevented' => 0.0, 'saves' => 50.0, 'goals_conceded' => 30.0]);
+        $all = [$careless, $careful, $unknown, $keeper];
 
-        $result = (new ImpactCalculator())->calculate($model, $all, $all);
+        $result = (new ImpactCalculator())->calculate(new ImpactModel(errorGoals: 1.0), $all, $all);
+        $withoutErrors = (new ImpactCalculator())->calculate(new ImpactModel(), [$careless], [$careless]);
 
-        self::assertEqualsWithDelta(8.55 * 0.5, $result[3]['goals']['defence'], 1e-9);
-        self::assertEqualsWithDelta(8.55 * 0.5, $result[4]['goals']['defence'], 1e-9);
-    }
-
-    public function testErrorsLeadingToAGoalCostOutfieldPlayersAGoalEach(): void
-    {
-        $defender = $this->player(1, 'DF', ['errors_leading_to_goal' => 2.0]);
-        $keeper = $this->player(2, 'GK', ['errors_leading_to_goal' => 3.0, 'goals_prevented' => 0.0, 'saves' => 50.0, 'goals_conceded' => 30.0]);
-
-        $result = (new ImpactCalculator())->calculate(new ImpactModel(errorGoals: 1.0), [$defender, $keeper], [$defender, $keeper]);
-        $withoutErrors = (new ImpactCalculator())->calculate(new ImpactModel(), [$defender], [$defender]);
-
-        self::assertEqualsWithDelta(-2.0, $result[1]['goals']['errors'], 1e-9);
-        self::assertNull($result[2]['goals']['errors'], 'a keeper\'s errors are already in his goals prevented');
+        $matches = 2000 / 90;
+        $kept = $matches / ($matches + 10);
+        self::assertEqualsWithDelta(-(1 + 1 * $kept), $result[1]['goals']['errors'], 1e-9);
+        self::assertEqualsWithDelta(-(1 - 1 * $kept), $result[2]['goals']['errors'], 1e-9);
+        self::assertEqualsWithDelta(-1.0, $result[3]['goals']['errors'], 1e-9, 'unknown: the role\'s rate, never zero');
+        self::assertNull($result[4]['goals']['errors'], 'a keeper\'s errors are already in his goals prevented');
         self::assertArrayNotHasKey('errors', $withoutErrors[1]['goals'], 'models without it keep their stored breakdown');
     }
 
