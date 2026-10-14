@@ -185,6 +185,10 @@ moved ("relinked").
 
 Read `docs/methodology.md`, then `ModelCatalog` → `ScoreCalculator` → `ScoreRunner`.
 The calculator is pure (no database), so model ideas are tested with unit tests first.
+`ScoreRunner` is the one class in `Football/Scoring` that uses Doctrine: it loads the
+candidates and stores the run. A run's `definition_hash` is a canonical hash
+(`CanonicalJson`), so it can be checked again from the stored definition. API errors are
+JSON (`ApiExceptionSubscriber`); request parsing lives in `Controller/Api/ApiContext`.
 **Never edit a released model**: add a new version to `ModelCatalog`. The API and the
 methodology page read the definition, so they follow automatically.
 

@@ -19,7 +19,8 @@ class PlayerScoreRepository extends ServiceEntityRepository
     }
 
     /**
-     * Ranked players first (by rank), then the unranked ones (by score).
+     * The calculator's order: ranked players by rank, then the unranked ones by score (unknown
+     * last), minutes and player id. Fully deterministic, so pages never overlap or skip rows.
      *
      * @return list<PlayerScore>
      */
@@ -27,11 +28,17 @@ class PlayerScoreRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('s')
             ->addSelect('p')
+            ->addSelect('CASE WHEN s.rank IS NULL THEN 1 ELSE 0 END AS HIDDEN unranked')
+            ->addSelect('CASE WHEN s.score IS NULL THEN 1 ELSE 0 END AS HIDDEN unscored')
             ->join('s.player', 'p')
             ->where('s.run = :run')
             ->setParameter('run', $run)
-            ->orderBy('s.rank', 'ASC')
+            ->orderBy('unranked', 'ASC')
+            ->addOrderBy('s.rank', 'ASC')
+            ->addOrderBy('unscored', 'ASC')
             ->addOrderBy('s.score', 'DESC')
+            ->addOrderBy('s.minutes', 'DESC')
+            ->addOrderBy('p.id', 'ASC')
             ->setMaxResults($limit)
             ->setFirstResult($offset);
         if ($positionGroup !== null) {

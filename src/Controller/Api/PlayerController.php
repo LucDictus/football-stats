@@ -7,16 +7,13 @@ namespace App\Controller\Api;
 use App\Api\ApiPresenter;
 use App\Entity\Player;
 use App\Entity\PlayerSeason;
-use App\Entity\Season;
 use App\Entity\StatsScope;
-use App\Football\Assessment\AssessmentScope;
-use App\Football\Scoring\ModelCatalog;
 use App\Repository\PlayerScoreRepository;
-use App\Repository\ScoreRunRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/players', name: 'api_players_', format: 'json')]
@@ -26,18 +23,17 @@ final class PlayerController extends AbstractController
 
     public function __construct(
         private readonly EntityManagerInterface $em,
-        private readonly ScoreRunRepository $runs,
+        private readonly ApiContext $context,
         private readonly PlayerScoreRepository $scores,
         private readonly ApiPresenter $presenter,
-        private readonly AssessmentScope $scope,
     ) {
     }
 
-    /** Name search for the search box: ?q=mbap */
+    /** Name search for the search box (?q=mbap): players of the current season, accents ignored. */
     #[Route('', name: 'search', methods: ['GET'])]
     public function search(Request $request): JsonResponse
     {
-        $query = trim($request->query->getString('q'));
+        $query = trim($this->context->string($request, 'q') ?? '');
         if (mb_strlen($query) < 2) {
             return $this->json(['players' => []]);
         }
@@ -45,14 +41,15 @@ final class PlayerController extends AbstractController
         $rows = $this->em->getConnection()->fetchAllAssociative(
             "SELECT p.id, p.name, ps.position_group, t.name AS team
              FROM player p
-             JOIN player_season ps ON ps.player_id = p.id
+             JOIN player_season ps ON ps.player_id = p.id AND ps.season_id = :season
              LEFT JOIN team t ON t.id = ps.main_team_id
              LEFT JOIN player_competition_stats l ON l.player_season_id = ps.id AND l.scope = 'league'
-             WHERE unaccent_lower(p.name) LIKE '%' || unaccent_lower(:q) || '%'
+             WHERE unaccent_lower(p.name) LIKE '%' || unaccent_lower(:q) || '%' ESCAPE '!'
              -- names starting with the query first, then the most-played players
-             ORDER BY unaccent_lower(p.name) NOT LIKE unaccent_lower(:q) || '%', l.minutes DESC NULLS LAST, p.name
+             ORDER BY unaccent_lower(p.name) NOT LIKE unaccent_lower(:q) || '%' ESCAPE '!', l.minutes DESC NULLS LAST, p.name, p.id
              LIMIT " . self::SEARCH_LIMIT,
-            ['q' => $query],
+            // % and _ in the query are letters, not wildcards.
+            ['q' => strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']), 'season' => $this->context->season()->getId()],
         );
 
         return $this->json(['players' => array_map(static fn (array $r) => [
@@ -63,21 +60,20 @@ final class PlayerController extends AbstractController
         ], $rows)]);
     }
 
-    /** Profile: season, statistics with provenance per scope, and the score breakdown. */
+    /** Profile: season, statistics with provenance per scope, and the score breakdown (?model=). */
     #[Route('/{id<\d+>}', name: 'show', methods: ['GET'])]
     public function show(int $id, Request $request): JsonResponse
     {
+        $modelId = $this->context->modelId($request);
         $player = $this->em->find(Player::class, $id);
-        $season = $this->em->getRepository(Season::class)->findOneBy(['label' => $this->scope->season]);
-        $playerSeason = $player !== null && $season !== null
-            ? $this->em->getRepository(PlayerSeason::class)->findOneBy(['player' => $player, 'season' => $season])
+        $playerSeason = $player !== null
+            ? $this->em->getRepository(PlayerSeason::class)->findOneBy(['player' => $player, 'season' => $this->context->season()])
             : null;
         if ($player === null || $playerSeason === null) {
-            return $this->json(['error' => 'No such player in this season'], 404);
+            throw new NotFoundHttpException('No such player in this season');
         }
 
-        $modelId = $request->query->getString('model', ModelCatalog::DEFAULT);
-        $run = isset(ModelCatalog::all()[$modelId]) ? $this->runs->latest($modelId, $season) : null;
+        $run = $this->context->run($request, $modelId);
         $score = $run !== null ? $this->scores->forPlayer($run, $player) : null;
 
         $stats = [];

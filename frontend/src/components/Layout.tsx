@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { useState } from 'react'
-import { NavLink, useLocation, useOutlet } from 'react-router'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { NavLink, useLocation, useNavigationType, useOutlet } from 'react-router'
 import { SearchBox } from './SearchBox'
 import styles from './Layout.module.css'
 
@@ -11,8 +11,35 @@ function FrozenOutlet() {
   return frozen
 }
 
+/**
+ * Scroll position per history entry: a new page starts at the top, Back/Forward return to
+ * where you were (e.g. deep in the ranking). Applied after the old page has animated out.
+ */
+function useScrollMemory() {
+  const location = useLocation()
+  const navigationType = useNavigationType()
+  const positions = useRef(new Map<string, number>())
+  const current = useRef({ key: location.key, navigationType })
+  useLayoutEffect(() => {
+    current.current = { key: location.key, navigationType }
+  }, [location.key, navigationType])
+
+  useEffect(() => {
+    window.history.scrollRestoration = 'manual'
+    const save = () => positions.current.set(current.current.key, window.scrollY)
+    window.addEventListener('scroll', save, { passive: true })
+    return () => window.removeEventListener('scroll', save)
+  }, [])
+
+  return () => {
+    const { key, navigationType: type } = current.current
+    window.scrollTo({ top: type === 'POP' ? (positions.current.get(key) ?? 0) : 0 })
+  }
+}
+
 export function Layout() {
   const location = useLocation()
+  const restoreScroll = useScrollMemory()
 
   return (
     <>
@@ -36,14 +63,13 @@ export function Layout() {
           <SearchBox />
         </div>
       </header>
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="wait" initial={false} onExitComplete={restoreScroll}>
         <motion.div
           key={location.pathname}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          onAnimationStart={() => window.scrollTo({ top: 0 })}
         >
           <FrozenOutlet />
         </motion.div>

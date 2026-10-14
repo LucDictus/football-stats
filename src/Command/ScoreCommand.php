@@ -42,7 +42,7 @@ final class ScoreCommand extends Command
                 $r->candidate->name,
                 $r->candidate->positionGroup,
                 $r->candidate->team,
-                number_format((float) $r->score, 1),
+                $r->score === null ? '–' : number_format($r->score, 1),
                 ...array_map(static fn ($key) => $r->components[$key]['score'] === null ? '–' : number_format($r->components[$key]['score'], 1), $componentKeys),
                 number_format($r->confidence * 100) . '%',
             ];

@@ -49,6 +49,17 @@ final class ScoreRunnerTest extends KernelTestCase
         self::assertSame(19.0, $top->getComponents()['attacking_output']['metrics']['np_ga']['value'], '20 goals - 2 penalties + 1 assist');
     }
 
+    public function testAChangedBreakdownGivesANewRunEvenWithTheSameRanks(): void
+    {
+        $runner = self::getContainer()->get(ScoreRunner::class);
+        $first = $runner->run(ModelCatalog::get('baseline-v1'));
+        // Simulate a code change that alters confidence but no rank or score.
+        $this->em()->getConnection()->executeStatement('UPDATE player_score SET confidence = 0.5 WHERE run_id = ?', [$first['run']->getId()]);
+        $this->em()->clear(); // as in a new process: read what is stored
+
+        self::assertTrue($runner->run(ModelCatalog::get('baseline-v1'))['created']);
+    }
+
     public function testNewDataGivesANewRun(): void
     {
         $runner = self::getContainer()->get(ScoreRunner::class);

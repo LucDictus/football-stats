@@ -38,6 +38,13 @@ final class PlayerCompetitionStatsTest extends TestCase
         self::assertSame(3.0, $stats->value('tackles'));
     }
 
+    public function testDerivedFieldNeedsEnoughScopeMinutesForPer90(): void
+    {
+        $stats = $this->stats(['np_goals' => 2.0], ['np_goals' => 'derived'], ['FBref' => ['ok', 300.0], 'SofaScore' => ['ok', 300.0]], minutes: 300.0);
+
+        self::assertNull($stats->per90('np_goals'));
+    }
+
     public function testSuspectOrMissingProviderGivesNoPer90(): void
     {
         $stats = $this->stats(['tackles' => 30.0], ['tackles' => 'SofaScore'], ['FBref' => ['ok', 1800.0], 'SofaScore' => ['suspect', 1500.0]]);
@@ -90,7 +97,7 @@ final class PlayerCompetitionStatsTest extends TestCase
      * @param array<string, string>                $origins
      * @param array<string, array{string, ?float}> $checks  origin => [status, minutes]
      */
-    private function stats(array $values, array $origins, array $checks): PlayerCompetitionStats
+    private function stats(array $values, array $origins, array $checks, float $minutes = 1800.0): PlayerCompetitionStats
     {
         $season = new PlayerSeason(new Player('Test'), new Season('2025/26', new \DateTimeImmutable(), new \DateTimeImmutable()));
 
@@ -98,7 +105,7 @@ final class PlayerCompetitionStatsTest extends TestCase
             $season,
             StatsScope::League,
             new ImportBatch('test', 'test', '2025/26', 'test', '1'),
-            1800.0,
+            $minutes,
             $values,
             $origins,
             array_map(static fn (array $c) => ['status' => $c[0], 'minutes' => $c[1], 'reason' => 'reason'], $checks),

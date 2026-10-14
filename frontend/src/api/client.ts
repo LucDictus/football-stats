@@ -24,7 +24,7 @@ async function get<T>(path: string, params: Record<string, string | number | boo
 
 export const api = {
   models: () => get<{ default: string; models: ScoringModel[] }>('/models'),
-  ranking: (params: { model?: string; position?: string; limit?: number; offset?: number; unranked?: boolean }) =>
+  ranking: (params: { model?: string; run?: number; position?: string; limit?: number; offset?: number; unranked?: boolean }) =>
     get<RankingResponse>('/rankings', params),
   player: (id: number) => get<PlayerProfile>(`/players/${id}`),
   search: (q: string) => get<{ players: SearchResult[] }>('/players', { q }),

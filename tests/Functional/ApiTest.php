@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Functional;
 
 use App\Entity\Player;
+use App\Entity\PlayerSeason;
+use App\Entity\Season;
 use App\Football\Scoring\ModelCatalog;
 use App\Football\Scoring\ScoreRunner;
 use App\Tests\Support\PipelineTrait;
@@ -87,6 +89,40 @@ final class ApiTest extends WebTestCase
     {
         self::assertSame(['Kylian Mbappé'], array_column($this->getJson('/api/players?q=mbappe')['players'], 'name'));
         self::assertSame([], $this->getJson('/api/players?q=m')['players'], 'at least 2 characters');
+    }
+
+    public function testUnrankedPagingIsDeterministicAndPinnedToARun(): void
+    {
+        $first = $this->getJson('/api/rankings?unranked=1&limit=1');
+        $second = $this->getJson('/api/rankings?unranked=1&limit=1&offset=1&run=' . $first['run']['id']);
+
+        self::assertSame(2, $first['total']);
+        self::assertNotSame($first['rows'][0]['player']['id'], $second['rows'][0]['player']['id']);
+        self::assertSame($first['run']['id'], $second['run']['id']);
+    }
+
+    public function testSearchTreatsWildcardsAsTextAndListsAPlayerOnce(): void
+    {
+        // A second season for the same player must not duplicate him.
+        $player = $this->em()->getRepository(Player::class)->findOneBy(['name' => 'Pedri']);
+        self::assertNotNull($player);
+        $previous = new Season('2024/25', new \DateTimeImmutable('2024-08-01'), new \DateTimeImmutable('2025-05-31'));
+        $this->em()->persist($previous);
+        $this->em()->persist(new PlayerSeason($player, $previous));
+        $this->em()->flush();
+
+        self::assertSame(['Pedri'], array_column($this->getJson('/api/players?q=pedri')['players'], 'name'));
+        self::assertSame([], $this->getJson('/api/players?q=__')['players']);
+        self::assertSame([], $this->getJson('/api/players?q=%25%25')['players']);
+    }
+
+    public function testErrorsAreJson(): void
+    {
+        foreach (['/api/rankings?position[]=FW' => 400, '/api/rankings?limit=abc' => 400, '/api/players/1?model=nope' => 404, '/api/rankings?run=99999' => 404] as $url => $status) {
+            $this->client->request('GET', $url);
+            self::assertResponseStatusCodeSame($status, $url);
+            self::assertArrayHasKey('error', json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR));
+        }
     }
 
     public function testUnknownPlayerIs404(): void

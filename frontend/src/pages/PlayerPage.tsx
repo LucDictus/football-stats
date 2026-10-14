@@ -10,15 +10,20 @@ import { ErrorState } from '../components/ErrorState'
 import { TrustBadge } from '../components/TrustBadge'
 import { POSITION_LABELS, formatNumber, formatScore, formatValue, ordinal } from '../lib/format'
 import { NotFoundPage } from './NotFoundPage'
+import { componentColor } from '../lib/colors'
 import styles from './PlayerPage.module.css'
 
-const COMPONENT_COLORS = ['var(--c1)', 'var(--c2)', 'var(--c3)']
 
 export function PlayerPage() {
-  const id = Number(useParams().id)
-  const { data, error, isPending } = useQuery({ queryKey: ['player', id], queryFn: () => api.player(id), enabled: Number.isInteger(id) })
+  const raw = useParams().id ?? ''
+  const id = /^\d+$/.test(raw) ? Number(raw) : null
+  const { data, error, isPending } = useQuery({
+    queryKey: ['player', id],
+    queryFn: () => api.player(id as number),
+    enabled: id !== null,
+  })
 
-  if (error instanceof ApiError && error.status === 404) return <NotFoundPage />
+  if (id === null || (error instanceof ApiError && error.status === 404)) return <NotFoundPage />
   if (error) {
     return (
       <main className="page">
@@ -99,8 +104,8 @@ function Breakdown({ components }: { components: BreakdownComponent[] }) {
     <section className={styles.section} aria-labelledby="breakdown">
       <h2 id="breakdown">Why this score</h2>
       <p className={styles.sectionLead}>
-        Each metric is a percentile among the ranked players: 90 means better than 90% of them. A component averages its metrics;
-        the score weighs the components.
+        Each metric is a percentile among all eligible players (outfield, 900+ league minutes): 90 means better than 90% of
+        them. A component averages its metrics; the score weighs the components.
       </p>
       <div className={styles.components}>
         {components.map((component, ci) => (
@@ -117,7 +122,7 @@ function Breakdown({ components }: { components: BreakdownComponent[] }) {
             </div>
             <div className={styles.componentScore}>
               <span className="num">{formatScore(component.score)}</span>
-              <Bar value={component.score} color={COMPONENT_COLORS[ci]} height={8} delay={0.2 + ci * 0.08} />
+              <Bar value={component.score} color={componentColor(ci)} height={8} delay={0.2 + ci * 0.08} />
             </div>
             <p className={styles.description}>{component.description}</p>
             <ul className={styles.metrics}>
@@ -125,7 +130,7 @@ function Breakdown({ components }: { components: BreakdownComponent[] }) {
                 <li key={metric.key}>
                   <span className={styles.metricLabel}>{metric.label}</span>
                   <span className="num">{formatValue(metric.value)}</span>
-                  <Bar value={metric.percentile} color={COMPONENT_COLORS[ci]} height={4} delay={0.3 + ci * 0.08 + mi * 0.05} />
+                  <Bar value={metric.percentile} color={componentColor(ci)} height={4} delay={0.3 + ci * 0.08 + mi * 0.05} />
                   <span className={styles.percentile}>
                     {metric.percentile === null ? 'not measurable' : `${ordinal(Math.round(metric.percentile))} percentile`}
                   </span>
@@ -140,12 +145,15 @@ function Breakdown({ components }: { components: BreakdownComponent[] }) {
 }
 
 function NotRanked({ profile }: { profile: PlayerProfile }) {
+  const { position_group: group } = profile.season
   const reason =
-    profile.season.position_group === 'GK'
+    group === 'GK'
       ? 'Goalkeepers are not part of the baseline model yet: they need their own metrics (saves, goals prevented), which arrive in the next model version.'
       : !profile.stats.league
         ? 'This player has Champions League data only. The baseline model ranks domestic league seasons.'
-        : 'The baseline model ranks outfield players with at least 900 league minutes.'
+        : group === null
+          ? 'No source gives this player’s position, and the baseline model ranks outfield players only.'
+          : 'The baseline model ranks outfield players with at least 900 league minutes.'
   return (
     <section className={`card ${styles.notRanked}`}>
       <h2>Not in this ranking</h2>

@@ -82,6 +82,35 @@ final class ScoreCalculatorTest extends TestCase
         self::assertSame(['A', 'B'], array_map(static fn ($r) => $r->candidate->name, $second));
     }
 
+    public function testEqualScoresAreOrderedByMinutesThenPlayerId(): void
+    {
+        $goalsOnly = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['FW'], 0.0, [
+            new Component('output', 'Output', '', 1.0, [new Metric('goals', 'Goals', ['goals'], MetricMode::Total, 1.0)]),
+        ]);
+
+        $results = (new ScoreCalculator())->score($goalsOnly, [
+            $this->candidate(3, 'Fewer minutes', goals: 5.0, minutes: 1500.0),
+            $this->candidate(2, 'Id 2', goals: 5.0, minutes: 2500.0),
+            $this->candidate(1, 'Id 1', goals: 5.0, minutes: 2500.0),
+        ]);
+
+        self::assertSame(['Id 1', 'Id 2', 'Fewer minutes'], array_map(static fn ($r) => $r->candidate->name, $results));
+    }
+
+    public function testConfidenceAtTheThresholdIsRankedDespiteRounding(): void
+    {
+        // 0.4 + 0.2 = 0.6000000000000001, 0.1 + 0.2 = 0.30000000000000004: both must count as reaching 0.6 / 0.3.
+        $model = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['FW'], 0.3, [
+            new Component('a', 'A', '', 0.1, [new Metric('goals', 'Goals', ['goals'], MetricMode::Total, 1.0)]),
+            new Component('b', 'B', '', 0.2, [new Metric('minutes', 'Minutes', ['minutes'], MetricMode::Total, 1.0)]),
+            new Component('c', 'C', '', 0.7, [new Metric('xg', 'xG', ['xg'], MetricMode::Total, 1.0)]),
+        ]);
+
+        $results = (new ScoreCalculator())->score($model, [$this->candidate(1, 'A', goals: 1.0)]);
+
+        self::assertSame(1, $results[0]->rank);
+    }
+
     public function testBaselineModelIsValid(): void
     {
         $model = ModelCatalog::get(ModelCatalog::DEFAULT);

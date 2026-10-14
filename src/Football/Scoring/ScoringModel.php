@@ -52,9 +52,12 @@ final readonly class ScoringModel
         ];
     }
 
-    /** Fingerprint of the definition: two runs with the same hash used the same model. */
+    /**
+     * Fingerprint of the definition: two runs with the same hash used the same model. Canonical,
+     * so it can be recomputed from a stored definition: CanonicalJson::hash($run->getDefinition()).
+     */
     public function hash(): string
     {
-        return hash('sha256', json_encode($this->toArray(), JSON_THROW_ON_ERROR));
+        return CanonicalJson::hash($this->toArray());
     }
 }

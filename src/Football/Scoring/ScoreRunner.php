@@ -99,6 +99,9 @@ final readonly class ScoreRunner
     }
 
     /**
+     * Same model, same batches and the same result for every player: rank, score, confidence
+     * and the full breakdown (a code change can alter a breakdown without moving a rank).
+     *
      * @param list<int>               $batchIds
      * @param list<PlayerScoreResult> $results
      */
@@ -109,18 +112,43 @@ final readonly class ScoreRunner
         }
         $stored = [];
         foreach ($this->scores->findBy(['run' => $latest]) as $score) {
-            $stored[(int) $score->getPlayer()->getId()] = [$score->getRank(), $score->getScore()];
+            $stored[(int) $score->getPlayer()->getId()] = [$score->getRank(), $score->getScore(), $score->getConfidence(), $score->getComponents()];
         }
         if (count($stored) !== count($results)) {
             return false;
         }
         foreach ($results as $result) {
             $previous = $stored[$result->candidate->playerId] ?? null;
-            if ($previous === null || $previous[0] !== $result->rank || abs((float) $previous[1] - (float) $result->score) > 1e-9) {
+            if ($previous === null || !self::same($previous, [$result->rank, $result->score, $result->confidence, $result->components])) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * Structural equality with a tolerance for numbers: a float that went through the database
+     * can differ from a fresh one in the last digits. Rounding instead would fail at boundaries.
+     */
+    public static function same(mixed $a, mixed $b): bool
+    {
+        if (is_array($a) && is_array($b)) {
+            if (count($a) !== count($b) || array_diff_key($a, $b) !== []) {
+                return false;
+            }
+            foreach ($a as $key => $value) {
+                if (!self::same($value, $b[$key])) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        if ((is_int($a) || is_float($a)) && (is_int($b) || is_float($b))) {
+            return abs((float) $a - (float) $b) <= 1e-9 * max(1.0, abs((float) $a));
+        }
+
+        return $a === $b;
     }
 }

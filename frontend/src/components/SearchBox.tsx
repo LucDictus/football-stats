@@ -36,6 +36,9 @@ export function SearchBox() {
     placeholderData: (previous) => previous,
   })
   const results = debounced.length >= 2 ? (data?.players ?? []) : []
+  // Results belong to the text in the box only after the debounce has caught up.
+  const current = debounced === query.trim()
+  const expanded = open && results.length > 0
 
   const go = (id: number) => {
     setOpen(false)
@@ -53,9 +56,10 @@ export function SearchBox() {
         placeholder="Search a player"
         aria-label="Search a player"
         role="combobox"
-        aria-expanded={open && results.length > 0}
-        aria-controls={listId}
-        aria-activedescendant={open && results[active] ? `${listId}-${active}` : undefined}
+        aria-autocomplete="list"
+        aria-expanded={expanded}
+        aria-controls={expanded ? listId : undefined}
+        aria-activedescendant={expanded && results[active] ? `${listId}-${active}` : undefined}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value)
@@ -66,11 +70,11 @@ export function SearchBox() {
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') {
             e.preventDefault()
-            setActive((i) => Math.min(i + 1, results.length - 1))
+            setActive((i) => Math.max(0, Math.min(i + 1, results.length - 1)))
           } else if (e.key === 'ArrowUp') {
             e.preventDefault()
             setActive((i) => Math.max(i - 1, 0))
-          } else if (e.key === 'Enter' && results[active]) {
+          } else if (e.key === 'Enter' && current && results[active]) {
             go(results[active].id)
           } else if (e.key === 'Escape') {
             setOpen(false)
@@ -78,7 +82,7 @@ export function SearchBox() {
         }}
       />
       <AnimatePresence>
-        {open && results.length > 0 && (
+        {expanded && (
           <motion.ul
             id={listId}
             role="listbox"

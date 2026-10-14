@@ -6,16 +6,14 @@ namespace App\Controller\Api;
 
 use App\Api\ApiPresenter;
 use App\Entity\PlayerSeason;
-use App\Entity\Season;
-use App\Football\Assessment\AssessmentScope;
 use App\Football\Scoring\ModelCatalog;
 use App\Football\Scoring\ScoringModel;
 use App\Repository\PlayerScoreRepository;
-use App\Repository\ScoreRunRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api', name: 'api_', format: 'json')]
@@ -24,11 +22,9 @@ final class RankingController extends AbstractController
     private const MAX_LIMIT = 200;
 
     public function __construct(
-        private readonly ScoreRunRepository $runs,
+        private readonly ApiContext $context,
         private readonly PlayerScoreRepository $scores,
         private readonly ApiPresenter $presenter,
-        private readonly AssessmentScope $scope,
-        private readonly EntityManagerInterface $em,
     ) {
     }
 
@@ -43,28 +39,23 @@ final class RankingController extends AbstractController
     }
 
     /**
-     * The latest ranking of a model: ?model=baseline-v1&position=FW&limit=100&offset=0&unranked=1.
+     * A ranking: ?model=baseline-v1&run=2&position=FW&limit=100&offset=0&unranked=1.
+     * Without run: the latest run of the model. Pass the run id of the first page when paging.
      */
     #[Route('/rankings', name: 'rankings', methods: ['GET'])]
     public function ranking(Request $request): JsonResponse
     {
-        $modelId = $request->query->getString('model', ModelCatalog::DEFAULT);
-        if (!isset(ModelCatalog::all()[$modelId])) {
-            return $this->json(['error' => "Unknown model {$modelId}"], 404);
-        }
-        $season = $this->em->getRepository(Season::class)->findOneBy(['label' => $this->scope->season]);
-        $run = $season !== null ? $this->runs->latest($modelId, $season) : null;
-        if ($run === null) {
-            return $this->json(['error' => "No ranking yet for {$modelId}: run app:score"], 404);
-        }
+        $modelId = $this->context->modelId($request);
+        $run = $this->context->run($request, $modelId)
+            ?? throw new NotFoundHttpException("No ranking yet for {$modelId}: run app:score");
 
-        $position = $request->query->getString('position') ?: null;
+        $position = $this->context->string($request, 'position');
         if ($position !== null && !in_array($position, PlayerSeason::POSITION_GROUPS, true)) {
-            return $this->json(['error' => 'position must be one of ' . implode(', ', PlayerSeason::POSITION_GROUPS)], 400);
+            throw new BadRequestHttpException('position must be one of ' . implode(', ', PlayerSeason::POSITION_GROUPS));
         }
-        $limit = max(1, min(self::MAX_LIMIT, $request->query->getInt('limit', 100)));
-        $offset = max(0, $request->query->getInt('offset'));
-        $unranked = $request->query->getBoolean('unranked');
+        $limit = max(1, min(self::MAX_LIMIT, $this->context->int($request, 'limit', 100)));
+        $offset = max(0, $this->context->int($request, 'offset', 0));
+        $unranked = filter_var($this->context->string($request, 'unranked') ?? '0', FILTER_VALIDATE_BOOL);
 
         return $this->json([
             'run' => $this->presenter->run($run),

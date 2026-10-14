@@ -84,7 +84,8 @@ final class ScoreCalculator
 
         // Ranked players first, best score first; ties broken by minutes, then by player id,
         // so the order is stable.
-        $ranked = static fn (array $s) => $s['score'] !== null && $s['confidence'] >= $model->minConfidence;
+        // Tolerance: weights like 0.4 + 0.2 do not add up exactly in floating point.
+        $ranked = static fn (array $s) => $s['score'] !== null && $s['confidence'] >= $model->minConfidence - 1e-9;
         usort($scored, static fn (array $a, array $b) => [$ranked($b), $b['score'], $b['candidate']->stats->getMinutes(), $a['candidate']->playerId]
             <=> [$ranked($a), $a['score'], $a['candidate']->stats->getMinutes(), $b['candidate']->playerId]);
 

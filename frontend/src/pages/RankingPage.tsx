@@ -9,10 +9,10 @@ import { PositionBadge } from '../components/PositionBadge'
 import { PositionFilter } from '../components/PositionFilter'
 import { ErrorState } from '../components/ErrorState'
 import { formatNumber, formatScore } from '../lib/format'
+import { componentColor } from '../lib/colors'
 import styles from './RankingPage.module.css'
 
 const PAGE_SIZE = 50
-const COMPONENT_COLORS = ['var(--c1)', 'var(--c2)', 'var(--c3)']
 const POSITIONS: PositionGroup[] = ['FW', 'MF', 'DF']
 
 export function RankingPage() {
@@ -20,11 +20,14 @@ export function RankingPage() {
   const raw = params.get('position')
   const position = POSITIONS.includes(raw as PositionGroup) ? (raw as PositionGroup) : null
 
+  // Later pages ask for the run of the first page, so a new score run can never mix in.
   const query = useInfiniteQuery({
     queryKey: ['ranking', position],
-    queryFn: ({ pageParam }) => api.ranking({ position: position ?? undefined, limit: PAGE_SIZE, offset: pageParam }),
-    initialPageParam: 0,
-    getNextPageParam: (last) => (last.offset + last.rows.length < last.total ? last.offset + last.rows.length : undefined),
+    queryFn: ({ pageParam }) =>
+      api.ranking({ position: position ?? undefined, limit: PAGE_SIZE, offset: pageParam.offset, run: pageParam.run }),
+    initialPageParam: { offset: 0, run: undefined as number | undefined },
+    getNextPageParam: (last) =>
+      last.offset + last.rows.length < last.total ? { offset: last.offset + last.rows.length, run: last.run.id } : undefined,
   })
 
   const first = query.data?.pages[0]
@@ -104,7 +107,7 @@ function Legend({ components }: { components: ModelComponent[] }) {
     <ul className={styles.legend} aria-label="Components">
       {components.map((c, i) => (
         <li key={c.key} title={c.description}>
-          <span style={{ background: COMPONENT_COLORS[i] }} />
+          <span style={{ background: componentColor(i) }} />
           {c.label} <span className="muted">{Math.round(c.weight * 100)}%</span>
         </li>
       ))}
@@ -136,7 +139,7 @@ function PodiumCard({ row, place, components }: { row: RankingRow; place: number
             <div key={c.key} className={styles.podiumBar}>
               <span>{c.label}</span>
               <span className="num">{formatScore(row.components[c.key] ?? null)}</span>
-              <Bar value={row.components[c.key] ?? null} color={COMPONENT_COLORS[i]} delay={0.2 + place * 0.08 + i * 0.05} />
+              <Bar value={row.components[c.key] ?? null} color={componentColor(i)} delay={0.2 + place * 0.08 + i * 0.05} />
             </div>
           ))}
         </div>
@@ -157,7 +160,7 @@ function Row({ row, components }: { row: RankingRow; components: ModelComponent[
       <span className={styles.components}>
         {components.map((c, i) => (
           <span key={c.key} title={`${c.label}: ${formatScore(row.components[c.key] ?? null)}`}>
-            <Bar value={row.components[c.key] ?? null} color={COMPONENT_COLORS[i]} height={5} />
+            <Bar value={row.components[c.key] ?? null} color={componentColor(i)} height={5} />
           </span>
         ))}
       </span>

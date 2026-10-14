@@ -3,9 +3,9 @@ import { motion } from 'motion/react'
 import { api } from '../api/client'
 import { ErrorState } from '../components/ErrorState'
 import { TrustBadge } from '../components/TrustBadge'
+import { componentColor } from '../lib/colors'
 import styles from './MethodologyPage.module.css'
 
-const COMPONENT_COLORS = ['var(--c1)', 'var(--c2)', 'var(--c3)']
 
 /** The model definition comes from the API, so this page can never drift from the code. */
 export function MethodologyPage() {
@@ -44,7 +44,7 @@ export function MethodologyPage() {
             {model.components.map((c, i) => (
               <motion.div
                 key={c.key}
-                style={{ background: COMPONENT_COLORS[i], flexGrow: c.weight }}
+                style={{ background: componentColor(i), flexGrow: c.weight }}
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -58,7 +58,7 @@ export function MethodologyPage() {
             {model.components.map((c, i) => (
               <article key={c.key} className="card">
                 <h3>
-                  <span style={{ background: COMPONENT_COLORS[i] }} />
+                  <span style={{ background: componentColor(i) }} />
                   {c.label}
                 </h3>
                 <p className="muted">{c.description}</p>
@@ -84,7 +84,7 @@ export function MethodologyPage() {
         <ol className={styles.principles}>
           <li>
             <strong>Percentiles, not raw numbers.</strong> Goals and minutes live on different scales, so every metric becomes a
-            percentile among the ranked players: 90 means better than 90% of them.
+            percentile among all eligible players (outfield, 900+ minutes): 90 means better than 90% of them.
           </li>
           <li>
             <strong>Quality and volume, both.</strong> Per-90 rates reward efficiency, season totals reward doing it all season.
