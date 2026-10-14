@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DataQuality;
+namespace App\Football\Data;
 
 /** How far a provider's numbers for one player can be trusted. */
 enum OriginStatus: string
@@ -15,6 +15,18 @@ enum OriginStatus: string
     case Suspect = 'suspect';
     /** No record in this provider. Missing, never zero. */
     case Missing = 'missing';
+
+    /** @param list<self> $statuses */
+    public static function weakest(array $statuses): self
+    {
+        foreach ([self::Missing, self::Suspect, self::Partial] as $worst) {
+            if (in_array($worst, $statuses, true)) {
+                return $worst;
+            }
+        }
+
+        return self::Ok;
+    }
 
     public function usable(): bool
     {

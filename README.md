@@ -5,6 +5,7 @@ A transparent Ballon d'Or / MVP ranking for season 2025/26: the top-5 European l
 Every score should be explainable from data, rules and evidence.
 
 - Data coverage report (what the data can and cannot tell): [docs/data-coverage.md](docs/data-coverage.md)
+- Data model and identity rules: [docs/data-model.md](docs/data-model.md)
 - Baseline code and data audit: [docs/AUDIT.md](docs/AUDIT.md)
 - Stack: Symfony 7.4 LTS, Doctrine ORM, PostgreSQL 16, PHPUnit
 
@@ -13,9 +14,10 @@ Every score should be explainable from data, rules and evidence.
 ```bash
 composer install
 docker compose up -d database          # PostgreSQL on localhost:5432
-cp .env .env.local                     # then set FOOTBALL_DATA_API_KEY and APP_SECRET
+cp .env .env.local                     # then set APP_SECRET
 php bin/console doctrine:migrations:migrate
-php bin/phpunit
+php bin/console --env=test doctrine:database:create && php bin/console --env=test doctrine:migrations:migrate -n
+php bin/phpunit                        # unit tests + integration tests on the test database
 ```
 
 ## Data
@@ -32,6 +34,7 @@ php bin/console app:import:top5
 php bin/console app:import:sofascore-cl    # needs the curl binary (SofaScore blocks PHP's TLS stack)
 php bin/console app:import:fotmob-cl
 php bin/console app:data:audit             # writes docs/data-coverage.md
+php bin/console app:build-season           # players, teams, season stats (safe to re-run)
 ```
 
 Every import is stored unchanged as a new `import_batch` with its `source_record`s
@@ -43,7 +46,8 @@ in `config/services.yaml`.
 
 ```
 src/
-  DataImport/    source readers and HTTP clients, raw import
+  Entity/        domain model (see docs/data-model.md)
+  DataImport/    source readers and HTTP clients, raw import, identity matching, season builder
   DataQuality/   stint merging, provider consistency checks, data audit
   Football/      assessment scope, field catalog (later: metrics, scoring, ranking)
   Command/       console commands

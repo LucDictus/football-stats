@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\DataQuality;
 
+use App\Football\Data\OriginCheck;
+
+use App\Football\Data\OriginStatus;
+
 /**
  * Compares a provider's minutes (and goals) with FBref, the reference for playing time.
  *

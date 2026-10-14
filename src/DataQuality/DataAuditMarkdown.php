@@ -152,13 +152,14 @@ final class DataAuditMarkdown
             '- **%d players** from %d clubs (%d with %d+ minutes), %d goals in total.',
             $c['players'], $c['teams'], $c['regular'], DataAudit::CL_MIN_MINUTES, $c['goals'],
         );
+        $methods = implode(', ', array_map(static fn ($m, $n) => "{$n} by {$m}", array_keys($c['methods']), $c['methods']));
         $out[] = sprintf(
-            '- **Link to league data:** of %d players at the %d top-5 clubs, %d are linked exactly (SofaScore player id) and %d by name (initial + surname, narrowed by club; only for league players without a usable SofaScore id). %d remain unlinked.',
-            $c['top5_players'], $c['top5_teams'], $c['top5_linked'], count($c['linked_by_name']), count($c['unlinked_at_top5']),
+            '- **Link to league data:** of %d players at the %d top-5 clubs, %d are linked (%s); %d remain unlinked. Rules: `src/DataImport/Identity/ClPlayerMatcher.php`, manual links: `config/identity/players.yaml`.',
+            $c['top5_players'], $c['top5_teams'], array_sum($c['methods']), $methods, count($c['unlinked_at_top5']),
         );
         $out[] = sprintf(
-            '- %d players at %d clubs outside the top-5 leagues have CL data only (%s). They cannot be ranked on a full season.',
-            $c['other_players'], count($c['other_teams']), implode(', ', $c['other_teams']),
+            '- %d players at %d clubs outside the top-5 leagues (%s). %d of them also played in a top-5 league this season (transfer); the rest have CL data only and cannot be ranked on a full season.',
+            $c['other_players'], count($c['other_teams']), implode(', ', $c['other_teams']), $c['other_linked'],
         );
         $out[] = sprintf(
             '- xG is empty for %d players without a shot (= 0 xG, safe to treat as zero) and for %d players who did shoot (unknown).',
@@ -166,15 +167,15 @@ final class DataAuditMarkdown
         );
         $out[] = '';
         if ($c['linked_by_name'] !== []) {
-            $out[] = 'Linked by name (their league SofaScore id is missing, shared or suspect). Check these before relying on them:';
+            $out[] = 'Linked without an exact id (their league SofaScore id is missing, shared or suspect). Check these:';
             $out[] = '';
             foreach ($c['linked_by_name'] as $p) {
-                $out[] = sprintf('- %s (%s, %d CL min) → %s', $p['player'], $p['team'], $p['minutes'], $p['name_match']);
+                $out[] = sprintf('- %s (%s, %d CL min) → %s [%s]', $p['player'], $p['team'], $p['minutes'], $p['match'], $p['method']);
             }
             $out[] = '';
         }
         if ($c['unlinked_at_top5'] !== []) {
-            $out[] = 'Still unlinked at top-5 clubs (most CL minutes first). Mostly youngsters without league minutes, or name variants:';
+            $out[] = 'Still unlinked at top-5 clubs (most CL minutes first): players without league minutes in the dataset.';
             $out[] = '';
             foreach (array_slice($c['unlinked_at_top5'], 0, 15) as $p) {
                 $out[] = sprintf('- %s (%s, %d CL min)', $p['player'], $p['team'], $p['minutes']);

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\DataQuality;
 
+use App\Football\Data\OriginCheck;
+
+use App\Football\Data\OriginStatus;
+
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
 
@@ -15,6 +19,7 @@ final readonly class MergedPlayerSeason
      * @param list<string>               $leagues  league names as in the source
      * @param array<string, float|null>  $values   field key => value (null = unknown)
      * @param array<string, OriginCheck> $checks   Origin value => check
+     * @param list<array{team: string, league: string, appearances: ?int, starts: ?int, minutes: ?int}> $stintDetails most minutes first
      */
     public function __construct(
         public string $key,
@@ -29,6 +34,7 @@ final readonly class MergedPlayerSeason
         public float $minutes,
         public array $values,
         public array $checks,
+        public array $stintDetails = [],
     ) {
     }
 
@@ -51,19 +57,9 @@ final readonly class MergedPlayerSeason
     /** Status of the field: its provider's status, or the weakest of its inputs for derived fields. */
     public function fieldStatus(string $field): OriginStatus
     {
-        $inputs = match ($field) {
-            'np_goals' => [Origin::Fbref, Origin::Sofascore],
-            'save_pct' => [Origin::Sofascore],
-            default => [FieldCatalog::get($field)->origin],
-        };
-        $statuses = array_map(fn (Origin $o) => $this->check($o)->status, $inputs);
-
-        foreach ([OriginStatus::Missing, OriginStatus::Suspect, OriginStatus::Partial] as $worst) {
-            if (in_array($worst, $statuses, true)) {
-                return $worst;
-            }
-        }
-
-        return OriginStatus::Ok;
+        return OriginStatus::weakest(array_map(
+            fn (Origin $o) => $this->check($o)->status,
+            FieldCatalog::get($field)->dependsOn(),
+        ));
     }
 }

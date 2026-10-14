@@ -58,7 +58,7 @@ final class FieldCatalog
             // Attacking output
             new Field('goals', 'Goals', 'Attacking', $fb, 'fb_gls', 'goals', note: 'Includes penalties'),
             new Field('penalty_goals', 'Penalty goals', 'Attacking', $ss, 'ss_penaltyGoals', 'penaltyGoals'),
-            new Field('np_goals', 'Non-penalty goals', 'Attacking', Origin::Derived, null, null, note: 'Goals minus penalty goals; only when both are trusted'),
+            new Field('np_goals', 'Non-penalty goals', 'Attacking', Origin::Derived, null, null, note: 'Goals minus penalty goals; only when both are trusted', inputs: [$fb, $ss]),
             new Field('assists', 'Assists', 'Attacking', $fb, 'fb_ast', 'assists'),
             new Field('shots', 'Shots', 'Attacking', $fb, 'fb_sh', 'totalShots'),
             new Field('shots_on_target', 'Shots on target', 'Attacking', $fb, 'fb_sot', 'shotsOnTarget'),
@@ -87,7 +87,7 @@ final class FieldCatalog
             // Goalkeeping
             new Field('saves', 'Saves', 'Goalkeeping', $ss, 'ss_saves', 'saves', goalkeeper: true),
             new Field('goals_conceded', 'Goals conceded', 'Goalkeeping', $ss, 'ss_goalsConceded', 'goalsConceded', goalkeeper: true),
-            new Field('save_pct', 'Save %', 'Goalkeeping', Origin::Derived, null, null, goalkeeper: true, per90: false, note: 'saves / (saves + goals conceded)'),
+            new Field('save_pct', 'Save %', 'Goalkeeping', Origin::Derived, null, null, goalkeeper: true, per90: false, note: 'saves / (saves + goals conceded)', inputs: [$ss]),
             new Field('goals_prevented', 'Goals prevented', 'Goalkeeping', $ss, 'ss_goalsPrevented', 'goalsPrevented', goalkeeper: true, note: 'SofaScore post-shot model'),
             new Field('clean_sheets', 'Clean sheets', 'Goalkeeping', $ss, 'ss_cleanSheet', 'cleanSheet', goalkeeper: true, note: 'Mostly a team outcome'),
         ];

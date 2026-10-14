@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\DataQuality;
 
+use App\Football\Data\OriginStatus;
+
 use App\Command\ImportFotmobCommand;
 use App\Command\ImportSofascoreCommand;
 use App\DataImport\Fotmob\FotmobClient;
+use App\DataImport\Identity\ClMatchResult;
+use App\DataImport\Identity\ClPlayerMatcher;
+use App\DataImport\Identity\IdentityOverrides;
 use App\DataImport\Sofascore\SofascoreClient;
 use App\DataImport\Top5\Top5CsvReader;
 use App\Football\Assessment\AssessmentScope;
@@ -14,8 +19,6 @@ use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
 use App\Repository\ImportBatchRepository;
 use App\Repository\SourceRecordRepository;
-
-use function Symfony\Component\String\u;
 
 /**
  * Phase 1 audit: what the imported data can and cannot tell us.
@@ -35,6 +38,8 @@ final readonly class DataAudit
         private SourceRecordRepository $records,
         private AssessmentScope $scope,
         private Top5StintMerger $merger,
+        private ClPlayerMatcher $matcher,
+        private IdentityOverrides $overrides,
     ) {
     }
 
@@ -49,13 +54,9 @@ final readonly class DataAudit
         $fotmobBatch = $this->batches->latest(FotmobClient::SOURCE, ImportFotmobCommand::DATASET, $season);
 
         $league = $this->merger->merge($this->records->payloads($top5Batch));
-        $cl = array_values($this->records->payloads($clBatch));
-        $leagueBySofascoreId = [];
-        foreach ($league as $player) {
-            if ($player->sofascoreId !== null) {
-                $leagueBySofascoreId[$player->sofascoreId] = $player;
-            }
-        }
+        $clById = $this->records->payloads($clBatch);
+        $cl = array_values($clById);
+        $matches = $this->matcher->match($league, $clById, $this->overrides->sofascore());
 
         return [
             'scope' => $this->scope,
@@ -63,8 +64,8 @@ final readonly class DataAudit
             'batches' => array_values(array_filter([$top5Batch, $clBatch, $fotmobBatch])),
             'league' => $this->leagueSummary($league),
             'origins' => $this->originSummary($league),
-            'fields' => $this->fieldMatrix($league, $cl, $leagueBySofascoreId),
-            'cl' => $this->clSummary($cl, $league, $leagueBySofascoreId),
+            'fields' => $this->fieldMatrix($league, $clById, $matches),
+            'cl' => $this->clSummary($clById, $matches),
             'fotmob' => $fotmobBatch !== null ? $this->fotmobCrossCheck($cl, $this->records->payloads($fotmobBatch)) : null,
             'unavailable' => FieldCatalog::unavailable(),
         ];
@@ -125,17 +126,17 @@ final readonly class DataAudit
     /**
      * Per field: league presence and trust among regular players, CL presence.
      *
-     * @param list<MergedPlayerSeason>         $league
-     * @param list<array<string, mixed>>       $cl
-     * @param array<int, MergedPlayerSeason>   $leagueBySofascoreId
+     * @param list<MergedPlayerSeason>            $league
+     * @param array<string, array<string, mixed>> $cl
      */
-    private function fieldMatrix(array $league, array $cl, array $leagueBySofascoreId): array
+    private function fieldMatrix(array $league, array $cl, ClMatchResult $matches): array
     {
         $regular = array_values(array_filter($league, static fn ($p) => $p->minutes >= self::LEAGUE_MIN_MINUTES));
-        $clRegular = array_values(array_filter($cl, static fn ($r) => ($r['minutesPlayed'] ?? 0) >= self::CL_MIN_MINUTES));
-        $clIsKeeper = static fn (array $r): bool => isset($leagueBySofascoreId[$r['player']['id']])
-            ? $leagueBySofascoreId[$r['player']['id']]->goalkeeper
-            : ($r['saves'] ?? 0) > 0;
+        $clRegular = array_filter($cl, static fn ($r) => ($r['minutesPlayed'] ?? 0) >= self::CL_MIN_MINUTES);
+        $clIsKeeper = [];
+        foreach ($clRegular as $externalId => $r) {
+            $clIsKeeper[$externalId] = $matches->linkFor($externalId)['player']->goalkeeper ?? ($r['saves'] ?? 0) > 0;
+        }
 
         $rows = [];
         foreach (FieldCatalog::all() as $field) {
@@ -146,7 +147,7 @@ final readonly class DataAudit
 
             $clRow = null;
             if ($field->clColumn !== null) {
-                $clPopulation = array_values(array_filter($clRegular, static fn ($r) => !$field->goalkeeper || $clIsKeeper($r)));
+                $clPopulation = array_filter($clRegular, static fn ($r, $id) => !$field->goalkeeper || $clIsKeeper[$id], ARRAY_FILTER_USE_BOTH);
                 $clNull = array_values(array_filter($clPopulation, static fn ($r) => ($r[$field->clColumn] ?? null) === null));
                 $clRow = ['population' => count($clPopulation), 'missing' => count($clNull)];
             }
@@ -186,68 +187,43 @@ final readonly class DataAudit
         return "{$league}; {$clText}";
     }
 
-    /**
-     * @param list<array<string, mixed>>     $cl
-     * @param list<MergedPlayerSeason>       $league
-     * @param array<int, MergedPlayerSeason> $leagueBySofascoreId
-     */
-    private function clSummary(array $cl, array $league, array $leagueBySofascoreId): array
+    /** @param array<string, array<string, mixed>> $clById */
+    private function clSummary(array $clById, ClMatchResult $matches): array
     {
-        // Fallback for league players without a usable SofaScore id: first initial + surname,
-        // narrowed down by club when that is ambiguous.
-        $byShortName = [];
-        foreach ($league as $player) {
-            if ($player->sofascoreId === null || $player->check(Origin::Sofascore)->status === OriginStatus::Suspect) {
-                $byShortName[self::shortName($player->name)][] = $player;
-            }
-        }
-        // Club names differ per source ("Paris Saint-Germain" / "PSG"): learn the mapping from id-linked players.
-        $clubVotes = [];
-        foreach ($cl as $r) {
-            foreach (($leagueBySofascoreId[$r['player']['id']] ?? null)?->teams ?? [] as $leagueTeam) {
-                $clubVotes[$r['team']['name']][$leagueTeam] = ($clubVotes[$r['team']['name']][$leagueTeam] ?? 0) + 1;
-            }
-        }
-        $leagueClub = array_map(static fn (array $votes) => array_search(max($votes), $votes, true), $clubVotes);
-
         $teams = [];
-        foreach ($cl as $r) {
+        foreach ($clById as $externalId => $r) {
             $name = $r['team']['name'];
-            $teams[$name] ??= ['team' => $name, 'players' => 0, 'linked' => 0, 'unlinked' => []];
+            $teams[$name] ??= ['team' => $name, 'players' => 0, 'linked' => [], 'unlinked' => []];
             ++$teams[$name]['players'];
-            if (isset($leagueBySofascoreId[$r['player']['id']])) {
-                ++$teams[$name]['linked'];
-            } else {
-                $candidates = $byShortName[self::shortName($r['player']['name'])] ?? [];
-                if (count($candidates) > 1 && isset($leagueClub[$name])) {
-                    $candidates = array_values(array_filter($candidates, static fn ($p) => in_array($leagueClub[$name], $p->teams, true)));
-                }
-                $teams[$name]['unlinked'][] = [
-                    'player' => $r['player']['name'],
-                    'minutes' => $r['minutesPlayed'] ?? 0,
-                    'name_match' => count($candidates) === 1 ? $candidates[0]->name . ' (' . implode(' / ', $candidates[0]->teams) . ')' : null,
-                ];
+            $link = $matches->linkFor($externalId);
+            $entry = ['player' => $r['player']['name'], 'team' => $name, 'minutes' => $r['minutesPlayed'] ?? 0];
+            if ($link === null) {
+                $teams[$name]['unlinked'][] = $entry;
+                continue;
             }
+            $teams[$name]['linked'][] = $entry + ['method' => $link['method'], 'match' => $link['player']->name . ' (' . implode(' / ', $link['player']->teams) . ')'];
         }
 
-        // A club whose CL players mostly appear in the league data plays in a top-5 league.
-        $top5 = array_filter($teams, static fn ($t) => $t['linked'] / $t['players'] >= 0.5);
+        // A club is a top-5 club when the matcher could map it to a league club.
+        $top5 = array_filter($teams, static fn ($t) => isset($matches->clubs[$t['team']]));
         $other = array_diff_key($teams, $top5);
-        $linkedByName = [];
+        $byName = [];
         $unlinkedAtTop5 = [];
+        $methods = [];
         foreach ($top5 as $team) {
-            foreach ($team['unlinked'] as $p) {
-                if ($p['name_match'] !== null) {
-                    $linkedByName[] = $p + ['team' => $team['team']];
-                } else {
-                    $unlinkedAtTop5[] = $p + ['team' => $team['team']];
+            foreach ($team['linked'] as $p) {
+                $methods[$p['method']] = ($methods[$p['method']] ?? 0) + 1;
+                if ($p['method'] !== ClPlayerMatcher::METHOD_ID) {
+                    $byName[] = $p;
                 }
             }
+            array_push($unlinkedAtTop5, ...$team['unlinked']);
         }
-        usort($linkedByName, static fn ($a, $b) => $b['minutes'] <=> $a['minutes']);
+        usort($byName, static fn ($a, $b) => $b['minutes'] <=> $a['minutes']);
         usort($unlinkedAtTop5, static fn ($a, $b) => $b['minutes'] <=> $a['minutes']);
 
-        // SofaScore leaves xG/xA empty when there is nothing to measure (no shots / no passes into shots).
+        $cl = array_values($clById);
+        // SofaScore leaves xG empty when there is nothing to measure (no shots).
         $xgNullNoShots = count(array_filter($cl, static fn ($r) => ($r['expectedGoals'] ?? null) === null && ($r['totalShots'] ?? 0) === 0));
         $xgNullWithShots = count(array_filter($cl, static fn ($r) => ($r['expectedGoals'] ?? null) === null && ($r['totalShots'] ?? 0) > 0));
 
@@ -257,10 +233,11 @@ final readonly class DataAudit
             'teams' => count($teams),
             'top5_teams' => count($top5),
             'top5_players' => array_sum(array_column($top5, 'players')),
-            'top5_linked' => array_sum(array_column($top5, 'linked')),
-            'linked_by_name' => $linkedByName,
+            'methods' => $methods,
+            'linked_by_name' => $byName,
             'other_teams' => array_keys($other),
             'other_players' => array_sum(array_column($other, 'players')),
+            'other_linked' => array_sum(array_map(static fn ($t) => count($t['linked']), $other)),
             'unlinked_at_top5' => $unlinkedAtTop5,
             'xg_null_no_shots' => $xgNullNoShots,
             'xg_null_with_shots' => $xgNullWithShots,
@@ -280,7 +257,7 @@ final readonly class DataAudit
     {
         $byName = [];
         foreach ($fotmob as $entry) {
-            $byName[self::normalise($entry['ParticipantName'])][$entry['ParticiantId']][$entry['StatName']] = $entry['StatValue'];
+            $byName[ClPlayerMatcher::normalise($entry['ParticipantName'])][$entry['ParticiantId']][$entry['StatName']] = $entry['StatValue'];
         }
 
         $totals = ['minutes' => 0, 'goals' => 0, 'assists' => 0];
@@ -295,7 +272,7 @@ final readonly class DataAudit
         $ambiguous = $unmatched = 0;
         $disagreements = [];
         foreach ($cl as $r) {
-            $candidates = $byName[self::normalise($r['player']['name'])] ?? [];
+            $candidates = $byName[ClPlayerMatcher::normalise($r['player']['name'])] ?? [];
             if (count($candidates) !== 1) {
                 count($candidates) > 1 ? ++$ambiguous : ++$unmatched;
                 continue;
@@ -342,16 +319,4 @@ final readonly class DataAudit
         ];
     }
 
-    /** "Alejandro Grimaldo" and "Álex Grimaldo" -> "a grimaldo" */
-    private static function shortName(string $name): string
-    {
-        $parts = explode(' ', self::normalise($name));
-
-        return $parts[0][0] . ' ' . end($parts);
-    }
-
-    private static function normalise(string $name): string
-    {
-        return u($name)->ascii()->lower()->replaceMatches('/[^a-z ]+/', '')->collapseWhitespace()->toString();
-    }
 }

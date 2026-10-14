@@ -170,39 +170,49 @@ FBref is the reference for playing time. For every player, the Understat and Sof
 ## 5. Champions League
 
 - **878 players** from 36 clubs (636 with 180+ minutes), 634 goals in total.
-- **Link to league data:** of 550 players at the 22 top-5 clubs, 516 are linked exactly (SofaScore player id) and 9 by name (initial + surname, narrowed by club; only for league players without a usable SofaScore id). 25 remain unlinked.
-- 328 players at 14 clubs outside the top-5 leagues have CL data only (Bodø/Glimt, Galatasaray, Sporting CP, Club Brugge KV, Benfica, Qarabağ FK, Olympiacos FC, PSV Eindhoven, Pafos FC, Royale Union Saint-Gilloise, FC Kairat Almaty, FC København, SK Slavia Praha, AFC Ajax). They cannot be ranked on a full season.
+- **Link to league data:** of 550 players at the 22 top-5 clubs, 535 are linked (516 by sofascore id, 9 by initial + surname, 10 by name + club); 15 remain unlinked. Rules: `src/DataImport/Identity/ClPlayerMatcher.php`, manual links: `config/identity/players.yaml`.
+- 328 players at 14 clubs outside the top-5 leagues (Bodø/Glimt, Galatasaray, Sporting CP, Club Brugge KV, Benfica, Qarabağ FK, Olympiacos FC, PSV Eindhoven, Pafos FC, Royale Union Saint-Gilloise, FC Kairat Almaty, FC København, SK Slavia Praha, AFC Ajax). 15 of them also played in a top-5 league this season (transfer); the rest have CL data only and cannot be ranked on a full season.
 - xG is empty for 195 players without a shot (= 0 xG, safe to treat as zero) and for 0 players who did shoot (unknown).
 
-Linked by name (their league SofaScore id is missing, shared or suspect). Check these before relying on them:
+Linked without an exact id (their league SofaScore id is missing, shared or suspect). Check these:
 
-- Vitinha (Paris Saint-Germain, 1544 CL min) → Vitinha (PSG)
-- Alejandro Grimaldo (Bayer 04 Leverkusen, 1079 CL min) → Álex Grimaldo (Leverkusen)
-- Matvey Safonov (Paris Saint-Germain, 1020 CL min) → Matvei Safonov (PSG)
-- Pierre-Emile Højbjerg (Olympique de Marseille, 658 CL min) → Pierre Højbjerg (Marseille)
-- Nico González (Manchester City, 410 CL min) → Nicolás González (Manchester City)
-- Nicolás González (Atlético Madrid, 400 CL min) → Nicolás González (Atlético Madrid / Juventus)
-- Sávio (Manchester City, 369 CL min) → Sávio (Manchester City)
-- Ilya Zabarnyi (Paris Saint-Germain, 213 CL min) → Illia Zabarnyi (PSG)
-- Conrad Jaden Egan-Riley (Olympique de Marseille, 142 CL min) → CJ Egan-Riley (Marseille)
+- Vitinha (Paris Saint-Germain, 1544 CL min) → Vitinha (PSG) [initial + surname]
+- Alejandro Grimaldo (Bayer 04 Leverkusen, 1079 CL min) → Álex Grimaldo (Leverkusen) [initial + surname]
+- Matvey Safonov (Paris Saint-Germain, 1020 CL min) → Matvei Safonov (PSG) [initial + surname]
+- Éderson (Atalanta, 724 CL min) → Éderson Silva (Atalanta) [name + club]
+- Pierre-Emile Højbjerg (Olympique de Marseille, 658 CL min) → Pierre Højbjerg (Marseille) [initial + surname]
+- Fabián Ruiz (Paris Saint-Germain, 650 CL min) → Fabián Ruiz Peña (PSG) [name + club]
+- Alejandro Rego Mora (Athletic Club, 500 CL min) → Alejandro Rego (Athletic Club) [name + club]
+- Estêvão (Chelsea, 427 CL min) → Estêvão Willian (Chelsea) [name + club]
+- Nico González (Manchester City, 410 CL min) → Nicolás González (Manchester City) [initial + surname]
+- Nicolás González (Atlético Madrid, 400 CL min) → Nicolás González (Atlético Madrid / Juventus) [initial + surname]
+- Emerson (Olympique de Marseille, 395 CL min) → Emerson Palmieri (Marseille) [name + club]
+- Amir Murillo (Olympique de Marseille, 388 CL min) → Michael Amir Murillo (Marseille) [name + club]
+- Sávio (Manchester City, 369 CL min) → Sávio (Manchester City) [initial + surname]
+- Kang-in Lee (Paris Saint-Germain, 263 CL min) → Lee Kang-in (PSG) [name + club]
+- Ilya Zabarnyi (Paris Saint-Germain, 213 CL min) → Illia Zabarnyi (PSG) [initial + surname]
+- Conrad Jaden Egan-Riley (Olympique de Marseille, 142 CL min) → CJ Egan-Riley (Marseille) [initial + surname]
+- João Mário (Juventus, 105 CL min) → João Mário Lopes (Bologna / Juventus) [name + club]
+- Manuel Ángel Morán (Real Madrid, 30 CL min) → Manuel Ángel (Real Madrid) [name + club]
+- Stanis Idumbo Muzambo (AS Monaco, 26 CL min) → Stanis Idumbo (Monaco / Sevilla) [name + club]
 
-Still unlinked at top-5 clubs (most CL minutes first). Mostly youngsters without league minutes, or name variants:
+Still unlinked at top-5 clubs (most CL minutes first): players without league minutes in the dataset.
 
-- Éderson (Atalanta, 724 CL min)
-- Fabián Ruiz (Paris Saint-Germain, 650 CL min)
-- Alejandro Rego Mora (Athletic Club, 500 CL min)
-- Estêvão (Chelsea, 427 CL min)
-- Emerson (Olympique de Marseille, 395 CL min)
-- Amir Murillo (Olympique de Marseille, 388 CL min)
-- Kang-in Lee (Paris Saint-Germain, 263 CL min)
 - Thiago Pitarch (Real Madrid, 239 CL min)
-- João Mário (Juventus, 105 CL min)
-- Manuel Ángel Morán (Real Madrid, 30 CL min)
-- Stanis Idumbo Muzambo (AS Monaco, 26 CL min)
 - Reggie Walsh (Chelsea, 24 CL min)
 - Daniel Budesca (Villarreal, 21 CL min)
 - Filip Pavić (FC Bayern München, 18 CL min)
 - Amara Nallo (Liverpool FC, 15 CL min)
+- Brando Bailey-Joseph (Arsenal, 13 CL min)
+- Marli Salmon (Arsenal, 11 CL min)
+- Dani Meso (Real Madrid, 11 CL min)
+- Marvin Dills (Eintracht Frankfurt, 11 CL min)
+- Alexander Staff (Eintracht Frankfurt, 11 CL min)
+- Ibon Sánchez (Athletic Club, 10 CL min)
+- Andre Harriman-Annous (Arsenal, 9 CL min)
+- Jeremiah Mensah (Bayer 04 Leverkusen, 9 CL min)
+- Leo Shahar (Newcastle United, 3 CL min)
+- Ife Ibrahim (Arsenal, 1 CL min)
 
 ### Cross-check: SofaScore vs FotMob
 

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\DataQuality;
 
-use App\DataQuality\OriginStatus;
+use App\Football\Data\OriginStatus;
+
 use App\DataQuality\Top5StintMerger;
 use App\Football\Data\Origin;
 use PHPUnit\Framework\TestCase;

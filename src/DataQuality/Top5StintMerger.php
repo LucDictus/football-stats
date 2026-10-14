@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\DataQuality;
 
+use App\Football\Data\OriginCheck;
+
+use App\Football\Data\OriginStatus;
+
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
 
@@ -136,7 +140,21 @@ final class Top5StintMerger
             $minutes,
             $values,
             $checks,
+            array_map(static fn (array $s) => [
+                'team' => $s['team'],
+                'league' => $s['league'],
+                'appearances' => self::int($s['playing_time_mp']),
+                'starts' => self::int($s['playing_time_starts']),
+                'minutes' => self::int($s['playing_time_min']),
+            ], $stints),
         );
+    }
+
+    private static function int(?string $value): ?int
+    {
+        $number = self::num($value);
+
+        return $number !== null ? (int) $number : null;
     }
 
     /** @param list<array<string, string>> $stints */

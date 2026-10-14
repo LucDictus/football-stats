@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DataQuality;
+namespace App\Football\Data;
 
 final readonly class OriginCheck
 {

@@ -1,0 +1,10 @@
+# Manual player identity links, for cases the automatic matching cannot solve.
+# Checked before any automatic rule (see src/DataImport/Identity/ClPlayerMatcher.php).
+#
+# sofascore: SofaScore player id (from the CL data) => league player key in the
+#            Top-5 dataset: "<name>|<birth year>" (split name clashes: "<name>|<year>|<club>")
+#
+# Example:
+#   sofascore:
+#     784655: 'Fabián Ruiz Peña|1996'
+sofascore: {}
