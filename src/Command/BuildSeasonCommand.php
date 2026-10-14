@@ -33,6 +33,9 @@ final class BuildSeasonCommand extends Command
             ['New teams' => $result['teams_created']],
             ['New identifiers' => $result['identifiers_added']],
         );
+        if ($result['rejected'] !== []) {
+            $io->warning(['CL records not used:', ...$result['rejected']]);
+        }
         if ($result['relinked'] !== []) {
             $io->warning(['Identifiers moved to another player:', ...$result['relinked']]);
         }

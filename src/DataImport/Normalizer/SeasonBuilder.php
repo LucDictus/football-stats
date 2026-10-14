@@ -9,6 +9,7 @@ use App\DataImport\Identity\ClPlayerMatcher;
 use App\DataImport\Identity\IdentityOverrides;
 use App\DataImport\Identity\IdentityRegistry;
 use App\DataImport\Sofascore\SofascoreClient;
+use App\DataImport\SourceName;
 use App\DataImport\Top5\Top5CsvReader;
 use App\DataQuality\MergedPlayerSeason;
 use App\DataQuality\Top5StintMerger;
@@ -16,7 +17,6 @@ use App\Entity\Competition;
 use App\Entity\ImportBatch;
 use App\Entity\Player;
 use App\Entity\PlayerCompetitionStats;
-use App\Entity\PlayerIdentifier;
 use App\Entity\PlayerSeason;
 use App\Entity\PlayerSeasonStint;
 use App\Entity\Season;
@@ -44,6 +44,15 @@ final class SeasonBuilder
     /** @var array<string, Competition> */
     private array $competitions = [];
 
+    /** @var array<int, PlayerSeason> spl_object_id(Player) => the season built for that player in this run */
+    private array $built = [];
+
+    /** @var array<int, string> SofaScore id => league player key (manual links) */
+    private array $manual = [];
+
+    /** @var list<string> */
+    private array $rejected = [];
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly ImportBatchRepository $batches,
@@ -64,9 +73,16 @@ final class SeasonBuilder
         $clBatch = $this->batches->latest(SofascoreClient::SOURCE, SofascoreClient::DATASET, $this->scope->season)
             ?? throw new \RuntimeException('No SofaScore CL import yet: run app:import:sofascore-cl');
 
+        if ($top5Batch->getRecordCount() === 0 || $clBatch->getRecordCount() === 0) {
+            throw new \RuntimeException('The latest league or CL batch is empty; refusing to rebuild the season from it.');
+        }
+
         $league = $this->merger->merge($this->records->payloads($top5Batch));
         $cl = $this->records->payloads($clBatch);
-        $matches = $this->matcher->match($league, $cl, $this->overrides->sofascore());
+        $this->manual = $this->overrides->sofascore();
+        $matches = $this->matcher->match($league, $cl, $this->manual);
+        $this->built = [];
+        $this->rejected = [];
 
         return $this->em->wrapInTransaction(function () use ($league, $cl, $matches, $top5Batch, $clBatch): array {
             $season = $this->season();
@@ -94,6 +110,7 @@ final class SeasonBuilder
                 'cl_players' => count($cl),
                 'cl_linked' => count($matches->links),
                 'cl_only' => $clOnly,
+                'rejected' => $this->rejected,
             ] + $this->identities->stats();
         });
     }
@@ -104,13 +121,21 @@ final class SeasonBuilder
             ? (string) $merged->sofascoreId
             : null;
 
-        $player = $this->identities->player(PlayerIdentifier::SOURCE_TOP5, $merged->key)
-            ?? ($sofascoreId !== null ? $this->identities->player(PlayerIdentifier::SOURCE_SOFASCORE, $sofascoreId) : null)
-            ?? $this->identities->createPlayer($merged->name, $merged->born, null);
+        // A manual link sends this SofaScore id to another league player: the league row's id is wrong.
+        if ($sofascoreId !== null && isset($this->manual[(int) $sofascoreId]) && $this->manual[(int) $sofascoreId] !== $merged->key) {
+            $sofascoreId = null;
+        }
+
+        $player = $this->identities->player(SourceName::TOP5, $merged->key)
+            ?? ($sofascoreId !== null ? $this->identities->player(SourceName::SOFASCORE, $sofascoreId) : null);
+        if ($player === null || isset($this->built[spl_object_id($player)])) {
+            // New, or the stored identity already belongs to another league row in this build.
+            $player = $this->identities->createPlayer($merged->name, $merged->born, null);
+        }
         $player->enrich($merged->name, $merged->born, null);
-        $this->identities->identifyPlayer($player, PlayerIdentifier::SOURCE_TOP5, $merged->key, 'source key');
+        $this->identities->identifyPlayer($player, SourceName::TOP5, $merged->key, 'source key');
         if ($sofascoreId !== null) {
-            $this->identities->identifyPlayer($player, PlayerIdentifier::SOURCE_SOFASCORE, $sofascoreId, 'id in league data');
+            $this->identities->identifyPlayer($player, SourceName::SOFASCORE, $sofascoreId, 'id in league data');
         }
 
         $teams = [];
@@ -118,13 +143,15 @@ final class SeasonBuilder
             $teams[] = $this->leagueTeam($stint['team'], $stint['league']);
         }
 
+        $group = $merged->position !== null ? substr($merged->position, 0, 2) : null;
         $playerSeason = new PlayerSeason(
             $player,
             $season,
             $merged->position,
-            $merged->position !== null ? substr($merged->position, 0, 2) : null,
+            in_array($group, PlayerSeason::POSITION_GROUPS, true) ? $group : null,
             $teams[0] ?? null,
         );
+        $this->built[spl_object_id($player)] = $playerSeason;
         foreach ($merged->stintDetails as $i => $stint) {
             $playerSeason->addStint(new PlayerSeasonStint(
                 $playerSeason,
@@ -159,26 +186,39 @@ final class SeasonBuilder
      */
     private function buildClSeason(string $externalId, array $record, Season $season, ImportBatch $batch, ClMatchResult $matches, array $seasons): bool
     {
+        if (!isset($record['minutesPlayed'])) {
+            $this->rejected[] = "CL {$externalId}: no minutes";
+
+            return false;
+        }
         $sofascoreId = (string) $record['player']['id'];
         $link = $matches->linkFor($externalId);
         $playerSeason = $link !== null ? $seasons[$link['player']->key] : null;
 
         $player = $playerSeason?->getPlayer()
-            ?? $this->identities->player(PlayerIdentifier::SOURCE_SOFASCORE, $sofascoreId)
+            ?? $this->identities->player(SourceName::SOFASCORE, $sofascoreId)
             ?? $this->identities->createPlayer($record['player']['name'], null, null);
-        $this->identities->identifyPlayer($player, PlayerIdentifier::SOURCE_SOFASCORE, $sofascoreId, $link['method'] ?? 'source id');
+        // Not linked this time but known from an earlier build: keep the identity (and its season).
+        $playerSeason ??= $this->built[spl_object_id($player)] ?? null;
+        if ($playerSeason?->getStats(StatsScope::ChampionsLeague) !== null) {
+            $this->rejected[] = "CL {$externalId}: {$record['player']['name']} already has CL statistics (listed for two clubs?)";
+
+            return false;
+        }
+        $this->identities->identifyPlayer($player, SourceName::SOFASCORE, $sofascoreId, $link['method'] ?? 'source id');
 
         $team = $this->clTeam($record['team'], $matches);
-        $goalkeeper = $playerSeason?->isGoalkeeper() ?? (($record['goalsPrevented'] ?? null) !== null || ($record['saves'] ?? 0) > 0);
+        $goalkeeper = $playerSeason?->isGoalkeeper() ?? SofascoreClient::looksLikeGoalkeeper($record);
 
         if ($playerSeason === null) {
-            // CL-only, or a league player we could not link: the season holds CL statistics only.
+            // CL-only: the season holds CL statistics only.
             $playerSeason = new PlayerSeason($player, $season, null, $goalkeeper ? 'GK' : null, $team);
+            $this->built[spl_object_id($player)] = $playerSeason;
             $this->em->persist($playerSeason);
         }
 
         [$values, $origins] = $this->clValues($record, $goalkeeper);
-        $minutes = (float) ($record['minutesPlayed'] ?? 0);
+        $minutes = (float) $record['minutesPlayed'];
         $playerSeason->addStats(new PlayerCompetitionStats(
             $playerSeason,
             StatsScope::ChampionsLeague,
@@ -232,9 +272,9 @@ final class SeasonBuilder
 
     private function leagueTeam(string $name, string $top5League): Team
     {
-        $team = $this->identities->team(PlayerIdentifier::SOURCE_TOP5, $name)
+        $team = $this->identities->team(SourceName::TOP5, $name)
             ?? $this->identities->createTeam($name, $this->competitions[CompetitionCatalog::codeForTop5League($top5League)]);
-        $this->identities->identifyTeam($team, PlayerIdentifier::SOURCE_TOP5, $name);
+        $this->identities->identifyTeam($team, SourceName::TOP5, $name);
 
         return $team;
     }
@@ -244,10 +284,10 @@ final class SeasonBuilder
     {
         $id = (string) $clTeam['id'];
         $leagueName = $matches->clubs[$clTeam['name']] ?? null;
-        $team = $this->identities->team(PlayerIdentifier::SOURCE_SOFASCORE, $id)
-            ?? ($leagueName !== null ? $this->identities->team(PlayerIdentifier::SOURCE_TOP5, $leagueName) : null)
+        $team = $this->identities->team(SourceName::SOFASCORE, $id)
+            ?? ($leagueName !== null ? $this->identities->team(SourceName::TOP5, $leagueName) : null)
             ?? $this->identities->createTeam($clTeam['name'], null);
-        $this->identities->identifyTeam($team, PlayerIdentifier::SOURCE_SOFASCORE, $id);
+        $this->identities->identifyTeam($team, SourceName::SOFASCORE, $id);
 
         return $team;
     }

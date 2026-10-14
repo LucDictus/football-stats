@@ -7,7 +7,7 @@ Every score should be explainable from data, rules and evidence.
 - Data coverage report (what the data can and cannot tell): [docs/data-coverage.md](docs/data-coverage.md)
 - New to the code? Start with [docs/onboarding.md](docs/onboarding.md)
 - Data model and identity rules: [docs/data-model.md](docs/data-model.md)
-- Baseline code and data audit: [docs/AUDIT.md](docs/AUDIT.md)
+- Baseline code and data audit: [docs/audit.md](docs/audit.md)
 - Stack: Symfony 7.4 LTS, Doctrine ORM, PostgreSQL 16, PHPUnit
 
 ## Setup
@@ -19,6 +19,7 @@ cp .env .env.local                     # then set APP_SECRET
 php bin/console doctrine:migrations:migrate
 php bin/console --env=test doctrine:database:create && php bin/console --env=test doctrine:migrations:migrate -n
 php bin/phpunit                        # unit tests + integration tests on the test database
+composer qa                            # all quality checks: style, PHPStan level 8, linters, schema, tests
 ```
 
 ## Data
@@ -48,11 +49,15 @@ in `config/services.yaml`.
 
 ```
 src/
-  Entity/        domain model (see docs/data-model.md)
-  DataImport/    source readers and HTTP clients, raw import, identity matching, season builder
+  Command/       console commands (thin: they call services)
+  Controller/    HTTP: the data inspector (developer tool)
+  DataImport/    source readers and clients, raw import, identity matching, season builder
   DataQuality/   stint merging, provider consistency checks, data audit
+  Entity/        raw layer and domain model (see docs/data-model.md)
   Football/      assessment scope, field catalog (later: metrics, scoring, ranking)
-  Command/       console commands
+  Inspector/     read-only SQL for the inspector pages
+  Repository/    Doctrine repositories
+tests/           Unit/ (pure logic), Integration/ (pipeline on the test DB), Functional/ (HTTP)
 legacy/     the original plain-PHP importer and viewer, kept as a reference
             until the Symfony version replaces it (see legacy/README.md)
 docs/       audit and methodology

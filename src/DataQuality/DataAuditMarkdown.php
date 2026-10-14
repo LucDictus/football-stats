@@ -208,7 +208,7 @@ final class DataAuditMarkdown
                 $out[] = '| Player | Club | SofaScore | FotMob |';
                 $out[] = '|---|---|---|---|';
                 foreach ($f['disagreements'] as $d) {
-                    $out[] = sprintf('| %s | %s | %s | %s |', $d['player'], $d['team'], $d['sofascore'], $d['fotmob']);
+                    $out[] = sprintf('| %s | %s | %s | %s |', self::cell($d['player']), self::cell($d['team']), $d['sofascore'], $d['fotmob']);
                 }
                 $out[] = '';
             }
@@ -226,6 +226,12 @@ final class DataAuditMarkdown
         $out[] = '';
 
         return implode("\n", $out);
+    }
+
+    /** Third-party text in a table cell: a "|" would end the cell. */
+    private static function cell(string $text): string
+    {
+        return str_replace('|', '\\|', $text);
     }
 
     private static function pct(?float $value): string

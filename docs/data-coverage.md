@@ -14,8 +14,8 @@ What the imported data can and cannot tell the model. Every number below is meas
 
 | Source | Dataset | Competitions | Records | Rejected | Version | Imported |
 |---|---|---|---:|---:|---|---|
-| [top5-football-dataset](https://github.com/m-mahadi/top5-football-dataset) | player_seasons | PL,PD,SA,BL1,FL1 | 2,839 | 0 | `8940299c2c` | 2026-10-14 (batch #1) |
-| [sofascore](https://api.sofascore.com/api/v1/unique-tournament/7/season/76953/statistics) | player_season_statistics | CL | 878 | 0 | – | 2026-10-14 (batch #2) |
+| [top5-football-dataset](https://github.com/m-mahadi/top5-football-dataset) | player_seasons | PL,PD,SA,BL1,FL1 | 2,839 | 0 | `8940299c2c` | 2026-10-14 (batch #4) |
+| [sofascore](https://api.sofascore.com/api/v1/unique-tournament/7/season/76953/statistics) | player_season_statistics | CL | 878 | 0 | – | 2026-10-14 (batch #5) |
 | [fotmob](https://data.fotmob.com/stats/42/season/28184/{stat}.json) | player_stat_lists | CL | 1,441 | 0 | – | 2026-10-14 (batch #3) |
 
 League data: 2,839 stint rows → **2,691 players** (148 transferred during the season), **1,598 with 900+ minutes** (114 goalkeepers).
@@ -170,7 +170,7 @@ FBref is the reference for playing time. For every player, the Understat and Sof
 ## 5. Champions League
 
 - **878 players** from 36 clubs (636 with 180+ minutes), 634 goals in total.
-- **Link to league data:** of 550 players at the 22 top-5 clubs, 535 are linked (516 by sofascore id, 9 by initial + surname, 10 by name + club); 15 remain unlinked. Rules: `src/DataImport/Identity/ClPlayerMatcher.php`, manual links: `config/identity/players.yaml`.
+- **Link to league data:** of 550 players at the 22 top-5 clubs, 535 are linked (514 by sofascore id, 11 by initial + surname, 10 by name + club); 15 remain unlinked. Rules: `src/DataImport/Identity/ClPlayerMatcher.php`, manual links: `config/identity/players.yaml`.
 - 328 players at 14 clubs outside the top-5 leagues (Bodø/Glimt, Galatasaray, Sporting CP, Club Brugge KV, Benfica, Qarabağ FK, Olympiacos FC, PSV Eindhoven, Pafos FC, Royale Union Saint-Gilloise, FC Kairat Almaty, FC København, SK Slavia Praha, AFC Ajax). 15 of them also played in a top-5 league this season (transfer); the rest have CL data only and cannot be ranked on a full season.
 - xG is empty for 195 players without a shot (= 0 xG, safe to treat as zero) and for 0 players who did shoot (unknown).
 
@@ -193,6 +193,8 @@ Linked without an exact id (their league SofaScore id is missing, shared or susp
 - Ilya Zabarnyi (Paris Saint-Germain, 213 CL min) → Illia Zabarnyi (PSG) [initial + surname]
 - Conrad Jaden Egan-Riley (Olympique de Marseille, 142 CL min) → CJ Egan-Riley (Marseille) [initial + surname]
 - João Mário (Juventus, 105 CL min) → João Mário Lopes (Bologna / Juventus) [name + club]
+- Wataru Endo (Liverpool FC, 86 CL min) → Wataru Endo (Liverpool) [initial + surname]
+- Federico Chiesa (Liverpool FC, 84 CL min) → Federico Chiesa (Liverpool) [initial + surname]
 - Manuel Ángel Morán (Real Madrid, 30 CL min) → Manuel Ángel (Real Madrid) [name + club]
 - Stanis Idumbo Muzambo (AS Monaco, 26 CL min) → Stanis Idumbo (Monaco / Sevilla) [name + club]
 

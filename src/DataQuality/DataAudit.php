@@ -155,7 +155,7 @@ final readonly class DataAudit
         $clRegular = array_filter($cl, static fn ($r) => ($r['minutesPlayed'] ?? 0) >= self::CL_MIN_MINUTES);
         $clIsKeeper = [];
         foreach ($clRegular as $externalId => $r) {
-            $clIsKeeper[$externalId] = $matches->linkFor($externalId)['player']->goalkeeper ?? ($r['saves'] ?? 0) > 0;
+            $clIsKeeper[$externalId] = $matches->linkFor($externalId)['player']->goalkeeper ?? SofascoreClient::looksLikeGoalkeeper($r);
         }
 
         $rows = [];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\DataQuality\DataAudit;
 use App\Entity\Player;
 use App\Entity\PlayerIdentifier;
 use App\Entity\PlayerSeason;
@@ -26,8 +27,6 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/inspector', name: 'inspector_')]
 final class InspectorController extends AbstractController
 {
-    private const MIN_MINUTES = 900;
-
     public function __construct(
         private readonly InspectorQueries $queries,
         private readonly EntityManagerInterface $em,
@@ -38,7 +37,7 @@ final class InspectorController extends AbstractController
     public function overview(): Response
     {
         $statuses = [];
-        foreach ($this->queries->originStatuses(self::MIN_MINUTES) as $row) {
+        foreach ($this->queries->originStatuses(DataAudit::LEAGUE_MIN_MINUTES) as $row) {
             $statuses[$row['origin']][$row['status']] = $row['players'];
         }
 
@@ -47,16 +46,18 @@ final class InspectorController extends AbstractController
             'batches' => $this->queries->batches(),
             'statuses' => $statuses,
             'methods' => $this->queries->identifierMethods(),
-            'min_minutes' => self::MIN_MINUTES,
+            'min_minutes' => DataAudit::LEAGUE_MIN_MINUTES,
         ]);
     }
 
     #[Route('/coverage', name: 'coverage')]
     public function coverage(#[Autowire('%kernel.project_dir%/docs/data-coverage.md')] string $report): Response
     {
-        // Our own generated file, so rendering it as HTML is safe.
+        // The report contains player and club names from third-party sources: escape any HTML in it.
+        $converter = new GithubFlavoredMarkdownConverter(['html_input' => 'escape', 'allow_unsafe_links' => false]);
+
         return $this->render('inspector/coverage.html.twig', [
-            'html' => is_file($report) ? (new GithubFlavoredMarkdownConverter())->convert((string) file_get_contents($report)) : null,
+            'html' => is_file($report) ? (string) $converter->convert((string) file_get_contents($report)) : null,
         ]);
     }
 

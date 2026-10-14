@@ -89,6 +89,38 @@ final class ClPlayerMatcherTest extends TestCase
         self::assertCount(1, $result->links);
     }
 
+    public function testManualLinkAndIdCannotClaimTheSamePlayer(): void
+    {
+        // The league row of B carries CL player 1's id by mistake; a manual link sends CL player 2 to B.
+        $result = $this->match(
+            [$this->league('B|1991', 'Player B', 'Y', 1)],
+            [$this->cl(1, 'Player A', 'Y'), $this->cl(2, 'Player B', 'Y')],
+            [2 => 'B|1991'],
+        );
+
+        self::assertCount(1, $result->links);
+        self::assertSame(ClPlayerMatcher::METHOD_MANUAL, $this->link($result, '2|1')['method']);
+    }
+
+    public function testOnePlayerListedForTwoClClubsIsLinkedOnce(): void
+    {
+        $league = [$this->league('A|1990', 'Player A', 'X', 7)];
+        $cl = ['7|1' => $this->cl(7, 'Player A', 'X'), '7|2' => $this->cl(7, 'Player A', 'Z')];
+
+        $result = (new ClPlayerMatcher())->match($league, $cl);
+
+        self::assertCount(1, $result->links);
+    }
+
+    public function testSuspectIdIsNotTrustedButNameRulesStillApply(): void
+    {
+        $player = $this->league('Wataru Endo|1993', 'Wataru Endo', 'Liverpool', 5, OriginStatus::Suspect);
+
+        $result = $this->match([$player], [$this->cl(5, 'Wataru Endo', 'Liverpool FC')]);
+
+        self::assertSame(ClPlayerMatcher::METHOD_NAME, $this->link($result, '5|1')['method']);
+    }
+
     /** @return array{player: MergedPlayerSeason, method: string} */
     private function link(ClMatchResult $result, string $externalId): array
     {
@@ -113,14 +145,14 @@ final class ClPlayerMatcherTest extends TestCase
         return (new ClPlayerMatcher())->match(array_values($league), $byId, $manual);
     }
 
-    private function league(string $key, string $name, string $team, ?int $sofascoreId = null): MergedPlayerSeason
+    private function league(string $key, string $name, string $team, ?int $sofascoreId = null, OriginStatus $sofascoreStatus = OriginStatus::Ok): MergedPlayerSeason
     {
         $ok = new OriginCheck(OriginStatus::Ok, 2000.0);
 
         return new MergedPlayerSeason(
             $key, $name, 1995, 'MF', false, [$team], ['FRA-Ligue 1'], $sofascoreId, 1, 2000.0, [],
             [Origin::Fbref->value => $ok, Origin::Understat->value => $ok,
-                Origin::Sofascore->value => $sofascoreId !== null ? $ok : new OriginCheck(OriginStatus::Missing, null)],
+                Origin::Sofascore->value => $sofascoreId !== null ? new OriginCheck($sofascoreStatus, 2000.0) : new OriginCheck(OriginStatus::Missing, null)],
         );
     }
 

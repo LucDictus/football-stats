@@ -17,7 +17,7 @@
 /legacy/.env
 /legacy/var/
 
-.idea/workspace.xml
+/.idea/
 
 ###> friendsofphp/php-cs-fixer ###
 /.php-cs-fixer.php

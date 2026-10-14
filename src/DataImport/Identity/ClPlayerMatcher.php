@@ -14,12 +14,12 @@ use function Symfony\Component\String\u;
  * Links Champions League records (SofaScore) to league players (Top-5 dataset).
  *
  * In order, first match wins, and a league player is linked to at most one CL record:
- *   1. manual mapping (config/identity.yaml)
- *   2. SofaScore id: the league row carries the same, trusted, unshared id
+ *   1. manual mapping (config/identity/players.yaml)
+ *   2. SofaScore id: the league row carries the same id, and its SofaScore record is not suspect
  *   3. name: first initial + surname, unique (narrowed by club when ambiguous)
  *   4. name + club: same club, and one name's words contain the other's
  *      ("Fabián Ruiz" / "Fabián Ruiz Peña", "Kang-in Lee" / "Lee Kang-in")
- * Rules 3 and 4 only consider league players without a usable SofaScore id.
+ * Rules 3 and 4 only consider league players without a trusted SofaScore id.
  */
 final class ClPlayerMatcher
 {
@@ -40,10 +40,10 @@ final class ClPlayerMatcher
         $unidentified = [];
         foreach ($league as $player) {
             $byKey[$player->key] = $player;
-            if ($player->sofascoreId !== null) {
+            $trustedId = $player->sofascoreId !== null && $player->check(Origin::Sofascore)->status !== OriginStatus::Suspect;
+            if ($trustedId) {
                 $byId[$player->sofascoreId] = $player;
-            }
-            if ($player->sofascoreId === null || $player->check(Origin::Sofascore)->status === OriginStatus::Suspect) {
+            } else {
                 $unidentified[] = $player;
             }
         }
@@ -55,13 +55,19 @@ final class ClPlayerMatcher
             $claimed[$player->key] = true;
         };
 
-        // 1 and 2: exact links first, so name rules cannot take a player that has an exact match.
+        // 1. Manual links first: they exist to correct the automatic rules.
         foreach ($cl as $externalId => $record) {
-            $id = (int) $record['player']['id'];
-            if (isset($manual[$id], $byKey[$manual[$id]])) {
-                $link($externalId, $byKey[$manual[$id]], self::METHOD_MANUAL);
-            } elseif (isset($byId[$id])) {
-                $link($externalId, $byId[$id], self::METHOD_ID);
+            $target = $byKey[$manual[(int) $record['player']['id']] ?? ''] ?? null;
+            if ($target !== null && !isset($claimed[$target->key])) {
+                $link((string) $externalId, $target, self::METHOD_MANUAL);
+            }
+        }
+
+        // 2. Exact id, before the name rules, so those cannot take a player that has an exact match.
+        foreach ($cl as $externalId => $record) {
+            $target = $byId[(int) $record['player']['id']] ?? null;
+            if (!isset($links[$externalId]) && $target !== null && !isset($claimed[$target->key])) {
+                $link((string) $externalId, $target, self::METHOD_ID);
             }
         }
 

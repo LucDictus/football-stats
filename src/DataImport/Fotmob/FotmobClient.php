@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\DataImport\Fotmob;
 
+use App\DataImport\SourceName;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -12,7 +13,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final readonly class FotmobClient
 {
-    public const SOURCE = 'fotmob';
+    public const SOURCE = SourceName::FOTMOB;
     public const DATASET = 'player_stat_lists';
     private const BASE_URL = 'https://data.fotmob.com/stats';
 

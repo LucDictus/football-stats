@@ -137,11 +137,15 @@ class PlayerCompetitionStats
     }
 
     /**
-     * Per-90 rate on the supplying provider's own minutes. Null when the value is unknown,
-     * the provider is not usable (suspect/missing), or it has no minutes.
+     * Per-90 rate on the supplying provider's own minutes. Null when the field is not a
+     * per-90 statistic (minutes, percentages), the value is unknown, the provider is not
+     * usable (suspect/missing), or it has no minutes.
      */
     public function per90(string $field): ?float
     {
+        if (!FieldCatalog::get($field)->per90) {
+            return null;
+        }
         $value = $this->value($field);
         $origin = $this->origin($field);
         if ($value === null || $origin === null || !$this->fieldStatus($field)->usable()) {

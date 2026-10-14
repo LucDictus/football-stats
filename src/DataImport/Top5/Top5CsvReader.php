@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\DataImport\Top5;
 
+use App\DataImport\SourceName;
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
 
@@ -14,7 +15,7 @@ use App\Football\Data\Origin;
  */
 final readonly class Top5CsvReader
 {
-    public const SOURCE = 'top5-football-dataset';
+    public const SOURCE = SourceName::TOP5;
     public const DATASET = 'player_seasons';
     public const URL = 'https://github.com/m-mahadi/top5-football-dataset';
     private const CSV = '/data/master/player_seasons.csv';
@@ -85,6 +86,11 @@ final readonly class Top5CsvReader
                     continue;
                 }
                 $key = implode('|', [$row['player'], $row['born'], $row['team'], $row['league']]);
+                if (!is_numeric($row['playing_time_min'])) {
+                    // FBref minutes are the reference for every provider check; without them the row is unusable.
+                    $rejected[] = "line {$lineNumber}: {$key} has no minutes";
+                    continue;
+                }
                 if (isset($rows[$key])) {
                     $rejected[] = "line {$lineNumber}: duplicate of {$key}";
                     continue;

@@ -93,11 +93,11 @@ in January). Open `/inspector/players/22` in the browser next to the code.
    as `SourceRecord`s in batch #1, untouched.
 
 2. **Merge.** `SeasonBuilder::build()` loads the batch and calls
-   `Top5StintMerger::merge()` (`src/DataQuality/Top5StintMerger.php:35`):
+   `Top5StintMerger::merge()` (`src/DataQuality/Top5StintMerger.php`):
    - Rows are grouped by name + birth year. His two rows become one player.
    - (A group with more than `MAX_SEASON_APPEARANCES` = 42 is two different people and
      gets split again: that is the "two Vitinhas" case.)
-   - `mergePlayer()` (`:76`): FBref columns (minutes, goals, shots) are **summed** over the
+   - `mergePlayer()`: FBref columns (minutes, goals, shots) are **summed** over the
      stints (1,792 + 90 = 1,882 min). Understat/SofaScore columns are **taken once**,
      because the source repeats the same value on every row.
 
@@ -107,11 +107,13 @@ in January). Open `/inspector/players/22` in the browser next to the code.
    Understat has 1,786, within 15%, so **ok**. Derived fields like non-penalty goals are
    only calculated from trusted inputs.
 
-4. **Link to the CL.** `ClPlayerMatcher::match()` (`src/DataImport/Identity/ClPlayerMatcher.php:36`)
+4. **Link to the CL.** `ClPlayerMatcher::match()` (`src/DataImport/Identity/ClPlayerMatcher.php`)
    finds his SofaScore CL record. His league row carries SofaScore id 1002837 and so does the
-   CL record, so rule 2 (exact id) links them. Read the class docblock for the four rules.
+   CL record, so rule 2 (exact id) links them. Read the class docblock for the four rules:
+   manual links first, then exact ids, then two name rules; each league player is linked
+   to at most one CL record.
 
-5. **Identity.** `SeasonBuilder::buildLeagueSeason()` (`src/DataImport/Normalizer/SeasonBuilder.php:102`)
+5. **Identity.** `SeasonBuilder::buildLeagueSeason()` (`src/DataImport/Normalizer/SeasonBuilder.php`)
    asks `IdentityRegistry` for a player with identifier `top5-football-dataset / Piero Hincapié|2002`.
    First build: none, so a `Player` is created and identifiers are stored. Every later
    build finds him through that identifier, so he stays player #22.
@@ -119,11 +121,11 @@ in January). Open `/inspector/players/22` in the browser next to the code.
 6. **Store.** One `PlayerSeason`, two `PlayerSeasonStint`s (Arsenal PL 1,792, Leverkusen
    BL1 90), and a `PlayerCompetitionStats` for the league with `values`, `valueOrigins`
    (which provider gave which number) and `originChecks` (status + minutes per provider).
-   `buildClSeason()` (`:161`) adds the CL `PlayerCompetitionStats` to the same season.
+   `buildClSeason()` adds the CL `PlayerCompetitionStats` to the same season.
 
 7. **Read.** `PlayerCompetitionStats` (`src/Entity/PlayerCompetitionStats.php`) is the API
    for everything downstream: `value()`, `origin()`, `fieldStatus()`, `trusted()` and
-   `per90()` (`:143`). His league tackles per 90 are calculated over SofaScore's 90
+   `per90()`. His league tackles per 90 are calculated over SofaScore's 90
    minutes, not FBref's 1,882. That is the transfer bug from the audit, fixed in one place.
 
 ## 6. Commands
@@ -137,7 +139,13 @@ php bin/console app:build-season              # domain: rebuild players/stats (i
 php bin/console app:data:audit                # docs/data-coverage.md
 php -S 127.0.0.1:8010 -t public               # inspector at http://127.0.0.1:8010
 php bin/phpunit                               # all tests (needs the test DB, see README)
+composer qa                                   # everything below must pass before a commit
+composer fix                                  # apply code style
 ```
+
+`composer qa` runs code style (PHP-CS-Fixer, Symfony rules), static analysis (PHPStan
+level 8 with the Symfony, Doctrine and PHPUnit extensions), the container/Twig/YAML
+linters, the Doctrine schema check and the full test suite. Keep it green.
 
 ## 7. Tests
 
@@ -177,17 +185,20 @@ moved ("relinked").
 - **League and CL xG are different models** (Understat vs SofaScore). Don't add them.
 - **Container cache.** After changing a constructor, run `php bin/console cache:clear` if a
   command complains about arguments.
+- **Empty imports are refused**, and so is a build from an empty batch: an empty "latest"
+  batch would otherwise wipe the season.
+- **Source names** (`top5-football-dataset`, `sofascore`, `fotmob`) are defined once, in
+  `src/DataImport/SourceName.php`.
 - **The audit reads the raw layer**, not the domain layer: it reports on the sources.
   The inspector reads the domain layer.
 - **`legacy/`** has its own SQLite database and `.env`. Nothing in `src/` uses it.
 
 ## 10. Known rough edges (good first tasks)
 
-- `DataAudit` returns a large array; a few small result objects would make it clearer.
-- Dataset name constants live on the import commands (`ImportSofascoreCommand::DATASET`);
-  they belong on the client classes.
+- `DataAudit` returns large (typed) arrays; small result objects would read better.
 - No minimum minutes per provider yet: a `partial` provider can rest on 90 minutes.
   Phase 3 needs a threshold before a per-90 counts.
+- A player listed for two CL clubs is rejected at import, not combined (none this season).
 - The 15 unlinked CL youngsters, and position data for CL-only players, are unknown.
 
 ## 11. Your first hour

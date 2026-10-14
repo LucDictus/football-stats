@@ -14,9 +14,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(columns: ['source', 'external_id'])]
 class PlayerIdentifier
 {
-    public const SOURCE_TOP5 = 'top5-football-dataset';
-    public const SOURCE_SOFASCORE = 'sofascore';
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
