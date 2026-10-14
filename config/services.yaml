@@ -7,6 +7,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Local clone of https://github.com/m-mahadi/top5-football-dataset
+    app.top5_dataset_dir: '%kernel.project_dir%/var/sources/top5-football-dataset'
 
 services:
     # default configuration for services in *this* file
@@ -21,3 +23,18 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # The assessment scope of the ranking (roadmap step 1.2).
+    App\Football\Assessment\AssessmentScope:
+        arguments:
+            $season: '2025/26'
+            $top5SeasonCode: '2526'
+            $periodFrom: '2025-08-01'
+            $periodTo: '2026-05-30'
+            $leagues: ['PL', 'PD', 'SA', 'BL1', 'FL1']
+            $sofascoreCl: { tournament: 7, season: 76953 }
+            $fotmobCl: { league: 42, season: 28184 }
+
+    App\DataImport\Top5\Top5CsvReader:
+        arguments:
+            $directory: '%app.top5_dataset_dir%'
