@@ -180,7 +180,7 @@ final class SeasonBuilder
             $batch,
             $merged->minutes,
             $values,
-            array_map(static fn (string $field) => FieldCatalog::get($field)->origin->value, array_combine(array_keys($values), array_keys($values))),
+            array_map(static fn (Origin $origin) => $origin->value, $merged->valueOrigins),
             array_map(static fn (OriginCheck $c) => ['status' => $c->status->value, 'minutes' => $c->minutes, 'reason' => $c->reason], $merged->checks),
         ));
         $this->em->persist($playerSeason);

@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Football\Scoring;
+
+/** One measurable quantity: the sum of one or more fields, as a season total or per 90 (see MetricMode). */
+final readonly class Metric
+{
+    /** @param non-empty-list<string> $fields field keys from the FieldCatalog */
+    public function __construct(
+        public string $key,
+        public string $label,
+        public array $fields,
+        public MetricMode $mode,
+        public float $weight,
+    ) {
+    }
+
+    /** @return array{key: string, label: string, fields: list<string>, mode: string, weight: float} */
+    public function toArray(): array
+    {
+        return ['key' => $this->key, 'label' => $this->label, 'fields' => $this->fields, 'mode' => $this->mode->value, 'weight' => $this->weight];
+    }
+}

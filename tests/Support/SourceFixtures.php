@@ -21,7 +21,7 @@ final class SourceFixtures
         $row = [
             'player' => 'Test Player', 'born' => '1995', 'team' => 'Club', 'league' => 'ENG-Premier League',
             'pos' => 'FW', 'ss_player_id' => '', 'ss_goals' => '', 'season' => '2526',
-            'us_minutes' => '2000', 'ss_minutesPlayed' => '2000',
+            'us_minutes' => '2000', 'ss_minutesPlayed' => '2000', 'us_np_goals' => '',
         ];
         foreach (FieldCatalog::all() as $field) {
             if ($field->leagueColumn !== null) {

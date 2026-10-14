@@ -52,6 +52,18 @@ final class Top5StintMergerTest extends TestCase
         self::assertNull($player->value('np_goals'), 'full-season goals minus one club\'s penalties would be wrong');
     }
 
+    public function testNonPenaltyGoalsFallBackToUnderstatWhenSofascoreIsNotTrusted(): void
+    {
+        $player = $this->mergeOne([
+            $this->row(['team' => 'Arsenal', 'playing_time_min' => '1792', 'fb_gls' => '4', 'us_np_goals' => '3']),
+            $this->row(['team' => 'Leverkusen', 'league' => 'GER-Bundesliga', 'playing_time_min' => '90', 'fb_gls' => '0', 'us_np_goals' => '3']),
+        ], usMinutes: '1850', ssMinutes: '90');
+
+        self::assertSame(3.0, $player->value('np_goals'));
+        self::assertSame(Origin::Understat, $player->valueOrigins['np_goals']);
+        self::assertTrue($player->trusted('np_goals'));
+    }
+
     public function testUnknownStintMakesSumUnknown(): void
     {
         $player = $this->mergeOne([
@@ -151,7 +163,7 @@ final class Top5StintMergerTest extends TestCase
         $row = [
             'player' => 'Test Player', 'born' => '1995', 'team' => 'Club', 'league' => 'ENG-Premier League',
             'pos' => 'FW', 'ss_player_id' => '123456.0', 'ss_goals' => '',
-            'us_minutes' => '2000', 'ss_minutesPlayed' => '2000', 'us_xg' => '5.5',
+            'us_minutes' => '2000', 'ss_minutesPlayed' => '2000', 'us_xg' => '5.5', 'us_np_goals' => '',
             'playing_time_min' => '2000', 'playing_time_mp' => '15', 'playing_time_starts' => '12',
             'fb_gls' => '5', 'fb_ast' => '3', 'fb_sh' => '40', 'fb_sot' => '15',
             'us_np_xg' => '4.5', 'us_xa' => '2.5', 'us_xg_chain' => '8.0', 'us_xg_buildup' => '3.0',

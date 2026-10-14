@@ -18,6 +18,7 @@ final readonly class MergedPlayerSeason
      * @param array<string, float|null>                                                                 $values       field key => value (null = unknown)
      * @param array<string, OriginCheck>                                                                $checks       Origin value => check
      * @param list<array{team: string, league: string, appearances: ?int, starts: ?int, minutes: ?int}> $stintDetails most minutes first
+     * @param array<string, Origin>                                                                     $valueOrigins field key => provider that supplied the value (known values only)
      */
     public function __construct(
         public string $key,
@@ -33,6 +34,7 @@ final readonly class MergedPlayerSeason
         public array $values,
         public array $checks,
         public array $stintDetails = [],
+        public array $valueOrigins = [],
     ) {
     }
 
@@ -55,9 +57,9 @@ final readonly class MergedPlayerSeason
     /** Status of the field: its provider's status, or the weakest of its inputs for derived fields. */
     public function fieldStatus(string $field): OriginStatus
     {
-        return OriginStatus::weakest(array_map(
-            fn (Origin $o) => $this->check($o)->status,
-            FieldCatalog::get($field)->dependsOn(),
-        ));
+        $origin = $this->valueOrigins[$field] ?? null;
+        $dependsOn = $origin !== null && $origin !== Origin::Derived ? [$origin] : FieldCatalog::get($field)->dependsOn();
+
+        return OriginStatus::weakest(array_map(fn (Origin $o) => $this->check($o)->status, $dependsOn));
     }
 }

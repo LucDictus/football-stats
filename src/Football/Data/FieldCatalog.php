@@ -58,7 +58,7 @@ final class FieldCatalog
             // Attacking output
             new Field('goals', 'Goals', 'Attacking', $fb, 'fb_gls', 'goals', note: 'Includes penalties'),
             new Field('penalty_goals', 'Penalty goals', 'Attacking', $ss, 'ss_penaltyGoals', 'penaltyGoals'),
-            new Field('np_goals', 'Non-penalty goals', 'Attacking', Origin::Derived, null, null, note: 'Goals minus penalty goals; only when both are trusted', inputs: [$fb, $ss]),
+            new Field('np_goals', 'Non-penalty goals', 'Attacking', Origin::Derived, null, null, note: 'FBref goals minus SofaScore penalty goals when SofaScore is trusted; otherwise Understat\'s own non-penalty goals', inputs: [$fb, $ss]),
             new Field('assists', 'Assists', 'Attacking', $fb, 'fb_ast', 'assists'),
             new Field('shots', 'Shots', 'Attacking', $fb, 'fb_sh', 'totalShots'),
             new Field('shots_on_target', 'Shots on target', 'Attacking', $fb, 'fb_sot', 'shotsOnTarget'),

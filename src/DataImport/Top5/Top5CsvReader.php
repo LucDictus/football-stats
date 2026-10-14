@@ -127,7 +127,7 @@ final readonly class Top5CsvReader
     /** @return list<string> identity columns plus every league column in the field catalog */
     public static function requiredColumns(): array
     {
-        $columns = ['season', 'league', 'team', 'player', 'born', 'pos', 'ss_player_id', 'ss_goals'];
+        $columns = ['season', 'league', 'team', 'player', 'born', 'pos', 'ss_player_id', 'ss_goals', 'us_np_goals'];
         foreach (Origin::providers() as $origin) {
             $columns[] = (string) $origin->leagueMinutesColumn();
         }

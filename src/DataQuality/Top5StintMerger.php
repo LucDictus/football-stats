@@ -106,12 +106,20 @@ final class Top5StintMerger
             $checks[Origin::Sofascore->value] = new OriginCheck(OriginStatus::Suspect, $checks[Origin::Sofascore->value]->minutes, 'SofaScore id shared with another player');
         }
 
-        // Derived fields.
-        // Season goals (FBref) minus season penalty goals (SofaScore): only when SofaScore covers the whole season.
-        $values['np_goals'] = $values['goals'] !== null && $values['penalty_goals'] !== null
-            && $checks[Origin::Sofascore->value]->status === OriginStatus::Ok
-            ? $values['goals'] - $values['penalty_goals']
-            : null;
+        $origins = [];
+        foreach (FieldCatalog::all() as $field) {
+            $origins[$field->key] = $field->origin;
+        }
+
+        // Non-penalty goals: season goals (FBref) minus season penalty goals (SofaScore) when
+        // SofaScore covers the whole season; otherwise Understat's own non-penalty goal count.
+        $values['np_goals'] = null;
+        if ($values['goals'] !== null && $values['penalty_goals'] !== null && $checks[Origin::Sofascore->value]->status === OriginStatus::Ok) {
+            $values['np_goals'] = $values['goals'] - $values['penalty_goals'];
+        } elseif ($checks[Origin::Understat->value]->status === OriginStatus::Ok && self::num($main['us_np_goals']) !== null) {
+            $values['np_goals'] = self::num($main['us_np_goals']);
+            $origins['np_goals'] = Origin::Understat;
+        }
         $values['save_pct'] = $goalkeeper && $values['saves'] !== null && $values['goals_conceded'] !== null
             && $values['saves'] + $values['goals_conceded'] > 0
             ? round($values['saves'] / ($values['saves'] + $values['goals_conceded']) * 100, 1)
@@ -145,6 +153,7 @@ final class Top5StintMerger
                 'starts' => self::int($s['playing_time_starts']),
                 'minutes' => self::int($s['playing_time_min']),
             ], $stints),
+            array_intersect_key($origins, array_filter($values, static fn ($v) => $v !== null)),
         );
     }
 
