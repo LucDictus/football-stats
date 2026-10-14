@@ -140,7 +140,7 @@
   font-weight: 600;
 }
 
-.roleTabs button[aria-selected='true'] {
+.roleTabs button[aria-pressed='true'] {
   color: var(--text);
 }
 

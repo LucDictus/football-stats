@@ -80,7 +80,17 @@ export function RankingPage() {
         {models.data && models.data.models.length > 1 && (
           <label className={styles.modelSelect}>
             <span className="visually-hidden">Model</span>
-            <select value={modelId} onChange={(e) => update({ model: e.target.value === models.data.default ? null : e.target.value })}>
+            <select
+              value={modelId}
+              onChange={(e) => {
+                const next = models.data.models.find((m) => m.id === e.target.value)
+                update({
+                  model: e.target.value === models.data.default ? null : e.target.value,
+                  // A position the new model does not rank would show an empty list.
+                  position: position && next && !next.position_groups.includes(position) ? null : position,
+                })
+              }}
+            >
               {models.data.models.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.label}
@@ -104,12 +114,17 @@ export function RankingPage() {
         </div>
       )}
 
-      {query.isError ? (
-        <ErrorState error={query.error} />
+      {models.isError || query.isError ? (
+        <ErrorState error={(models.error ?? query.error) as Error} />
       ) : query.isPending || !model ? (
         <Skeleton />
       ) : (
         <>
+          {rows.length === 0 && (
+            <p className={`card ${styles.empty}`}>
+              {position ? `${model.label} does not rank ${POSITION_PLURAL[position]}.` : 'No ranked players in this run.'}
+            </p>
+          )}
           <section className={styles.podium} aria-label="Top three">
             {podium.map((row, i) => (
               <PodiumCard key={`${modelId}-${position}-${row.player.id}`} row={row} place={i} model={model} />

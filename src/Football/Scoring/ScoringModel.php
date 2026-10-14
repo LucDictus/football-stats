@@ -34,6 +34,10 @@ final readonly class ScoringModel
         public array $components,
         public array $roles = [],
         public Normalization $normalization = Normalization::Percentile,
+        /** Normalise against ranked players only (those meeting minConfidence), then apply to all. */
+        public bool $referenceRankedOnly = false,
+        /** Standard scores: deviations beyond ±zCap count as ±zCap at metric level. */
+        public ?float $zCap = null,
     ) {
         foreach ($positionGroups as $group) {
             if ($this->componentsFor($group) === []) {
@@ -79,7 +83,9 @@ final readonly class ScoringModel
                 'roles' => array_map(static fn (array $components) => array_map(static fn (Component $c) => $c->toArray(), $components), $this->roles),
                 'score' => 'composite normalised within the role',
             ] : [])
-            + ($this->normalization !== Normalization::Percentile ? ['normalization' => $this->normalization->value] : []);
+            + ($this->normalization !== Normalization::Percentile ? ['normalization' => $this->normalization->value] : [])
+            + ($this->referenceRankedOnly ? ['reference' => 'ranked players'] : [])
+            + ($this->zCap !== null ? ['z_cap' => $this->zCap] : []);
     }
 
     /**

@@ -67,9 +67,6 @@
   border-color: var(--line);
 }
 
-.scoreCard[data-unranked] .bigScore {
-  color: var(--muted);
-}
 
 .rankLine {
   font-size: 15px;
@@ -165,6 +162,13 @@
   color: var(--text-2);
 }
 
+.adjusted {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: help;
+}
+
 .percentile {
   grid-column: 1 / -1;
   font-size: 12px;
@@ -209,7 +213,7 @@
   font-weight: 600;
 }
 
-.tabs button[aria-selected='true'] {
+.tabs button[aria-pressed='true'] {
   color: var(--text);
 }
 

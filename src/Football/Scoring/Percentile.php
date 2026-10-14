@@ -11,13 +11,18 @@ namespace App\Football\Scoring;
 final class Percentile
 {
     /**
-     * @param array<array-key, float|null> $values nulls are left out and stay null
+     * @param array<array-key, float|null> $values    nulls are left out and stay null
+     * @param list<array-key>|null         $reference keys of the values that form the comparison group (default: all)
      *
      * @return array<array-key, float|null> same keys
      */
-    public static function ranks(array $values): array
+    public static function ranks(array $values, ?array $reference = null): array
     {
-        $known = array_filter($values, static fn (?float $v) => $v !== null);
+        $group = $reference === null ? $values : array_intersect_key($values, array_flip($reference));
+        $known = array_filter($group, static fn (?float $v) => $v !== null);
+        if ($known === []) {
+            $known = array_filter($values, static fn (?float $v) => $v !== null);
+        }
         $n = count($known);
         $sorted = array_values($known);
         sort($sorted);

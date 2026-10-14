@@ -81,18 +81,21 @@ function Header({ profile }: { profile: PlayerProfile }) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
-          <span className={`num ${styles.bigScore}`}>
-            <AnimatedNumber value={score.score} />
-          </span>
-          <span className={styles.rankLine}>
-            {score.rank !== null ? (
-              <>
+          {score.rank !== null ? (
+            <>
+              <span className={`num ${styles.bigScore}`}>
+                <AnimatedNumber value={score.score} />
+              </span>
+              <span className={styles.rankLine}>
                 <strong>{ordinal(score.rank)}</strong> of {formatNumber(score.ranked_players)}
-              </>
-            ) : (
-              'Not ranked: too little data'
-            )}
-          </span>
+              </span>
+            </>
+          ) : (
+            // A score built on a small part of the model is not comparable: no number.
+            <span className={styles.rankLine}>
+              <strong>Not ranked</strong>: too little data
+            </span>
+          )}
           <span className={styles.confidenceLine} title="Share of the model that could be measured for this player">
             {Math.round(score.confidence * 100)}% of the model measured
           </span>
@@ -144,6 +147,11 @@ function Breakdown({ score }: { score: ScoreBreakdown }) {
                 <li key={metric.key}>
                   <span className={styles.metricLabel}>{metric.label}</span>
                   <span className="num">{formatValue(metric.value)}</span>
+                  {metric.adjusted !== null && metric.value !== null && Math.abs(metric.adjusted - metric.value) >= 0.005 && (
+                    <span className={styles.adjusted} title="Adjusted for sample size: values built on few matches or duels are pulled toward the average for the role">
+                      adjusted for sample size: {formatValue(metric.adjusted)}
+                    </span>
+                  )}
                   <Bar value={metric.normalised} color={componentColor(ci)} height={4} delay={0.3 + ci * 0.08 + mi * 0.05} />
                   <span className={styles.percentile}>
                     {metric.normalised === null
@@ -196,9 +204,9 @@ function Stats({ profile }: { profile: PlayerProfile }) {
     <section className={styles.section} aria-labelledby="stats">
       <div className={styles.statsHead}>
         <h2 id="stats">Statistics</h2>
-        <div className={styles.tabs} role="tablist">
+        <div className={styles.tabs} role="group" aria-label="Competition">
           {scopes.map((scope) => (
-            <button key={scope.key} role="tab" aria-selected={scope.key === active} onClick={() => setActive(scope.key)}>
+            <button key={scope.key} type="button" aria-pressed={scope.key === active} onClick={() => setActive(scope.key)}>
               {scope.label}
               {scope.key === active && <motion.span layoutId="stats-tab" className={styles.tabLine} />}
             </button>

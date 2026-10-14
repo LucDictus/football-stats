@@ -11,6 +11,8 @@ export interface ModelMetric {
   mode: 'total' | 'per90' | 'rate'
   weight: number
   lower_is_better?: boolean
+  shrinkage?: number
+  sample_fields?: string[]
 }
 
 export interface ModelComponent {
@@ -36,6 +38,8 @@ export interface ScoringModel {
   /** Role models: components per position group, each normalised within its role. */
   roles?: Partial<Record<PositionGroup, ModelComponent[]>>
   normalization?: 'percentile' | 'standard'
+  reference?: string
+  z_cap?: number
 }
 
 export interface ScoreRun {
@@ -100,6 +104,8 @@ export interface ScopeStats {
 
 export interface BreakdownMetric extends ModelMetric {
   value: number | null
+  /** After shrinkage toward the role average (models with shrinkage); this is what was normalised. */
+  adjusted: number | null
   /** 0–100 within the comparison group: a percentile, or a T-score (50 = average) for standard models. */
   normalised: number | null
 }

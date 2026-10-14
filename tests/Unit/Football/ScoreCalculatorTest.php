@@ -162,10 +162,77 @@ final class ScoreCalculatorTest extends TestCase
         self::assertNull($byName['B']->components['duels']['metrics']['aerial']['value'], 'a suspect provider is not used');
     }
 
-    public function testBaselineModelIsUnchanged(): void
+    public function testShrinkagePullsSmallSamplesTowardTheAverage(): void
     {
-        // A released model must never change: its hash is pinned.
+        $model = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['FW'], 0.0, [
+            new Component('output', 'Output', '', 1.0, [new Metric('goals_p90', 'Goals per 90', ['goals'], MetricMode::Per90, 1.0, shrinkage: 10.0)]),
+        ]);
+
+        $results = (new ScoreCalculator())->score($model, [
+            $this->candidate(1, 'Hot streak', goals: 10.0, minutes: 900.0),    // 1.0 per 90 over 10 matches
+            $this->candidate(2, 'Season-long', goals: 30.0, minutes: 2700.0),  // 1.0 per 90 over 30 matches
+            $this->candidate(3, 'Average', goals: 0.0, minutes: 2700.0),
+        ]);
+        $byName = array_column(array_map(static fn ($r) => ['name' => $r->candidate->name, 'r' => $r], $results), 'r', 'name');
+        $adjusted = static fn (string $n) => $byName[$n]->components['output']['metrics']['goals_p90']['adjusted'];
+
+        // (rate × matches + average × 10) / (matches + 10), with the average of the raw rates = 2/3
+        self::assertEqualsWithDelta((1.0 * 10 + (2 / 3) * 10) / 20, $adjusted('Hot streak'), 1e-9);
+        self::assertEqualsWithDelta((1.0 * 30 + (2 / 3) * 10) / 40, $adjusted('Season-long'), 1e-9);
+        self::assertGreaterThan($byName['Hot streak']->score, $byName['Season-long']->score, 'the same rate over more matches is more convincing');
+        self::assertSame(1.0, $byName['Hot streak']->components['output']['metrics']['goals_p90']['value'], 'the raw value stays visible');
+    }
+
+    public function testShrunkRatesUseAttemptsAsTheSample(): void
+    {
+        $model = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['DF'], 0.0, [
+            new Component('duels', 'Duels', '', 1.0, [new Metric('tackle_pct', 'Tackles won %', ['tackle_success_pct'], MetricMode::Rate, 1.0, shrinkage: 20.0, sampleFields: ['tackles'])]),
+        ]);
+
+        $results = (new ScoreCalculator())->score($model, [
+            $this->candidate(1, '15 of 15', goals: null, group: 'DF', extra: ['tackle_success_pct' => 100.0, 'tackles' => 15.0]),
+            $this->candidate(2, '60 of 80', goals: null, group: 'DF', extra: ['tackle_success_pct' => 75.0, 'tackles' => 80.0]),
+        ]);
+        $adjusted = array_column(array_map(static fn ($r) => [$r->candidate->name, $r->components['duels']['metrics']['tackle_pct']['adjusted']], $results), 1, 0);
+
+        self::assertEqualsWithDelta((100 * 15 + 87.5 * 20) / 35, $adjusted['15 of 15'], 1e-9);
+        self::assertEqualsWithDelta((75 * 80 + 87.5 * 20) / 100, $adjusted['60 of 80'], 1e-9);
+    }
+
+    public function testTheReferenceGroupCanBeTheRankedPlayersOnly(): void
+    {
+        $model = static fn (bool $rankedOnly) => new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['FW'], 0.6, [
+            new Component('output', 'Output', '', 0.5, [new Metric('goals', 'Goals', ['goals'], MetricMode::Total, 1.0)]),
+            new Component('availability', 'Availability', '', 0.5, [new Metric('minutes', 'Minutes', ['minutes'], MetricMode::Total, 1.0)]),
+        ], normalization: Normalization::Standard, referenceRankedOnly: $rankedOnly);
+        $candidates = [
+            $this->candidate(1, 'A', goals: 10.0, minutes: 2000.0),
+            $this->candidate(2, 'B', goals: 20.0, minutes: 2000.0),
+            $this->candidate(3, 'No goals data, many minutes', goals: null, minutes: 3400.0),
+        ];
+        $minutesScore = static fn (array $results) => array_column(array_map(static fn ($r) => [$r->candidate->name, $r->components['availability']['score']], $results), 1, 0)['A'];
+
+        // With everyone as reference the unranked 3,400-minute player sets the average; without him A and B are exactly average.
+        self::assertSame(50.0, $minutesScore((new ScoreCalculator())->score($model(true), $candidates)));
+        self::assertLessThan(50.0, $minutesScore((new ScoreCalculator())->score($model(false), $candidates)));
+    }
+
+    public function testZCapLimitsHowFarOneMetricCanCarryAPlayer(): void
+    {
+        $values = [...array_fill(0, 20, 1.0), ...array_fill(0, 20, 2.0), 50.0];
+
+        $capped = Normalization::Standard->scores($values, zCap: 3.0);
+        $free = Normalization::Standard->scores($values);
+
+        self::assertSame(80.0, $capped[40]);
+        self::assertGreaterThan(80.0, $free[40]);
+    }
+
+    public function testReleasedModelsAreUnchanged(): void
+    {
+        // A released model must never change: their hashes are pinned (and match their stored runs).
         self::assertSame('74768eddf47b9da716df9fbe8c9740cab248f411c56323d019184e795a2739b8', ModelCatalog::get('baseline-v1')->hash());
+        self::assertSame('e042f01b224f4fd0648ad9a9188ef4b08afbd777ce981d5126ee95a90ebfe1e0', ModelCatalog::get('positional-v1')->hash());
     }
 
     public function testEveryReleasedModelHasValidWeights(): void

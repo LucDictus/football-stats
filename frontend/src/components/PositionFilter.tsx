@@ -2,15 +2,15 @@ import { motion } from 'motion/react'
 import type { PositionGroup } from '../api/types'
 import styles from './PositionFilter.module.css'
 
-const OPTIONS: { value: PositionGroup | null; label: string }[] = [
-  { value: null, label: 'All' },
-  { value: 'FW', label: 'Forwards' },
-  { value: 'MF', label: 'Midfielders' },
-  { value: 'DF', label: 'Defenders' },
-  { value: 'GK', label: 'Goalkeepers' },
+const OPTIONS: { value: PositionGroup | null; label: string; short: string }[] = [
+  { value: null, label: 'All', short: 'All' },
+  { value: 'FW', label: 'Forwards', short: 'FW' },
+  { value: 'MF', label: 'Midfielders', short: 'MF' },
+  { value: 'DF', label: 'Defenders', short: 'DF' },
+  { value: 'GK', label: 'Goalkeepers', short: 'GK' },
 ]
 
-/** Segmented control; the highlight slides to the selected option. */
+/** Segmented control (toggle buttons); the highlight slides to the selected option. */
 export function PositionFilter({ value, onChange, available }: {
   value: PositionGroup | null
   onChange: (value: PositionGroup | null) => void
@@ -18,22 +18,25 @@ export function PositionFilter({ value, onChange, available }: {
   available: PositionGroup[]
 }) {
   return (
-    <div className={styles.group} role="radiogroup" aria-label="Position">
+    <div className={styles.group} role="group" aria-label="Position">
       {OPTIONS.filter((option) => option.value === null || available.includes(option.value)).map((option) => {
         const selected = option.value === value
         return (
           <button
             key={option.label}
             type="button"
-            role="radio"
-            aria-checked={selected}
+            aria-pressed={selected}
+            aria-label={option.label}
             className={styles.option}
             onClick={() => onChange(option.value)}
           >
             {selected && (
               <motion.span layoutId="position-pill" className={styles.pill} transition={{ type: 'spring', stiffness: 420, damping: 34 }} />
             )}
-            <span className={styles.label}>{option.label}</span>
+            <span className={styles.label} aria-hidden="true">
+              <span className={styles.long}>{option.label}</span>
+              <span className={styles.short}>{option.short}</span>
+            </span>
           </button>
         )
       })}

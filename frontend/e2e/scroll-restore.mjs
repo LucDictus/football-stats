@@ -12,7 +12,7 @@ try {
   await page.goto(base, { waitUntil: 'networkidle0' })
 
   // Filter first: a same-path navigation must not stop positions from being saved.
-  await page.click('[role=radio] ::-p-text(Midfielders)')
+  await page.click('button[aria-label=Midfielders]')
   await page.waitForFunction(() => location.search === '?position=MF')
   await page.waitForNetworkIdle()
 

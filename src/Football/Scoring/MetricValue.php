@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Football\Scoring;
 
 use App\Entity\PlayerCompetitionStats;
+use App\Football\Data\Origin;
 
 /** Calculates a metric for one player, or null when the data does not support it. */
 final class MetricValue
@@ -25,5 +26,41 @@ final class MetricValue
         }
 
         return $sum;
+    }
+
+    /**
+     * How much evidence the value rests on, for shrinkage: matches played (per 90, on the
+     * provider's own minutes; the smallest when fields come from several providers) or
+     * attempts (rates). Null when unknown or not applicable (totals).
+     */
+    public static function sample(Metric $metric, PlayerCompetitionStats $stats): ?float
+    {
+        if ($metric->mode === MetricMode::Rate) {
+            $attempts = 0.0;
+            foreach ($metric->sampleFields as $field) {
+                $value = $stats->value($field);
+                if ($value === null) {
+                    return null;
+                }
+                $attempts += $value;
+            }
+
+            return $attempts;
+        }
+        if ($metric->mode === MetricMode::Per90) {
+            $matches = null;
+            foreach ($metric->fields as $field) {
+                $origin = $stats->origin($field);
+                $minutes = $origin === null || $origin === Origin::Derived ? $stats->getMinutes() : $stats->originMinutes($origin);
+                if ($minutes === null) {
+                    return null;
+                }
+                $matches = min($matches ?? INF, $minutes / 90);
+            }
+
+            return $matches;
+        }
+
+        return null;
     }
 }

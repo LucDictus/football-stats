@@ -11,8 +11,8 @@ That means we must always be able to say where a number came from, whether it ca
 trusted, and what was missing. Most of the code so far exists to make that possible.
 
 The roadmap has 10 phases (see the README). Done: 1 (data audit), 2 (domain model),
-3 (baseline score, JSON API, React frontend), 4 (positional model: every position on one
-ranking). Next: 5 (impact model).
+3 (baseline score, JSON API, React frontend), 4 (positional models: every position on one
+ranking; positional-v2 is the default). Next: 5 (impact model).
 
 ## 2. The mental model: three layers
 
@@ -142,7 +142,7 @@ php bin/console app:import:sofascore-cl       # raw: CL stats (--no-fetch to reu
 php bin/console app:import:fotmob-cl          # raw: cross-check data
 php bin/console app:build-season              # domain: rebuild players/stats (idempotent)
 php bin/console app:data:audit                # docs/data-coverage.md
-php bin/console app:score                     # ranking run with the default model (positional-v1)
+php bin/console app:score                     # ranking run with the default model (positional-v2)
 php bin/console app:score -m baseline-v1      # or any released model
 php -S 127.0.0.1:8010 -t public               # API + inspector at http://127.0.0.1:8010
 npm --prefix frontend run dev                 # the app at http://127.0.0.1:5173
@@ -191,8 +191,10 @@ The calculator is pure (no database), so model ideas are tested with unit tests 
 candidates and stores the run. A run's `definition_hash` is a canonical hash
 (`CanonicalJson`), so it can be checked again from the stored definition. API errors are
 JSON (`ApiExceptionSubscriber`); request parsing lives in `Controller/Api/ApiContext`.
-**Never edit a released model**: add a new version to `ModelCatalog` (a test pins the hash of
-`baseline-v1`). The API and the methodology page read the definition, so they follow
+**Never edit a released model**: add a new version to `ModelCatalog` (a test pins the hashes
+of released models). Engine behaviour that changes results must be a model option that
+appears in the definition only when used (like `shrinkage`, `referenceRankedOnly`, `zCap`),
+so older models keep reproducing. The API and the methodology page read the definition, so they follow
 automatically. Role models (`roles:` per position group) compare each group only with itself;
 see `docs/methodology.md` for why the composite is standardised again within the role.
 

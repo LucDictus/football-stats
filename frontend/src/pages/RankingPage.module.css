@@ -308,3 +308,9 @@
     display: none;
   }
 }
+
+.empty {
+  padding: 20px 24px;
+  color: var(--muted);
+  margin: 0 0 18px;
+}

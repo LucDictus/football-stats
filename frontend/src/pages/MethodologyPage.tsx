@@ -53,6 +53,10 @@ export function MethodologyPage() {
             leagues, some sources only cover one club.
           </li>
           <li>
+            <strong>Little evidence, little deviation.</strong> A rate over a few matches, or a success rate over a few duels, is
+            pulled toward the average for the role: 15 tackles out of 15 is not a perfect season.
+          </li>
+          <li>
             <strong>Reproducible.</strong> Every ranking is stored with the exact model definition and the data imports it
             used. The same inputs always give the same ranking.
           </li>
@@ -119,12 +123,22 @@ function ModelSection({ model }: { model: ScoringModel }) {
         <li>
           <strong>Minimum data</strong> {Math.round(model.min_confidence * 100)}% of the model must be measurable
         </li>
+        {model.reference && (
+          <li>
+            <strong>Average means</strong> the average of the {model.reference}
+          </li>
+        )}
+        {model.z_cap && (
+          <li>
+            <strong>Outliers</strong> more than {model.z_cap} standard deviations from the average count as {model.z_cap}
+          </li>
+        )}
       </ul>
 
       {roles.length > 0 && (
-        <div className={styles.roleTabs} role="tablist" aria-label="Position">
+        <div className={styles.roleTabs} role="group" aria-label="Position">
           {roles.map((r) => (
-            <button key={r} role="tab" aria-selected={r === role} onClick={() => setRole(r)}>
+            <button key={r} type="button" aria-pressed={r === role} onClick={() => setRole(r)}>
               {POSITION_LABELS[r]}s
               {r === role && <motion.span layoutId="role-tab" className={styles.roleTabLine} />}
             </button>
@@ -149,7 +163,9 @@ function ModelSection({ model }: { model: ScoringModel }) {
                     <span className="muted">
                       {' '}
                       · {MODE_LABELS[m.mode]}
-                      {m.lower_is_better ? ', fewer is better' : ''} · {Math.round(m.weight * 100)}%
+                      {m.lower_is_better ? ', fewer is better' : ''}
+                      {m.shrinkage ? `, small samples pulled toward average (${m.shrinkage} ${m.mode === 'rate' ? 'attempts' : 'matches'})` : ''} ·{' '}
+                      {Math.round(m.weight * 100)}%
                     </span>
                   </li>
                 ))}

@@ -71,6 +71,8 @@ final class ApiPresenter
                 // Stored as 'percentile' since v1; with standard normalisation it is a T-score.
                 'metrics' => array_map(static fn (array $metric) => $metric + [
                     'value' => self::round($result['metrics'][$metric['key']]['value'] ?? null, 2),
+                    // Shrunk toward the role average (models with shrinkage): what was normalised.
+                    'adjusted' => self::round($result['metrics'][$metric['key']]['adjusted'] ?? null, 2),
                     'normalised' => self::round($result['metrics'][$metric['key']]['percentile'] ?? null),
                 ], $component['metrics']),
             ];

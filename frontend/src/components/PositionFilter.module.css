@@ -1,5 +1,8 @@
 .group {
   display: inline-flex;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
   padding: 4px;
   gap: 2px;
   border-radius: 999px;
@@ -20,7 +23,7 @@
   transition: color 0.2s;
 }
 
-.option[aria-checked='true'] {
+.option[aria-pressed='true'] {
   color: var(--text);
 }
 
@@ -40,9 +43,19 @@
   position: relative;
 }
 
-@media (max-width: 520px) {
+.short {
+  display: none;
+}
+
+@media (max-width: 560px) {
   .option {
-    padding: 7px 11px;
+    padding: 7px 12px;
     font-size: 13px;
+  }
+  .long {
+    display: none;
+  }
+  .short {
+    display: inline;
   }
 }

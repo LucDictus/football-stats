@@ -11,67 +11,85 @@ new version. Every `ScoreRun` stores the full definition, its SHA-256 hash and t
 batches its statistics came from, so any published ranking can be explained and reproduced.
 `app:score` does not store a run that would be identical to the latest one.
 
-## positional-v1 (roadmap phase 4, the current model)
+## positional-v2 (roadmap phase 4, the current model)
 
 Every position group has its own components and is compared only with its own group:
 
 | Role | Components (weight) |
 |---|---|
-| Forwards | attacking output 40%, attacking quality 30%, link-up play 15%, availability 15% |
-| Midfielders | chance creation 30%, build-up 25%, attacking output 20%, defending 10%, availability 15% |
-| Defenders | defensive actions 25%, duel success 20%, build-up 20%, reliability 10%, attacking threat 10%, availability 15% |
-| Goalkeepers | shot stopping (goals prevented) 70%, reliability 15%, availability 15% |
+| Forwards | attacking output 40%, attacking quality 30%, link-up play 10%, availability 20% |
+| Midfielders | chance creation 25%, build-up 25%, attacking output 15%, defending 15%, availability 20% |
+| Defenders | defensive actions 20%, duel success 20%, build-up 20%, reliability 10%, attacking threat 10%, availability 20% |
+| Goalkeepers | shot stopping (goals prevented per 90) 70%, reliability 10%, availability 20% |
 
 How one ranking holds all positions:
 
-1. Each metric becomes a **standard score within the role**: 50 + 10 × standard deviations
-   from the role's average, clamped to 0–100 (`Normalization::Standard`).
-2. A player's **composite** is the weighted mean of his components.
-3. The **score** is the composite standardised again within the role. Averaging several
-   metrics pulls composites toward 50, the more so the more (and the less correlated)
-   metrics a role has: without this step defenders, with six defensive metrics, could not
-   reach the top. The score therefore reads "how far above his positional peers".
+1. **Rates only, plus minutes.** Every metric is a per-90 rate or a success rate; volume is
+   measured once, by league minutes (availability). Season totals are rate × minutes, so
+   adding them would count minutes again (roadmap 3.3).
+2. **Shrinkage.** A rate built on little evidence is pulled toward the role average
+   (empirical Bayes): `(rate × n + average × prior) / (n + prior)`, with n the player's
+   matches (per 90; prior 10 matches) or attempts (success rates; prior 20). The player page
+   shows both the raw and the adjusted value.
+3. **Standard scores within the role**, against the ranked players only: 50 + 10 × standard
+   deviations from their average. Deviations beyond 3 count as 3, so one skewed minor metric
+   cannot carry a player.
+4. The **composite** is the weighted mean of the components; the **score** is the composite
+   standardised again within the role (against ranked players). Averaging several metrics
+   pulls composites toward 50, more so the more (and the less correlated) metrics a role has;
+   this step gives every role the same spread, so the score reads "how far above his
+   positional peers". It is a design choice: it decides by definition that the best of each
+   role are comparable, rather than measuring it.
 
 Avoiding overlap (roadmap 5.2): xGBuildup measures build-up without the player's own shots
 and key passes; save % is left out because goals prevented already measures shot stopping.
-New measures: duel success rates (aerial duels won %, tackle success %, minimum 20 duels /
-15 tackles) and errors leading to goal, where fewer is better.
+Duel success: aerial duels won % and tackles won % (SofaScore: tackles that won the ball).
 
-### Why standard scores, not percentiles
+### Roadmap 4.3 checks (run #6)
 
-Both were run on the 2025/26 data (same model, only the normalisation differs):
+- **Does the striker rank highly for the right reasons?** Kane #5 (85.0) and Haaland #6 on
+  attacking output and quality.
+- **Can a midfielder rank highly without scoring many goals?** Yes: Kimmich #12 with 10 goals +
+  assists, on build-up (80.0) and creation (70.3).
+- **Can an outstanding defender reach the top?** Yes, and now centre-backs for their defending:
+  Willi Orban #18, Bastoni #23, van Dijk #33 (duel success 63.6). Nuno Mendes, a full-back whose
+  attacking numbers come from 1,256 minutes, went from #11 to #26.
+- **Can a goalkeeper compete for the top spot?** In principle (best: #30), but goals prevented
+  over one season is noisy, so goalkeeper results deserve the least trust.
 
-| | Percentiles | Standard scores |
-|---|---|---|
-| Top 5 | Kane, Lautaro, Undav, Haaland, Mbappé | Kane, Olise, Haaland, Bruno Fernandes, Yamal |
-| Separation at the top | #2–#20 within 10 points (flat) | runaway seasons stand out |
-| Goalkeepers in top 12 | 4 (noise in goals prevented gets amplified) | 0 |
+### How positional-v2 came about (experiments on the 2025/26 data)
 
-Percentiles only know that a player is first, not by how much; that was the main weakness of
-baseline-v1 (Kane's 36 goals scored like a 25-goal season). Standard scores keep the distance.
-Re-standardising the composite within the role was then added to put all roles on the same
-spread (best defender before: #54; after: #11).
+1. **Percentiles vs standard scores** (first draft of positional-v1, same components): with
+   percentiles #2–#20 were within 10 points and four goalkeepers made the top 12 (noise in goals
+   prevented gets amplified); standard scores keep the distance between a runaway season and the
+   rest. Top 5 of that draft: percentiles Kane, Lautaro, Undav, Haaland, Mbappé; standard
+   scores Kane, Olise, Haaland, Bruno Fernandes, Yamal.
+2. **Re-standardising the composite within the role** (released as positional-v1): best defender
+   from #54 to #11. Top 5 of run #5: Olise, Bruno Fernandes, Yamal, Dimarco, Kane.
+3. **Review of positional-v1** found that standard scores on skewed metrics give minor
+   components far more effect than their weight (a full-back's attacking output made him the
+   best defender), that small samples count fully (15 of 15 tackles), that players with very
+   little data stretched each role's scale, and that minutes counted three times for forwards.
+   positional-v2 fixes these with shrinkage, rates plus minutes, a ±3 cap and the ranked-only
+   reference. Effect of each, measured: without the cap Mendes stays #14 and Olise at 99.1;
+   without shrinkage 15/15 tackles still counts as perfect.
 
-### Roadmap 4.3 checks (run #5)
-
-- **Does the striker rank highly for the right reasons?** Kane #5 (90.3): attacking output 88.5
-  and quality 84.1, held back by availability (2,377 minutes).
-- **Can a midfielder rank highly without scoring many goals?** Yes: Kimmich #9 with 10 goals +
-  assists, on build-up 95.9 (best in his role on accurate passes and xGBuildup).
-- **Can an outstanding defender reach the top?** Yes: Nuno Mendes #11, Bischof #25, Kim Min-jae
-  #29. Not yet the right ones, though: see the limitations.
-- **Can a goalkeeper compete for the top spot?** In principle (best: Koffi #21), but goals
-  prevented over one season is noisy, so goalkeeper results deserve the least trust.
-
-### Known limitations of positional-v1
+### Known limitations of positional-v2
 
 - **Broad position labels.** "MF" covers wingers and holding midfielders alike, so attacking
-  midfielders stand far above that mixed group: 20 of the top 30 are midfielders. Finer roles
+  midfielders stand far above that mixed group: 7 of the top 10 are midfielders. Finer roles
   (inferred from the data, not the label) are planned.
 - **Defensive volume is not possession-adjusted.** Tackles and interceptions favour defenders of
-  teams that defend a lot (van Dijk #74, Saliba far lower). Duel success rates partly offset
-  this; possession adjustment belongs to the impact model (roadmap 5.1).
+  teams that defend a lot (Saliba #271). Duel success partly offsets this; possession
+  adjustment belongs to the impact model (roadmap 5.1).
+- **Errors leading to goal** are rare: most defenders have none, so one error still costs
+  noticeably, even after shrinkage and the cap.
 - **Scope** is still the domestic league only (Champions League: phase 6).
+
+## positional-v1 (superseded by v2, kept for reproducibility)
+
+The first positional model: the same idea with season totals next to per-90 rates, no
+shrinkage, no cap, and all eligible players as reference. See "How positional-v2 came about".
 
 ## baseline-v1 (roadmap phase 3)
 
@@ -90,7 +108,8 @@ spread (best defender before: #54; after: #11).
 ## How a score is calculated (`ScoreCalculator`)
 
 For role models the steps below run per position group, and the composite is normalised
-again within the group (see positional-v1).
+again within the group (see positional-v2). Model options used by positional-v2: shrinkage
+of small samples, ranked players as the reference group, and a cap on standard scores.
 
 
 1. **Metric values** (`MetricValue`): a total needs every field *trusted* (its provider
@@ -100,7 +119,7 @@ again within the group (see positional-v1).
    usable. One unknown part makes the metric unknown.
 2. **Normalisation** (`Normalization`): a mid-rank percentile, or a standard score, among the
    group members with a value. Unknown values are not counted.
-3. **Components:** weighted mean of the known metric percentiles.
+3. **Components:** weighted mean of the known normalised metric scores.
 4. **Score:** weighted mean of the known components. What is unknown is left out, never
    zero; **confidence** is the share of the model's weight that could be measured.
 5. **Order:** ranked players by score, ties by minutes then player id (deterministic);

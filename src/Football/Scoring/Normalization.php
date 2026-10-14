@@ -18,40 +18,53 @@ enum Normalization: string
     case Standard = 'standard';
 
     /**
-     * @param array<array-key, float|null> $values nulls stay null and are not counted
+     * @param array<array-key, float|null> $values    nulls stay null and are not counted
+     * @param list<array-key>|null         $reference keys of the comparison group whose distribution is used (default: all)
+     * @param float|null                   $zCap      standard scores: deviations beyond ±zCap count as ±zCap
+     * @param bool                         $clamp     keep the result within 0–100
      *
-     * @return array<array-key, float|null> same keys, 0–100, higher is better
+     * @return array<array-key, float|null> same keys, higher is better
      */
-    public function scores(array $values, bool $lowerIsBetter = false): array
+    public function scores(array $values, bool $lowerIsBetter = false, ?array $reference = null, ?float $zCap = null, bool $clamp = true): array
     {
         if ($lowerIsBetter) {
             $values = array_map(static fn (?float $v) => $v === null ? null : -$v, $values);
         }
 
         return match ($this) {
-            self::Percentile => Percentile::ranks($values),
-            self::Standard => self::tScores($values),
+            self::Percentile => Percentile::ranks($values, $reference),
+            self::Standard => self::tScores($values, $reference, $zCap, $clamp),
         };
     }
 
     /**
      * @param array<array-key, float|null> $values
+     * @param list<array-key>|null         $reference
      *
      * @return array<array-key, float|null>
      */
-    private static function tScores(array $values): array
+    private static function tScores(array $values, ?array $reference, ?float $zCap, bool $clamp): array
     {
-        $known = array_values(array_filter($values, static fn (?float $v) => $v !== null));
+        $group = $reference === null ? $values : array_intersect_key($values, array_flip($reference));
+        $known = array_values(array_filter($group, static fn (?float $v) => $v !== null));
+        if ($known === []) {
+            $known = array_values(array_filter($values, static fn (?float $v) => $v !== null));
+        }
         $n = count($known);
         $mean = $n > 0 ? array_sum($known) / $n : 0.0;
         $sd = $n > 1 ? sqrt(array_sum(array_map(static fn (float $v) => ($v - $mean) ** 2, $known)) / $n) : 0.0;
 
-        return array_map(static function (?float $v) use ($mean, $sd): ?float {
+        return array_map(static function (?float $v) use ($mean, $sd, $zCap, $clamp): ?float {
             if ($v === null) {
                 return null;
             }
+            $z = $sd > 0 ? ($v - $mean) / $sd : 0.0;
+            if ($zCap !== null) {
+                $z = max(-$zCap, min($zCap, $z));
+            }
+            $t = 50 + 10 * $z;
 
-            return $sd > 0 ? max(0.0, min(100.0, 50 + 10 * ($v - $mean) / $sd)) : 50.0;
+            return $clamp ? max(0.0, min(100.0, $t)) : $t;
         }, $values);
     }
 }
