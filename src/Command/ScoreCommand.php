@@ -32,7 +32,7 @@ final class ScoreCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $model = ModelCatalog::get((string) $input->getOption('model'));
-        ['run' => $run, 'created' => $created, 'results' => $results] = $this->runner->run($model);
+        ['run' => $run, 'created' => $created, 'results' => $results, 'possession' => $possession] = $this->runner->run($model);
 
         $componentKeys = array_map(static fn ($c) => $c->key, $model->components);
         $rows = [];
@@ -48,6 +48,14 @@ final class ScoreCommand extends Command
             ];
         }
         $io->table(['#', 'Player', 'Pos', 'Club', 'Score', ...array_map(static fn ($c) => $c->label, $model->components), 'Confidence'], $rows);
+
+        if ($possession !== null) {
+            $io->table(['Possession-adjusted statistic', 'Fitted sensitivity β'], array_map(
+                static fn (string $field, float $beta) => [$field, number_format($beta, 2)],
+                array_keys($possession->elasticities()),
+                $possession->elasticities(),
+            ));
+        }
 
         $io->success($created
             ? sprintf('Score run #%d (%s): %d ranked, %d listed without rank.', $run->getId(), $model->id(), $run->getRankedCount(), $run->getUnrankedCount())

@@ -12,7 +12,7 @@ trusted, and what was missing. Most of the code so far exists to make that possi
 
 The roadmap has 10 phases (see the README). Done: 1 (data audit), 2 (domain model),
 3 (baseline score, JSON API, React frontend), 4 (positional models: every position on one
-ranking), 5 in progress (contribution in goals; mvp-v1 is the default).
+ranking), 5 in progress (contribution in goals; mvp-v2 is the default).
 
 ## 2. The mental model: three layers
 
@@ -61,7 +61,7 @@ src/
     Assessment/       what is being assessed: season, competitions (AssessmentScope)
     Data/             the vocabulary: Field, FieldCatalog, Origin, OriginStatus
     Scoring/          models (ModelCatalog), the pure ScoreCalculator, ScoreRunner
-    Analysis/         checks on a model's results (OverlapAnalysis → docs/overlap.md)
+    Analysis/         checks on a model's results (OverlapAnalysis → docs/overlap-<model>.md)
   Inspector/          read-only SQL for the inspector pages
   Repository/
 config/
@@ -143,9 +143,9 @@ php bin/console app:import:sofascore-cl       # raw: CL stats (--no-fetch to reu
 php bin/console app:import:fotmob-cl          # raw: cross-check data
 php bin/console app:build-season              # domain: rebuild players/stats (idempotent)
 php bin/console app:data:audit                # docs/data-coverage.md
-php bin/console app:score                     # ranking run with the default model (mvp-v1)
+php bin/console app:score                     # ranking run with the default model (mvp-v2)
 php bin/console app:score -m baseline-v1      # or any released model
-php bin/console app:analyse:overlap           # docs/overlap.md: what drives the score per position
+php bin/console app:analyse:overlap           # docs/overlap-<model>.md: what drives the score per position
 php -S 127.0.0.1:8010 -t public               # API + inspector at http://127.0.0.1:8010
 npm --prefix frontend run dev                 # the app at http://127.0.0.1:5173
 php bin/phpunit                               # all tests (needs the test DB, see README)

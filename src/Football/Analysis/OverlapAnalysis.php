@@ -55,6 +55,8 @@ final class OverlapAnalysis
         'shot_stopping' => 'goalkeeping',
         'impact.goalkeeping' => 'goalkeeping',
         'reliability' => 'reliability',
+        'impact.errors' => 'reliability',
+        'distribution' => 'build_up',
         'availability' => 'volume',
         'impact.replacement' => 'volume',
     ];

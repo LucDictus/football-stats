@@ -14,6 +14,7 @@ export interface ModelMetric {
   shrinkage?: number
   sample_fields?: string[]
   transform?: 'sqrt'
+  possession_adjusted?: boolean
 }
 
 export interface ModelComponent {
@@ -42,7 +43,16 @@ export interface ScoringModel {
   reference?: string
   z_cap?: number
   /** Blended models: contribution in goals and its weight in the final score. */
-  impact?: { shooter_share: number; passer_share: number; build_up_share: number; weight: number }
+  impact?: {
+    shooter_share: number
+    passer_share: number
+    build_up_share: number
+    weight: number
+    /** Absent: shared by the sum of defensive actions. */
+    defence_sharing?: 'per_type'
+    /** Goals an outfield player loses per error leading to a goal (absent: not counted). */
+    error_goals?: number
+  }
 }
 
 export interface ScoreRun {
@@ -110,7 +120,9 @@ export interface ScopeStats {
 
 export interface BreakdownMetric extends ModelMetric {
   value: number | null
-  /** After shrinkage toward the role average (models with shrinkage); this is what was normalised. */
+  /** Multiplier for the team's possession (possession-adjusted metrics only). */
+  possession_factor: number | null
+  /** After the possession factor and shrinkage toward the role average; this is what was normalised. */
   adjusted: number | null
   /** 0–100 within the comparison group: a percentile, or a T-score (50 = average) for standard models. */
   normalised: number | null
@@ -141,7 +153,7 @@ export interface ScoreBreakdown {
   impact: ImpactBreakdown | null
 }
 
-export type ImpactKey = 'shooting' | 'finishing' | 'creation' | 'build_up' | 'goalkeeping' | 'defence'
+export type ImpactKey = 'shooting' | 'finishing' | 'creation' | 'build_up' | 'goalkeeping' | 'defence' | 'errors'
 
 export interface ImpactBreakdown {
   components: { key: ImpactKey; goals: number | null; evidence: 'strong' | 'moderate' | 'weak' }[]

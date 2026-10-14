@@ -23,8 +23,8 @@ final class OverlapCommand extends Command
         private readonly ScoreRunner $runner,
         private readonly OverlapAnalysis $analysis,
         private readonly OverlapMarkdown $markdown,
-        #[Autowire('%kernel.project_dir%/docs/overlap.md')]
-        private readonly string $defaultOutput,
+        #[Autowire('%kernel.project_dir%/docs')]
+        private readonly string $docs,
     ) {
         parent::__construct();
     }
@@ -33,7 +33,7 @@ final class OverlapCommand extends Command
     {
         $this
             ->addOption('model', 'm', InputOption::VALUE_REQUIRED, 'Model id (' . implode(', ', array_keys(ModelCatalog::all())) . ')', ModelCatalog::DEFAULT)
-            ->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Markdown file to write', $this->defaultOutput);
+            ->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Markdown file to write (default: docs/overlap-<model>.md)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -54,7 +54,7 @@ final class OverlapCommand extends Command
             ], array_keys($analysis['roles']), $analysis['roles']),
         );
 
-        $file = (string) $input->getOption('output');
+        $file = (string) ($input->getOption('output') ?? "{$this->docs}/overlap-{$model->id()}.md");
         file_put_contents($file, $this->markdown->render($model->id(), (int) $run->getId(), $analysis));
         $io->success("Report for {$model->id()} (score run #{$run->getId()}) written to {$file}");
 

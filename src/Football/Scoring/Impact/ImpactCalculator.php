@@ -26,7 +26,7 @@ use App\Football\Scoring\ScoringCandidate;
  */
 final class ImpactCalculator
 {
-    public const COMPONENTS = ['shooting', 'finishing', 'creation', 'build_up', 'goalkeeping', 'defence'];
+    public const COMPONENTS = ['shooting', 'finishing', 'creation', 'build_up', 'goalkeeping', 'defence', 'errors'];
 
     /** How strong the evidence for each component is (shown with the breakdown). */
     public const EVIDENCE = [
@@ -36,6 +36,7 @@ final class ImpactCalculator
         'build_up' => 'moderate',
         'goalkeeping' => 'moderate',
         'defence' => 'weak',
+        'errors' => 'moderate',
     ];
 
     /**
@@ -87,9 +88,9 @@ final class ImpactCalculator
     }
 
     /**
-     * @param array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, psxg_faced: float, gk_minutes: float, league: ?string}|null $team
-     * @param array<string, float>                                                                                                                 $leagueAverage league => expected goals on target conceded per 90
-     * @param Calibration                                                                                                                          $calibration
+     * @param array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, by_type: array<string, float>, psxg_faced: float, gk_minutes: float, league: ?string}|null $team
+     * @param array<string, float>                                                                                                                                                $leagueAverage league => expected goals on target conceded per 90
+     * @param Calibration                                                                                                                                                         $calibration
      *
      * @return array{goals: array<string, ?float>, total: ?float, attack_source: ?string, calibration?: array{xg: float, xa: float, build_up_per_pass: ?float}}
      */
@@ -97,6 +98,9 @@ final class ImpactCalculator
     {
         $s = $c->stats;
         $goals = array_fill_keys(self::COMPONENTS, null);
+        if ($model->errorGoals === null) {
+            unset($goals['errors']); // models without it keep exactly their stored breakdown
+        }
 
         [$npxg, $xa, $buildUp, $source] = self::attack($model, $c, $calibration);
         if ($npxg !== null && $xa !== null) {
@@ -127,8 +131,13 @@ final class ImpactCalculator
                 // Rate over the minutes the team's goalkeeping data covers, applied to the whole season.
                 $rate = $team['psxg_faced'] / $team['gk_minutes'] * 90;
                 $teamPrevented = ($leagueAverage[(string) $team['league']] - $rate) * CompetitionCatalog::LEAGUE_MATCHES[(string) $team['league']];
-                $goals['defence'] = $teamPrevented * $mine / $team['defensive_actions'];
+                $goals['defence'] = $teamPrevented * self::defenceShare($model, $c->stats, $team, $mine);
             }
+        }
+        if ($model->errorGoals !== null && $c->positionGroup !== 'GK') {
+            // A keeper's errors are already in his goals prevented.
+            $errors = self::seasonTotal($s, 'errors_leading_to_goal');
+            $goals['errors'] = $errors === null ? null : -$model->errorGoals * $errors;
         }
 
         // Without npxG and xA the attack is unknown, so the contribution is unknown (never zero).
@@ -247,7 +256,7 @@ final class ImpactCalculator
      * @param list<ScoringCandidate> $candidates
      * @param Calibration            $calibration
      *
-     * @return array<string, array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, psxg_faced: float, gk_minutes: float, league: ?string}>
+     * @return array<string, array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, by_type: array<string, float>, psxg_faced: float, gk_minutes: float, league: ?string}>
      */
     private function teams(ImpactModel $model, array $candidates, array $calibration): array
     {
@@ -257,7 +266,7 @@ final class ImpactCalculator
             if ($key === null) {
                 continue;
             }
-            $teams[$key] ??= ['xg' => 0.0, 'xa' => 0.0, 'xg_buildup' => 0.0, 'defensive_actions' => 0.0, 'psxg_faced' => 0.0, 'gk_minutes' => 0.0, 'league' => $c->league];
+            $teams[$key] ??= ['xg' => 0.0, 'xa' => 0.0, 'xg_buildup' => 0.0, 'defensive_actions' => 0.0, 'by_type' => array_fill_keys($model->defensiveActions, 0.0), 'psxg_faced' => 0.0, 'gk_minutes' => 0.0, 'league' => $c->league];
             [$npxg, $xa, $buildUp] = self::attack($model, $c, $calibration);
             $teams[$key]['xg'] += $npxg ?? 0.0;
             $teams[$key]['xa'] += $xa ?? 0.0;
@@ -270,8 +279,11 @@ final class ImpactCalculator
                     $teams[$key]['psxg_faced'] += $conceded + $prevented;
                     $teams[$key]['gk_minutes'] += (float) $c->stats->originMinutes(Origin::Sofascore);
                 }
-            } else {
-                $teams[$key]['defensive_actions'] += self::defensiveActions($model, $c->stats) ?? 0.0;
+            } elseif (self::defensiveActions($model, $c->stats) !== null) {
+                $teams[$key]['defensive_actions'] += (float) self::defensiveActions($model, $c->stats);
+                foreach ($model->defensiveActions as $field) {
+                    $teams[$key]['by_type'][$field] += (float) self::seasonTotal($c->stats, $field);
+                }
             }
         }
 
@@ -293,6 +305,27 @@ final class ImpactCalculator
         }
 
         return array_map(static fn (array $values) => array_sum($values) / count($values), $perLeague);
+    }
+
+    /**
+     * The player's share of his team's defending: of all its defensive actions, or of each kind
+     * averaged over the kinds the team has any of.
+     *
+     * @param array{defensive_actions: float, by_type: array<string, float>} $team
+     */
+    private static function defenceShare(ImpactModel $model, PlayerCompetitionStats $s, array $team, float $mine): float
+    {
+        if ($model->defenceSharing === 'actions') {
+            return $mine / $team['defensive_actions'];
+        }
+        $shares = [];
+        foreach ($model->defensiveActions as $field) {
+            if ($team['by_type'][$field] > 0) {
+                $shares[] = (float) self::seasonTotal($s, $field) / $team['by_type'][$field];
+            }
+        }
+
+        return $shares === [] ? 0.0 : array_sum($shares) / count($shares);
     }
 
     private static function defensiveActions(ImpactModel $model, PlayerCompetitionStats $s): ?float

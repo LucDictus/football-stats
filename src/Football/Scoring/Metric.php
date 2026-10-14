@@ -25,7 +25,10 @@ final readonly class Metric
          * many barely move: 15 out of 15 tackles is not a perfect season.
          */
         public ?float $shrinkage = null,
-        /** Rates: the fields whose sum is the number of attempts (the sample size for shrinkage). */
+        /**
+         * The fields whose sum is the sample size for shrinkage: attempts for rates; for per-90
+         * metrics optionally an event count instead of matches (shots on target faced).
+         */
         public array $sampleFields = [],
         /**
          * Square-root transform before normalising: the variance-stabilising transform for
@@ -34,9 +37,17 @@ final readonly class Metric
          * reduces that without cutting off the top. Only for non-negative metrics.
          */
         public bool $sqrt = false,
+        /**
+         * Per-90 defensive counts: adjusted for the team's possession, since a team without the
+         * ball has more to defend (PossessionAdjustment). Single-field per-90 metrics only.
+         */
+        public bool $possessionAdjusted = false,
     ) {
         if ($shrinkage !== null && $mode === MetricMode::Rate && $sampleFields === []) {
             throw new \InvalidArgumentException("Metric {$key}: a shrunk rate needs sample fields");
+        }
+        if ($possessionAdjusted && ($mode !== MetricMode::Per90 || count($fields) !== 1)) {
+            throw new \InvalidArgumentException("Metric {$key}: only a single-field per-90 metric can be adjusted for possession");
         }
     }
 
@@ -44,7 +55,7 @@ final readonly class Metric
      * Optional settings appear only when used, so older model definitions (and their hashes)
      * stay exactly the same.
      *
-     * @return array{key: string, label: string, fields: list<string>, mode: string, weight: float, lower_is_better?: true, shrinkage?: float, sample_fields?: list<string>, transform?: string}
+     * @return array{key: string, label: string, fields: list<string>, mode: string, weight: float, lower_is_better?: true, shrinkage?: float, sample_fields?: list<string>, transform?: string, possession_adjusted?: true}
      */
     public function toArray(): array
     {
@@ -52,6 +63,7 @@ final readonly class Metric
             + ($this->lowerIsBetter ? ['lower_is_better' => true] : [])
             + ($this->shrinkage !== null ? ['shrinkage' => $this->shrinkage] : [])
             + ($this->sampleFields !== [] ? ['sample_fields' => $this->sampleFields] : [])
-            + ($this->sqrt ? ['transform' => 'sqrt'] : []);
+            + ($this->sqrt ? ['transform' => 'sqrt'] : [])
+            + ($this->possessionAdjusted ? ['possession_adjusted' => true] : []);
     }
 }

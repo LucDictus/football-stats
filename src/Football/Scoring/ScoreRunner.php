@@ -30,7 +30,7 @@ final readonly class ScoreRunner
     ) {
     }
 
-    /** @return array{run: ScoreRun, created: bool, results: list<PlayerScoreResult>} */
+    /** @return array{run: ScoreRun, created: bool, results: list<PlayerScoreResult>, possession: ?PossessionAdjustment} */
     public function run(ScoringModel $model): array
     {
         $season = $this->em->getRepository(Season::class)->findOneBy(['label' => $this->scope->season])
@@ -41,12 +41,13 @@ final readonly class ScoreRunner
             throw new \RuntimeException("No {$model->scope->value} statistics for {$season->getLabel()}: run app:build-season");
         }
         $results = $this->calculator->score($model, $candidates);
+        $possession = ScoreCalculator::possessionAdjustment($model, $candidates);
         $batchIds = array_values(array_unique(array_map(static fn (ScoringCandidate $c) => (int) $c->stats->getBatch()->getId(), $candidates)));
         sort($batchIds);
 
         $latest = $this->runs->latest($model->id(), $season);
         if ($latest !== null && $this->isSameRun($latest, $model, $batchIds, $results)) {
-            return ['run' => $latest, 'created' => false, 'results' => $results];
+            return ['run' => $latest, 'created' => false, 'results' => $results, 'possession' => $possession];
         }
 
         $run = new ScoreRun($model->id(), $model->toArray(), $model->hash(), $season, $batchIds);
@@ -73,7 +74,7 @@ final readonly class ScoreRunner
             $run->setCounts($ranked, count($results) - $ranked);
         });
 
-        return ['run' => $run, 'created' => true, 'results' => $results];
+        return ['run' => $run, 'created' => true, 'results' => $results, 'possession' => $possession];
     }
 
     /** @return list<ScoringCandidate> */

@@ -13,7 +13,65 @@ a new version. Every `ScoreRun` stores the full definition, its SHA-256 hash and
 batches its statistics came from, so any published ranking can be explained and reproduced.
 `app:score` does not store a run that would be identical to the latest one.
 
-## mvp-v1 (roadmap phase 5, released, the current model)
+## mvp-v2 (roadmap phase 5, release candidate, the current model)
+
+**Same blend as mvp-v1 (50% positional + 50% contribution in goals), with defending measured
+against opportunity and errors counted once, in goals.**
+
+| Change | Why |
+|---|---|
+| Defensive counts per 90 (tackles won, interceptions, aerial duels won, blocks, clearances) adjusted for team possession | A team without the ball has more to defend: across the 96 teams, clearances correlate −0.67 with possession, aerial duels won −0.52, blocks −0.42 |
+| How strongly each statistic depends on possession is fitted from the data | The full adjustment overcorrects: it turns tackles and interceptions into +0.61 / +0.47 correlations with possession |
+| Errors leading to a goal: −1 goal each in the contribution for outfield players, out of defenders' positional reliability | An error that leads to a goal is a goal given away. It was counted only for defenders and goalkeepers, as a 10% positional component; now every outfield player is measured, once |
+| Team defence shared by each kind of defensive action, averaged | By the sum, clearances (the most frequent action) decided most of the share |
+| Goalkeepers: distribution (accurate passes per 90, 15%) added to the positional half; shot stopping 50% (was 70%), shrunk by shots on target faced (prior 300, as in the contribution) | The overlap check found goals prevented counted in both halves; passing is unrelated to it (r 0.03) |
+
+**Possession** is not in the data, so it is estimated from passing: a team's accurate passes
+per 90 over that plus its league's average (`PossessionAdjustment`). Each statistic's
+sensitivity β is the slope of ln(team rate / league average) on ln((1 − p) / (1 − league
+average p)); a player's count is multiplied by ((1 − p) / (1 − league average p))^−β. Fitted
+on 2025/26 (printed by `app:score`):
+
+| Statistic | β |
+|---|---|
+| Clearances | 1.25 |
+| Aerial duels won | 1.08 |
+| Blocks | 0.89 |
+| Interceptions | 0.45 |
+| Tackles won | 0.30 |
+
+Ball recoveries are not adjusted: they rise with possession (r +0.24; pressing), not against it.
+The player page shows the factor next to each adjusted count.
+
+### Result (run #13)
+
+| | mvp-v1 (run #11) | mvp-v2 (run #13) |
+|---|---|---|
+| Top 10 FW / MF | 5 / 5 | 5 / 5 (same ten players) |
+| Top 100 FW / MF / DF / GK | 21 / 48 / 25 / 6 | 20 / 48 / 27 / 5 |
+| Best defender / goalkeeper | Schlotterbeck #17 / Koffi #36 | Schlotterbeck #15 / Nübel #33 |
+| Positional ↔ contribution r: DF / GK | 0.58 / 0.89 | 0.50 / 0.90 |
+
+- **Defenders of dominant teams rise**: Konaté #189 → #146, Cubarsí #163 → #120, Pacho
+  #159 → #131, Upamecano #165 → #147.
+- **Errors cost places**: van Dijk #57 → #70 (positional up from 73 to 78, but 2 errors leading
+  to a goal); 334 ranked players made at least one error, at most 4.
+- **The goalkeeper change does little** (overlap report: [overlap-mvp-v2.md](overlap-mvp-v2.md)).
+  Each role's positional score is standardised again within the role, which undoes any extra
+  shrinkage of a role's dominant statistic; distribution lowers goalkeeping from 88% to 81% of a
+  keeper's final score. Counting goals prevented only once would take goalkeepers out of the top
+  100 (best #107). They are not over-represented as it is: 5 of 113 goalkeepers are in the top
+  100 (4.4%), against 5.4% of defenders, 7.0% of midfielders and 8.8% of forwards. For a
+  goalkeeper shot stopping *is* the role, as attack is for a forward.
+
+### Known limitations of mvp-v2
+
+- Possession is estimated from passing, not measured.
+- Errors leading to a goal are a provider's judgement, and rare: one error moves a mid-table
+  player dozens of places (the middle of the ranking is dense).
+- The limitations of mvp-v1 below still apply, apart from what is listed here.
+
+## mvp-v1 (roadmap phase 5, released)
 
 **Final score = 50% positional excellence (positional-v2, unchanged) + 50% contribution in goals.**
 
@@ -110,7 +168,7 @@ level of comparable Understat players: Cherki #15, Gabriel Magalhães #24.
 `php bin/console app:analyse:overlap` (`OverlapAnalysis`) breaks the final score down, per role,
 into the share of its variance each part explains, and groups the parts that measure the same
 thing in both halves into families. It also re-ranks everyone under counterfactuals without
-the overlap. The full generated report is in [overlap.md](overlap.md).
+the overlap. The full generated report is in [overlap-mvp-v1.md](overlap-mvp-v1.md).
 
 | Role | Positional ↔ contribution r | Contribution SD | Final SD | Largest family |
 |---|---|---|---|---|
@@ -153,6 +211,7 @@ Findings:
   measure that is not also driven by the team (save % repeats goals prevented; clean sheets are
   team outcomes). **For the next model version:** shrink the positional shot stopping like the
   contribution's goalkeeping. That needs a new version, because released models are never edited.
+  (mvp-v2 does, with little effect: see above.)
 - **Minutes**: availability (20% of the positional half) and the season totals of the
   contribution both reward volume; the final score correlates 0.36 to 0.44 with minutes in
   every role.

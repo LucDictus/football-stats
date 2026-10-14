@@ -317,6 +317,12 @@ final class ScoreCalculatorTest extends TestCase
         }
     }
 
+    public function testOnlySingleFieldPer90MetricsCanBeAdjustedForPossession(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new Metric('ga', 'G+A', ['np_goals', 'assists'], MetricMode::Per90, 1.0, possessionAdjusted: true);
+    }
+
     public function testBaselineModelIsValid(): void
     {
         $model = ModelCatalog::get('baseline-v1');

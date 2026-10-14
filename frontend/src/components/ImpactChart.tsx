@@ -10,6 +10,7 @@ const LABELS: Record<ImpactKey, { label: string; hint: string }> = {
   build_up: { label: 'Build-up', hint: 'His share of the expected goals of attacks he helped build (xGBuildup)' },
   goalkeeping: { label: 'Goalkeeping', hint: 'Goals prevented: expected goals of shots on target faced minus goals conceded, shrunk for small numbers' },
   defence: { label: 'Defence', hint: 'His share of his team’s goals prevented against the league average, by his share of its defensive actions' },
+  errors: { label: 'Errors', hint: 'Minus a goal for each error of his that led to a goal' },
 }
 
 /** Contribution in goals per component, as bars from zero (negative values go left). */

@@ -41,7 +41,7 @@ final class ApiTest extends WebTestCase
     {
         $data = $this->getJson('/api/models');
 
-        self::assertSame('mvp-v1', $data['default']);
+        self::assertSame('mvp-v2', $data['default']);
         $byId = array_column($data['models'], null, 'id');
         self::assertSame('Attacking output', $byId['baseline-v1']['components'][0]['label']);
         self::assertSame('Shot stopping', $byId['positional-v1']['roles']['GK'][0]['label']);
@@ -91,7 +91,7 @@ final class ApiTest extends WebTestCase
 
         self::assertSame('GK', $data['score']['role']);
         self::assertSame('standard', $data['score']['normalization']);
-        self::assertSame(['shot_stopping', 'reliability', 'availability'], array_column($data['score']['components'], 'key'));
+        self::assertSame(['shot_stopping', 'distribution', 'reliability', 'availability'], array_column($data['score']['components'], 'key'));
         self::assertSame(3, $this->getJson('/api/rankings')['total'], 'the default model ranks every position');
     }
 

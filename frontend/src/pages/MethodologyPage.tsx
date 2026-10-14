@@ -7,7 +7,7 @@ import { ErrorState } from '../components/ErrorState'
 import { TrustBadge } from '../components/TrustBadge'
 import { componentColor } from '../lib/colors'
 import { POSITION_LABELS } from '../lib/format'
-import { componentsFor, describeScale, isRoleModel } from '../lib/model'
+import { adjustsForPossession, componentsFor, describeScale, isRoleModel } from '../lib/model'
 import styles from './MethodologyPage.module.css'
 
 const MODE_LABELS = { total: 'season total', per90: 'per 90', rate: 'success rate' } as const
@@ -56,6 +56,13 @@ export function MethodologyPage() {
             <strong>Little evidence, little deviation.</strong> A rate over a few matches, or a success rate over a few duels, is
             pulled toward the average for the role: 15 tackles out of 15 is not a perfect season.
           </li>
+          {model && adjustsForPossession(model) && (
+            <li>
+              <strong>Defending against opportunity.</strong> A team without the ball has more to defend, so clearances, blocks,
+              aerial duels, tackles and interceptions per 90 are adjusted for the team’s possession. How strongly each depends on
+              possession is measured from the data: clearances fully, tackles only a little.
+            </li>
+          )}
           <li>
             <strong>Skewed counts on a square-root scale.</strong> Most defenders score almost never and a few attacking
             full-backs often; on a square-root scale such a metric cannot outweigh the rest, while the best still stand out.
@@ -90,10 +97,16 @@ export function MethodologyPage() {
             Position labels are broad: “midfielder” covers wingers and holding midfielders alike, so attacking midfielders stand
             out most against that mixed group. Finer roles are next.
           </li>
-          <li>
-            Defensive action counts are not adjusted for how much the team has the ball, which favours defenders of teams that
-            defend a lot. Duel success rates partly offset this.
-          </li>
+          {model && adjustsForPossession(model) ? (
+            <li>
+              Possession is not in the data, so it is estimated from each team’s passing; defensive counts are adjusted with it.
+            </li>
+          ) : (
+            <li>
+              Defensive action counts are not adjusted for how much the team has the ball, which favours defenders of teams
+              that defend a lot. Duel success rates partly offset this.
+            </li>
+          )}
           <li>Champions League performances are not in the score yet; they are shown on player pages.</li>
           <li>All leagues count equally; league strength is not adjusted for yet.</li>
           <li>Goals prevented, the goalkeeper measure, is noisy over one season.</li>
@@ -205,13 +218,22 @@ function ImpactSection({ impact }: { impact: NonNullable<ScoringModel['impact']>
           shots. <span className="muted">Moderate evidence.</span>
         </li>
         <li>
-          <strong>Goalkeeping</strong>: goals prevented, pulled toward zero by the number of shots on target faced (most of one
-          season’s goals prevented is chance). <span className="muted">Moderate evidence.</span>
+          <strong>Goalkeeping</strong>: goals prevented, pulled toward zero by the number of shots on target faced (it is noisy
+          over one season). <span className="muted">Moderate evidence.</span>
         </li>
         <li>
           <strong>Defence</strong>: the team’s goals prevented against the league average, shared among outfield players by their
-          share of the team’s defensive actions. <span className="muted">Weak evidence: it is a team measure.</span>
+          share of the team’s defensive actions
+          {impact.defence_sharing === 'per_type' &&
+            ' (of each kind, averaged, so frequent clearances do not outweigh tackles and interceptions)'}
+          . <span className="muted">Weak evidence: it is a team measure.</span>
         </li>
+        {impact.error_goals !== undefined && (
+          <li>
+            <strong>Errors</strong>: an outfield player loses {impact.error_goals} goal for each error leading to a goal (a
+            goalkeeper’s errors are already in his goals prevented). <span className="muted">Moderate evidence.</span>
+          </li>
+        )}
         <li>
           <strong>Above replacement</strong>: minus what a low-level player in his position (20th percentile) adds in the same
           minutes, so playing time counts. The contribution score compares this across all positions.

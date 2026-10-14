@@ -6,7 +6,7 @@ Every score should be explainable from data, rules and evidence.
 
 - Data coverage report (what the data can and cannot tell): [docs/data-coverage.md](docs/data-coverage.md)
 - New to the code? Start with [docs/onboarding.md](docs/onboarding.md)
-- How scores are made: [docs/methodology.md](docs/methodology.md); what drives them per position: [docs/overlap.md](docs/overlap.md) (generated)
+- How scores are made: [docs/methodology.md](docs/methodology.md); what drives them per position: [docs/overlap-mvp-v2.md](docs/overlap-mvp-v2.md) (generated per model)
 - Data model and identity rules: [docs/data-model.md](docs/data-model.md)
 - Baseline code and data audit: [docs/audit.md](docs/audit.md)
 - Stack: Symfony 7.4 LTS, Doctrine ORM, PostgreSQL 16, PHPUnit; React 19 + TypeScript + Vite frontend
@@ -38,8 +38,8 @@ php bin/console app:import:sofascore-cl    # needs the curl binary (SofaScore bl
 php bin/console app:import:fotmob-cl
 php bin/console app:data:audit             # writes docs/data-coverage.md
 php bin/console app:build-season           # players, teams, season stats (safe to re-run)
-php bin/console app:score                  # ranking with the default model (mvp-v1), stored as a score run
-php bin/console app:analyse:overlap        # writes docs/overlap.md: what drives the score per position
+php bin/console app:score                  # ranking with the default model (mvp-v2), stored as a score run
+php bin/console app:analyse:overlap        # writes docs/overlap-<model>.md: what drives the score per position
 php -S 127.0.0.1:8010 -t public            # API + data inspector: http://127.0.0.1:8010
 npm --prefix frontend install && npm --prefix frontend run dev   # the app: http://127.0.0.1:5173
 ```

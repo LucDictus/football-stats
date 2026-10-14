@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Football\Analysis;
 
 /**
- * Renders an OverlapAnalysis as docs/overlap.md (generated; the interpretation lives in
+ * Renders an OverlapAnalysis as docs/overlap-<model>.md (generated; the interpretation lives in
  * docs/methodology.md).
  *
  * @phpstan-import-type RoleAnalysis from OverlapAnalysis

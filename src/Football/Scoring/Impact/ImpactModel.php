@@ -19,7 +19,8 @@ namespace App\Football\Scoring\Impact;
  * Defence: the team's goals prevented against the league average (expected goals on target
  * conceded per 90, from its goalkeepers' data over the minutes they cover, applied to the
  * whole season), shared among outfield players by their share of the team's defensive
- * actions. Team-based, so weak evidence.
+ * actions (or of each kind of action, averaged). Team-based, so weak evidence.
+ * Errors (optional): outfield players lose errorGoals per error leading to a goal.
  * Finally everything is measured above a replacement level for the role.
  */
 final readonly class ImpactModel
@@ -44,7 +45,18 @@ final readonly class ImpactModel
         public float $replacementPercentile = 0.2,
         /** Players covered by both Understat and SofaScore needed to calibrate the SofaScore fallback (per role for build-up). */
         public int $minCalibrationPlayers = 30,
+        /**
+         * How the team's defence is shared: by the sum of defensive actions ('actions'), or by
+         * the player's share of the team's count of each kind, averaged ('per_type'), so that
+         * frequent kinds (clearances) do not outweigh rarer ones (tackles, interceptions).
+         */
+        public string $defenceSharing = 'actions',
+        /** Outfield players lose this many goals per error leading to a goal (null: not counted). */
+        public ?float $errorGoals = null,
     ) {
+        if (!in_array($defenceSharing, ['actions', 'per_type'], true)) {
+            throw new \InvalidArgumentException("Unknown defence sharing {$defenceSharing}");
+        }
         if (abs($shooterShare + $passerShare + $buildUpShare - 1.0) > 1e-9) {
             throw new \InvalidArgumentException('The shares of an expected goal must add up to 1');
         }
@@ -64,6 +76,9 @@ final readonly class ImpactModel
             'penalty_xg' => $this->penaltyXg,
             'replacement_percentile' => $this->replacementPercentile,
             'min_calibration_players' => $this->minCalibrationPlayers,
-        ];
+        ]
+            // Optional settings appear only when used, so released definitions keep their hashes.
+            + ($this->defenceSharing !== 'actions' ? ['defence_sharing' => $this->defenceSharing] : [])
+            + ($this->errorGoals !== null ? ['error_goals' => $this->errorGoals] : []);
     }
 }

@@ -14,7 +14,8 @@ use App\Football\Scoring\Impact\ImpactModel;
  * 1. Eligibility: position group and minimum minutes from the model.
  * 2. Comparison groups: all eligible players, or each position group on its own when the
  *    model has roles ("90" then means exceptional for that role).
- * 3. Per group: metric values, and how much each player's data covers the model (confidence).
+ * 3. Per group: metric values (defensive counts adjusted for team possession where the metric
+ *    says so: PossessionAdjustment), and how much each player's data covers the model (confidence).
  *    The reference group is everyone, or only the players who will be ranked.
  * 4. Optional shrinkage pulls values built on little evidence toward the reference average;
  *    an optional square-root transform reduces the skew of count metrics.
@@ -59,9 +60,11 @@ final class ScoreCalculator
             $groups[$model->comparesWithinRole() ? (string) $candidate->positionGroup : 'all'][] = $candidate;
         }
 
+        $possession = self::possessionAdjustment($model, $candidates);
+
         $scored = [];
         foreach ($groups as $group => $members) {
-            $groupScores = $this->scoreGroup($model, $model->componentsFor($model->comparesWithinRole() ? $group : null), $members);
+            $groupScores = $this->scoreGroup($model, $model->componentsFor($model->comparesWithinRole() ? $group : null), $members, $possession);
             if ($model->comparesWithinRole()) {
                 $composites = array_map(static fn (array $s) => $s['composite'], $groupScores);
                 $reference = $this->reference($model, array_map(static fn (array $s) => $s['confidence'], $groupScores));
@@ -150,6 +153,27 @@ final class ScoreCalculator
     }
 
     /**
+     * Fitted on every candidate of the scope when the model has possession-adjusted metrics.
+     *
+     * @param list<ScoringCandidate> $candidates
+     */
+    public static function possessionAdjustment(ScoringModel $model, array $candidates): ?PossessionAdjustment
+    {
+        $fields = [];
+        foreach ($model->roles === [] ? [$model->components] : $model->roles as $components) {
+            foreach ($components as $component) {
+                foreach ($component->metrics as $metric) {
+                    if ($metric->possessionAdjusted) {
+                        $fields[$metric->fields[0]] = true;
+                    }
+                }
+            }
+        }
+
+        return $fields === [] ? null : PossessionAdjustment::fit($candidates, array_keys($fields));
+    }
+
+    /**
      * Scores one comparison group on its components.
      *
      * @param list<Component>        $components
@@ -157,16 +181,25 @@ final class ScoreCalculator
      *
      * @return list<array{candidate: ScoringCandidate, score: ?float, raw: ?float, composite: ?float, confidence: float, components: array<string, mixed>}>
      */
-    private function scoreGroup(ScoringModel $model, array $components, array $members): array
+    private function scoreGroup(ScoringModel $model, array $components, array $members, ?PossessionAdjustment $possession): array
     {
-        // Raw metric values and their sample sizes, per metric, indexed like $members.
+        // Metric values (possession-adjusted where the metric says so) and their sample sizes,
+        // per metric, indexed like $members.
         $values = [];
         $samples = [];
+        $factors = [];
         foreach ($components as $component) {
             foreach ($component->metrics as $metric) {
                 $values[$metric->key] = array_map(static fn (ScoringCandidate $c) => MetricValue::of($metric, $c->stats), $members);
                 $samples[$metric->key] = array_map(static fn (ScoringCandidate $c) => MetricValue::sample($metric, $c->stats), $members);
+                if ($metric->possessionAdjusted && $possession !== null) {
+                    $factors[$metric->key] = array_map(static fn (ScoringCandidate $c) => $possession->factor($c, $metric->fields[0]), $members);
+                }
             }
+        }
+        $measured = $values;
+        foreach ($factors as $key => $f) {
+            $values[$key] = array_map(static fn (?float $v, float $factor) => $v === null ? null : $v * $factor, $values[$key], $f);
         }
 
         // Confidence depends only on which values are known, so it is known before normalising.
@@ -199,7 +232,8 @@ final class ScoreCalculator
                 $total = 0.0;
                 foreach ($component->metrics as $metric) {
                     $score = $normalised[$metric->key][$i];
-                    $metrics[$metric->key] = ['value' => $values[$metric->key][$i], 'percentile' => $score, 'weight' => $metric->weight]
+                    $metrics[$metric->key] = ['value' => $measured[$metric->key][$i], 'percentile' => $score, 'weight' => $metric->weight]
+                        + (isset($factors[$metric->key]) ? ['possession_factor' => $factors[$metric->key][$i]] : [])
                         + ($metric->shrinkage !== null ? ['adjusted' => $adjusted[$metric->key][$i]] : []);
                     $total += $metric->weight;
                     if ($score !== null) {
