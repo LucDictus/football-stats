@@ -5,6 +5,7 @@ A transparent Ballon d'Or / MVP ranking for season 2025/26: the top-5 European l
 Every score should be explainable from data, rules and evidence.
 
 - Data coverage report (what the data can and cannot tell): [docs/data-coverage.md](docs/data-coverage.md)
+- New to the code? Start with [docs/onboarding.md](docs/onboarding.md)
 - Data model and identity rules: [docs/data-model.md](docs/data-model.md)
 - Baseline code and data audit: [docs/AUDIT.md](docs/AUDIT.md)
 - Stack: Symfony 7.4 LTS, Doctrine ORM, PostgreSQL 16, PHPUnit
@@ -35,6 +36,7 @@ php bin/console app:import:sofascore-cl    # needs the curl binary (SofaScore bl
 php bin/console app:import:fotmob-cl
 php bin/console app:data:audit             # writes docs/data-coverage.md
 php bin/console app:build-season           # players, teams, season stats (safe to re-run)
+php -S 127.0.0.1:8010 -t public            # data inspector: http://127.0.0.1:8010
 ```
 
 Every import is stored unchanged as a new `import_batch` with its `source_record`s
