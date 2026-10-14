@@ -23,13 +23,15 @@ function useScrollMemory() {
   const location = useLocation()
   const navigationType = useNavigationType()
   const positions = useRef(new Map<string, number>())
-  const current = useRef({ key: location.key, navigationType })
+  const current = useRef({ key: location.key, pathname: location.pathname, navigationType })
   const transitioning = useRef(false)
 
   useLayoutEffect(() => {
-    if (current.current.key !== location.key) transitioning.current = true
-    current.current = { key: location.key, navigationType }
-  }, [location.key, navigationType])
+    // Only a new path animates (AnimatePresence is keyed by path). A same-path navigation,
+    // like the position filter, keeps the page and simply saves under the new history key.
+    if (current.current.pathname !== location.pathname) transitioning.current = true
+    current.current = { key: location.key, pathname: location.pathname, navigationType }
+  }, [location.key, location.pathname, navigationType])
 
   useEffect(() => {
     window.history.scrollRestoration = 'manual'

@@ -11,6 +11,11 @@ try {
   await page.setViewport({ width: 1280, height: 800 })
   await page.goto(base, { waitUntil: 'networkidle0' })
 
+  // Filter first: a same-path navigation must not stop positions from being saved.
+  await page.click('[role=radio] ::-p-text(Midfielders)')
+  await page.waitForFunction(() => location.search === '?position=MF')
+  await page.waitForNetworkIdle()
+
   await page.click('button ::-p-text(Show more)')
   await page.waitForFunction(() => document.querySelectorAll('ol li').length > 60)
   await page.evaluate(() => window.scrollTo(0, 6000))
