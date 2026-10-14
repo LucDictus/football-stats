@@ -110,17 +110,26 @@ final class ApiPresenter
             return null;
         }
 
+        $calibration = $impact['calibration'] ?? null;
+
         return [
             'components' => array_map(static fn (string $key) => [
                 'key' => $key,
                 'goals' => self::round($impact['goals'][$key] ?? null, 2),
-                'evidence' => ImpactCalculator::EVIDENCE[$key],
+                // Build-up estimated from passes (SofaScore fallback) is weaker evidence than xGBuildup.
+                'evidence' => $key === 'build_up' && $calibration !== null ? 'weak' : ImpactCalculator::EVIDENCE[$key],
             ], ImpactCalculator::COMPONENTS), // fixed order (jsonb sorts keys)
             'total' => self::round($impact['total'], 2),
             'replacement' => self::round($impact['replacement'], 2),
             'above' => self::round($impact['above'], 2),
             // Understat, or SofaScore when Understat has no record of the player.
             'attack_source' => $impact['attack_source'] ?? null,
+            // SofaScore fallback: scale factors to Understat's level, xGBuildup per accurate pass.
+            'calibration' => $calibration === null ? null : [
+                'xg' => self::round($calibration['xg'], 3),
+                'xa' => self::round($calibration['xa'], 3),
+                'build_up_per_pass' => self::round($calibration['build_up_per_pass'], 5),
+            ],
             'score' => self::round($impact['score']),
             'weight' => $impact['weight'],
         ];

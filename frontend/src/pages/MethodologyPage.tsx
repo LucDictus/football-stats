@@ -71,7 +71,9 @@ export function MethodologyPage() {
         <h2>How far each source is trusted</h2>
         <p>
           Statistics come from FBref (minutes, goals, assists, shots), Understat (xG, xA) and SofaScore (defending, passing,
-          goalkeeping, Champions League). Each source is checked against the reference minutes for every player:
+          goalkeeping, Champions League). When Understat has no record of a player, his xG and xA come from SofaScore, scaled
+          to Understat’s level on the players both cover, and his build-up is estimated from his accurate passes. Each source is
+          checked against the reference minutes for every player:
         </p>
         <ul className={styles.trust}>
           <li><TrustBadge status="ok" /> covers the whole season and agrees with the reference</li>

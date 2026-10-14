@@ -73,7 +73,15 @@ export function ImpactChart({ impact }: { impact: ImpactBreakdown }) {
         </div>
       </dl>
       {impact.attack_source === 'SofaScore' && (
-        <p className={styles.note}>xG and xA from SofaScore: Understat has no record of him.</p>
+        <p className={styles.note}>
+          Understat has no record of him, so xG and xA come from SofaScore
+          {impact.calibration &&
+            `, scaled to Understat's level (×${impact.calibration.xg.toFixed(2)} and ×${impact.calibration.xa.toFixed(2)}, measured on players both cover)`}
+          .
+          {impact.calibration?.build_up_per_pass != null
+            ? ' Build-up is estimated from his accurate passes (weak evidence).'
+            : ' Build-up could not be estimated.'}
+        </p>
       )}
       <details className={styles.how}>
         <summary>How each part is measured</summary>

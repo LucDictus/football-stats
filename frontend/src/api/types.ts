@@ -150,6 +150,8 @@ export interface ImpactBreakdown {
   above: number | null
   /** Where npxG and xA come from: Understat, or SofaScore when Understat has no record of him. */
   attack_source: 'Understat' | 'SofaScore' | null
+  /** SofaScore fallback only: scale factors to Understat's level, and xGBuildup per accurate pass (null: no build-up estimate). */
+  calibration: { xg: number; xa: number; build_up_per_pass: number | null } | null
   score: number | null
   weight: number
 }

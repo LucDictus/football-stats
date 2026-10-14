@@ -16,6 +16,13 @@ use App\Football\Scoring\ScoringCandidate;
  * Team totals are built from every candidate of the team, also those who are not ranked:
  * a team's xG is everybody's. Season totals from a provider that covers only part of the
  * season (a transfer between leagues) are extrapolated from its rate to the full minutes.
+ *
+ * The SofaScore fallback is calibrated on the players both providers cover: its xG and xA
+ * are scaled to Understat's level, and build-up (xGBuildup is Understat-only) is estimated
+ * from accurate passes with the role's xGBuildup per accurate pass.
+ */
+/**
+ * @phpstan-type Calibration array{xg: float, xa: float, build_up_per_pass: array<string, float>}
  */
 final class ImpactCalculator
 {
@@ -36,16 +43,17 @@ final class ImpactCalculator
      * @param list<ScoringCandidate> $scored     the players to calculate contribution for
      * @param list<int>|null         $reference  player ids that define the replacement level (default: all scored)
      *
-     * @return array<int, array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, attack_source: ?string}> by player id
+     * @return array<int, array{goals: array<string, ?float>, total: ?float, replacement: float, above: ?float, attack_source: ?string, calibration?: array{xg: float, xa: float, build_up_per_pass: ?float}}> by player id
      */
     public function calculate(ImpactModel $model, array $candidates, array $scored, ?array $reference = null): array
     {
-        $teams = $this->teams($model, $candidates);
+        $calibration = $this->calibration($model, $candidates);
+        $teams = $this->teams($model, $candidates, $calibration);
         $leagueAverage = $this->leagueAverages($model, $teams);
 
         $raw = [];
         foreach ($scored as $candidate) {
-            $raw[$candidate->playerId] = $this->player($model, $candidate, $teams[self::teamKey($candidate)] ?? null, $leagueAverage);
+            $raw[$candidate->playerId] = $this->player($model, $candidate, $teams[self::teamKey($candidate)] ?? null, $leagueAverage, $calibration);
         }
 
         // Replacement level per role: a low percentile of contribution per 90 among the reference players.
@@ -81,16 +89,16 @@ final class ImpactCalculator
     /**
      * @param array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, psxg_faced: float, gk_minutes: float, league: ?string}|null $team
      * @param array<string, float>                                                                                                                 $leagueAverage league => expected goals on target conceded per 90
+     * @param Calibration                                                                                                                          $calibration
      *
-     * @return array{goals: array<string, ?float>, total: ?float, attack_source: ?string}
+     * @return array{goals: array<string, ?float>, total: ?float, attack_source: ?string, calibration?: array{xg: float, xa: float, build_up_per_pass: ?float}}
      */
-    private function player(ImpactModel $model, ScoringCandidate $c, ?array $team, array $leagueAverage): array
+    private function player(ImpactModel $model, ScoringCandidate $c, ?array $team, array $leagueAverage, array $calibration): array
     {
         $s = $c->stats;
         $goals = array_fill_keys(self::COMPONENTS, null);
 
-        [$npxg, $xa, $source] = self::attack($model, $s);
-        $buildUp = self::seasonTotal($s, 'xg_buildup');
+        [$npxg, $xa, $buildUp, $source] = self::attack($model, $c, $calibration);
         if ($npxg !== null && $xa !== null) {
             $goals['shooting'] = $model->shooterShare * $npxg;
             $goals['creation'] = $model->passerShare * $xa;
@@ -126,42 +134,122 @@ final class ImpactCalculator
         // Without npxG and xA the attack is unknown, so the contribution is unknown (never zero).
         $known = array_filter($goals, static fn (?float $g) => $g !== null);
 
-        return ['goals' => $goals, 'total' => $goals['shooting'] === null ? null : array_sum($known), 'attack_source' => $source];
+        $result = ['goals' => $goals, 'total' => $goals['shooting'] === null ? null : array_sum($known), 'attack_source' => $source];
+        if ($source === Origin::Sofascore->value) {
+            $result['calibration'] = ['xg' => $calibration['xg'], 'xa' => $calibration['xa'], 'build_up_per_pass' => $calibration['build_up_per_pass'][(string) $c->positionGroup] ?? null];
+        }
+
+        return $result;
     }
 
     /**
-     * Non-penalty xG and xA: Understat when it has the player, otherwise SofaScore (whose xG
-     * includes penalties, and which leaves xG/xA empty when there was nothing to measure).
+     * Non-penalty xG, xA and xGBuildup: Understat when it has the player, otherwise SofaScore
+     * calibrated to Understat's level (see calibration()).
      *
-     * @return array{0: ?float, 1: ?float, 2: ?string} npxG, xA, source
+     * @param Calibration $calibration
+     *
+     * @return array{0: ?float, 1: ?float, 2: ?float, 3: ?string} npxG, xA, xGBuildup, source
      */
-    private static function attack(ImpactModel $model, PlayerCompetitionStats $s): array
+    private static function attack(ImpactModel $model, ScoringCandidate $c, array $calibration): array
     {
+        $s = $c->stats;
         $npxg = self::seasonTotal($s, 'np_xg');
         $xa = self::seasonTotal($s, 'xa');
         if ($npxg !== null && $xa !== null) {
-            return [$npxg, $xa, Origin::Understat->value];
+            return [$npxg, $xa, self::seasonTotal($s, 'xg_buildup'), Origin::Understat->value];
         }
+        [$npxg, $xa] = self::sofascoreAttack($model, $s);
+        if ($npxg === null || $xa === null) {
+            return [null, null, null, null];
+        }
+        $perPass = $calibration['build_up_per_pass'][(string) $c->positionGroup] ?? null;
+        $passes = self::seasonTotal($s, 'accurate_passes');
+
+        return [$npxg * $calibration['xg'], $xa * $calibration['xa'], $perPass !== null && $passes !== null ? $passes * $perPass : null, Origin::Sofascore->value];
+    }
+
+    /**
+     * SofaScore's npxG (its xG includes penalties) and xA, uncalibrated. SofaScore leaves them
+     * empty when there was nothing to measure.
+     *
+     * @return array{0: ?float, 1: ?float}
+     */
+    private static function sofascoreAttack(ImpactModel $model, PlayerCompetitionStats $s): array
+    {
         if (!$s->originStatus(Origin::Sofascore)->usable()) {
-            return [null, null, null];
+            return [null, null];
         }
         $xg = self::seasonTotal($s, 'xg_sofascore') ?? (self::seasonTotal($s, 'shots') === 0.0 ? 0.0 : null);
-        $xaSofascore = self::seasonTotal($s, 'xa_sofascore') ?? (self::seasonTotal($s, 'key_passes') === 0.0 ? 0.0 : null);
-        if ($xg === null || $xaSofascore === null) {
-            return [null, null, null];
+        $xa = self::seasonTotal($s, 'xa_sofascore') ?? (self::seasonTotal($s, 'key_passes') === 0.0 ? 0.0 : null);
+        if ($xg === null || $xa === null) {
+            return [null, null];
         }
 
-        return [max(0.0, $xg - $model->penaltyXg * (self::seasonTotal($s, 'penalties_taken') ?? 0.0)), $xaSofascore, Origin::Sofascore->value];
+        return [max(0.0, $xg - $model->penaltyXg * (self::seasonTotal($s, 'penalties_taken') ?? 0.0)), $xa];
+    }
+
+    /**
+     * Calibrates the SofaScore fallback on the players with full-season data from both
+     * providers: ratio of the sums of Understat's to SofaScore's npxG and xA, and per role
+     * the sum of xGBuildup over the sum of accurate passes. Without enough such players the
+     * scale stays 1 and build-up is not estimated.
+     *
+     * @param list<ScoringCandidate> $candidates
+     *
+     * @return Calibration
+     */
+    private function calibration(ImpactModel $model, array $candidates): array
+    {
+        $sums = ['us_xg' => 0.0, 'ss_xg' => 0.0, 'us_xa' => 0.0, 'ss_xa' => 0.0];
+        $count = 0;
+        $buildUp = [];
+        foreach ($candidates as $c) {
+            $s = $c->stats;
+            if ($s->originStatus(Origin::Understat) !== OriginStatus::Ok || $s->originStatus(Origin::Sofascore) !== OriginStatus::Ok) {
+                continue;
+            }
+            $npxg = $s->value('np_xg');
+            $xa = $s->value('xa');
+            [$ssXg, $ssXa] = self::sofascoreAttack($model, $s);
+            if ($npxg !== null && $xa !== null && $ssXg !== null && $ssXa !== null) {
+                $sums['us_xg'] += $npxg;
+                $sums['ss_xg'] += $ssXg;
+                $sums['us_xa'] += $xa;
+                $sums['ss_xa'] += $ssXa;
+                ++$count;
+            }
+            $xgBuildup = $s->value('xg_buildup');
+            $passes = $s->value('accurate_passes');
+            if ($xgBuildup !== null && $passes !== null) {
+                $group = (string) $c->positionGroup;
+                $buildUp[$group] ??= ['xg_buildup' => 0.0, 'passes' => 0.0, 'count' => 0];
+                $buildUp[$group]['xg_buildup'] += $xgBuildup;
+                $buildUp[$group]['passes'] += $passes;
+                ++$buildUp[$group]['count'];
+            }
+        }
+
+        $enough = $count >= $model->minCalibrationPlayers;
+
+        return [
+            'xg' => $enough && $sums['ss_xg'] > 0 ? $sums['us_xg'] / $sums['ss_xg'] : 1.0,
+            'xa' => $enough && $sums['ss_xa'] > 0 ? $sums['us_xa'] / $sums['ss_xa'] : 1.0,
+            'build_up_per_pass' => array_map(
+                static fn (array $g) => $g['xg_buildup'] / $g['passes'],
+                array_filter($buildUp, static fn (array $g) => $g['count'] >= $model->minCalibrationPlayers && $g['passes'] > 0),
+            ),
+        ];
     }
 
     /**
      * Team totals from every player of the team (only providers trusted or extrapolated).
      *
      * @param list<ScoringCandidate> $candidates
+     * @param Calibration            $calibration
      *
      * @return array<string, array{xg: float, xa: float, xg_buildup: float, defensive_actions: float, psxg_faced: float, gk_minutes: float, league: ?string}>
      */
-    private function teams(ImpactModel $model, array $candidates): array
+    private function teams(ImpactModel $model, array $candidates, array $calibration): array
     {
         $teams = [];
         foreach ($candidates as $c) {
@@ -170,10 +258,10 @@ final class ImpactCalculator
                 continue;
             }
             $teams[$key] ??= ['xg' => 0.0, 'xa' => 0.0, 'xg_buildup' => 0.0, 'defensive_actions' => 0.0, 'psxg_faced' => 0.0, 'gk_minutes' => 0.0, 'league' => $c->league];
-            [$npxg, $xa] = self::attack($model, $c->stats);
+            [$npxg, $xa, $buildUp] = self::attack($model, $c, $calibration);
             $teams[$key]['xg'] += $npxg ?? 0.0;
             $teams[$key]['xa'] += $xa ?? 0.0;
-            $teams[$key]['xg_buildup'] += self::seasonTotal($c->stats, 'xg_buildup') ?? 0.0;
+            $teams[$key]['xg_buildup'] += $buildUp ?? 0.0;
             if ($c->positionGroup === 'GK') {
                 $conceded = $c->stats->value('goals_conceded');
                 $prevented = $c->stats->value('goals_prevented');

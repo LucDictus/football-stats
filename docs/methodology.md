@@ -54,8 +54,13 @@ positional-v2 answers "how far does a player stand above others in his position?
   (tested). xGBuildup excludes only the player's own shots and key passes, so a passer still
   gets some build-up credit for other chances in the same possessions: mild overlap.
 - **npxG and xA** come from Understat, or from SofaScore for the 89 players Understat has no
-  record of (name-matching gaps): npxG = SofaScore xG − 0.76 per penalty taken. The player page
-  says when this fallback is used.
+  record of (name-matching gaps): npxG = SofaScore xG − 0.76 per penalty taken. SofaScore runs
+  lower than Understat, so the fallback is **calibrated** in every run on the players both
+  cover with full-season data (at least 30): × Σ Understat / Σ SofaScore, on 2025/26 ×1.107
+  for npxG and ×1.123 for xA (correlation 0.99). xGBuildup is Understat-only, so the
+  fallback's **build-up is estimated** from accurate passes × the role's xGBuildup per
+  accurate pass (correlation with xGBuildup 0.79), shown as weak evidence; the estimate also
+  counts in the team's build-up total. The player page says when the fallback is used.
 - **Shrinkage**: most of one season's finishing and goals prevented is chance. Goals prevented
   is shrunk with a prior of 300 shots on target (more than a season); with 150, three
   goalkeepers were in the top 18 on noise.
@@ -69,24 +74,26 @@ positional-v2 answers "how far does a player stand above others in his position?
 - **Both halves must stand**: a player is ranked only when his positional part meets the
   minimum confidence on its own and his contribution is known.
 - **No clamping** of blended scores: the parts shown add up to the total, and a runaway season
-  can go above 100 (Olise: 50% × 93.2 + 50% × 112.8 = 103.0).
+  can go above 100 (Olise: 50% × 93.2 + 50% × 113.0 = 103.1).
 - Players who moved within a league are credited to their main club in team totals (small
   effect on team pools).
 
-### Result (run #10)
+### Result (run #11)
 
 | | positional-v2 | mvp-v1 |
 |---|---|---|
 | Top 10 by position | 8 MF, 2 FW | **5 FW, 5 MF** |
 | Kane / Haaland / Mbappé | #3 / #9 / #26 | **#2 / #5 / #10** |
-| Kimmich (build-up, 10 G+A) | #6 | #13 |
-| Declan Rice | #30 | #12 |
-| Saliba (team defence) | #270 | #88 |
-| Best defender / goalkeeper | Orban #15 / Koffi #28 | Orban #16 / Nübel #36 |
+| Kimmich (build-up, 10 G+A) | #6 | #12 |
+| Declan Rice | #30 | #13 |
+| Saliba (team defence) | #270 | #93 |
+| Best defender / goalkeeper | Orban #15 / Koffi #28 | Schlotterbeck #17 / Koffi #36 |
 
 Top 10: Olise, Kane, Yamal, Luis Díaz, Haaland, Dimarco, Bruno Fernandes, Undav, Lautaro
-Martínez, Mbappé. Olise #1 holds in both views: +12.3 goals above replacement, Kane +12.2.
-mvp-v1 ranks the same 1,523 players as positional-v2.
+Martínez, Mbappé. Olise #1 holds in both views (50% × 93.2 + 50% × 113.0 = 103.1), with
++12.16 goals above replacement, Kane +12.15. mvp-v1 ranks the same 1,523 players as
+positional-v2. The calibrated fallback lifts the 63 ranked players on it to the build-up
+level of comparable Understat players: Cherki #15, Gabriel Magalhães #24.
 
 ### Known limitations of mvp-v1
 

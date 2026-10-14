@@ -76,7 +76,8 @@ final class ImpactCalculatorTest extends TestCase
 
     public function testUnderstatGapsFallBackToSofascore(): void
     {
-        // No Understat record; SofaScore has 9.0 xG including 3 penalties, and 2.5 xA.
+        // No Understat record; SofaScore has 9.0 xG including 3 penalties, and 2.5 xA. Too few
+        // players to calibrate on: the scale stays 1 and build-up is not estimated.
         $player = $this->player(1, 'FW', ['xg_sofascore' => 9.0, 'penalties_taken' => 3.0, 'xa_sofascore' => 2.5], understat: 'missing');
 
         $result = (new ImpactCalculator())->calculate(new ImpactModel(), [$player], [$player]);
@@ -84,6 +85,28 @@ final class ImpactCalculatorTest extends TestCase
         self::assertEqualsWithDelta(0.5 * (9.0 - 3 * 0.76), $result[1]['goals']['shooting'], 1e-9);
         self::assertEqualsWithDelta(0.3 * 2.5, $result[1]['goals']['creation'], 1e-9);
         self::assertSame('SofaScore', $result[1]['attack_source']);
+        self::assertNull($result[1]['goals']['build_up']);
+    }
+
+    public function testTheSofascoreFallbackIsCalibratedOnPlayersBothProvidersCover(): void
+    {
+        $model = new ImpactModel(minCalibrationPlayers: 2);
+        // Covered by both: SofaScore runs lower (xG 8 vs 10, xA 2 vs 4); 3 xGBuildup per 300 accurate passes.
+        $both = array_map(fn (int $id) => $this->player($id, 'FW', [
+            'np_xg' => 10.0, 'xa' => 4.0, 'xg_buildup' => 3.0, 'xg_sofascore' => 8.0, 'xa_sofascore' => 2.0, 'accurate_passes' => 300.0,
+        ]), [1, 2]);
+        $fallback = $this->player(3, 'FW', ['xg_sofascore' => 4.0, 'xa_sofascore' => 1.0, 'accurate_passes' => 500.0], understat: 'missing');
+        $all = [...$both, $fallback];
+
+        $result = (new ImpactCalculator())->calculate($model, $all, $all);
+
+        // Scaled ×1.25 (xG) and ×2 (xA); build-up 500 × 0.01 = 5, also in the team's denominator.
+        self::assertEqualsWithDelta(0.5 * 5.0, $result[3]['goals']['shooting'], 1e-9);
+        self::assertEqualsWithDelta(0.3 * 2.0, $result[3]['goals']['creation'], 1e-9);
+        $pool = 0.2 * 25.0 + 0.3 * (25.0 - 10.0);
+        self::assertEqualsWithDelta($pool * 5.0 / 11.0, $result[3]['goals']['build_up'], 1e-9);
+        self::assertEqualsWithDelta(['xg' => 1.25, 'xa' => 2.0, 'build_up_per_pass' => 0.01], $result[3]['calibration'] ?? null, 1e-9);
+        self::assertArrayNotHasKey('calibration', $result[1]);
     }
 
     public function testReplacementLevelComesFromTheReferencePlayers(): void

@@ -247,7 +247,9 @@ function Row({ row, model, compare }: { row: RankingRow; model: ScoringModel; co
       )}
       <span className={styles.score}>
         {row.impact_goals !== null && (
-          <span className={styles.goals}>{formatSigned(row.impact_goals)} goals above replacement</span>
+          <span className={styles.goals}>
+            {formatSigned(row.impact_goals)} goals<span className={styles.long}> above replacement</span>
+          </span>
         )}
         <span className="num">{formatScore(row.score)}</span>
         {row.confidence < 1 && (

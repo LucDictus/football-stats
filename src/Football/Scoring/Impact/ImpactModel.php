@@ -8,7 +8,8 @@ namespace App\Football\Scoring\Impact;
  * Contribution in a common unit, goals, for every position (roadmap phase 5).
  *
  * Attack: npxG and xA from Understat, or from SofaScore for players Understat has no record
- * of (npxG = SofaScore xG − penaltyXg × penalties taken).
+ * of (npxG = SofaScore xG − penaltyXg × penalties taken), calibrated to Understat's level on
+ * the players both cover; their build-up is estimated from accurate passes.
  * Every expected goal a team creates is shared out, so the credits add up to the
  * team's xG and a chance is never counted twice: the shooter gets $shooterShare, the last
  * passer $passerShare (xA), and the players who built the attack get the rest in proportion
@@ -41,6 +42,8 @@ final readonly class ImpactModel
         public float $penaltyXg = 0.76,
         /** Replacement level: this percentile of contribution per 90 within the role. */
         public float $replacementPercentile = 0.2,
+        /** Players covered by both Understat and SofaScore needed to calibrate the SofaScore fallback (per role for build-up). */
+        public int $minCalibrationPlayers = 30,
     ) {
         if (abs($shooterShare + $passerShare + $buildUpShare - 1.0) > 1e-9) {
             throw new \InvalidArgumentException('The shares of an expected goal must add up to 1');
@@ -60,6 +63,7 @@ final readonly class ImpactModel
             'min_team_goalkeeper_minutes' => $this->minTeamGoalkeeperMinutes,
             'penalty_xg' => $this->penaltyXg,
             'replacement_percentile' => $this->replacementPercentile,
+            'min_calibration_players' => $this->minCalibrationPlayers,
         ];
     }
 }
