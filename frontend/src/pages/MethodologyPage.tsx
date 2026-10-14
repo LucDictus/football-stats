@@ -57,6 +57,10 @@ export function MethodologyPage() {
             pulled toward the average for the role: 15 tackles out of 15 is not a perfect season.
           </li>
           <li>
+            <strong>Skewed counts on a square-root scale.</strong> Most defenders score almost never and a few attacking
+            full-backs often; on a square-root scale such a metric cannot outweigh the rest, while the best still stand out.
+          </li>
+          <li>
             <strong>Reproducible.</strong> Every ranking is stored with the exact model definition and the data imports it
             used. The same inputs always give the same ranking.
           </li>
@@ -164,7 +168,8 @@ function ModelSection({ model }: { model: ScoringModel }) {
                       {' '}
                       · {MODE_LABELS[m.mode]}
                       {m.lower_is_better ? ', fewer is better' : ''}
-                      {m.shrinkage ? `, small samples pulled toward average (${m.shrinkage} ${m.mode === 'rate' ? 'attempts' : 'matches'})` : ''} ·{' '}
+                      {m.shrinkage ? `, small samples pulled toward average (${m.shrinkage} ${m.mode === 'rate' ? 'attempts' : 'matches'})` : ''}
+                      {m.transform === 'sqrt' ? ', square-root scale' : ''} ·{' '}
                       {Math.round(m.weight * 100)}%
                     </span>
                   </li>

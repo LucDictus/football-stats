@@ -192,8 +192,9 @@ candidates and stores the run. A run's `definition_hash` is a canonical hash
 (`CanonicalJson`), so it can be checked again from the stored definition. API errors are
 JSON (`ApiExceptionSubscriber`); request parsing lives in `Controller/Api/ApiContext`.
 **Never edit a released model**: add a new version to `ModelCatalog` (a test pins the hashes
-of released models). Engine behaviour that changes results must be a model option that
-appears in the definition only when used (like `shrinkage`, `referenceRankedOnly`, `zCap`),
+of released models). A new model is a release candidate until its phase review passes; until
+then it may change and its runs are replaced. Engine behaviour that changes results must be a model option that
+appears in the definition only when used (like `shrinkage`, `sqrt`, `referenceRankedOnly`, `zCap`),
 so older models keep reproducing. The API and the methodology page read the definition, so they follow
 automatically. Role models (`roles:` per position group) compare each group only with itself;
 see `docs/methodology.md` for why the composite is standardised again within the role.

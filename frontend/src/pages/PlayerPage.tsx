@@ -114,7 +114,12 @@ function Breakdown({ score }: { score: ScoreBreakdown }) {
       <p className={styles.sectionLead}>
         Every metric is compared with other {peers} (900+ league minutes): {describeScale(normalization)}. A component averages
         its metrics, and the components are weighed into a combined score
-        {role && score.composite !== null ? (
+        {score.rank === null ? (
+          <>
+            . Too little of the model could be measured for him to be ranked, so there is no final score: the components below
+            are shown for information.
+          </>
+        ) : role && score.composite !== null ? (
           <>
             {' '}
             of <strong className="num">{formatScore(score.composite)}</strong>. The final score says how far that stands above

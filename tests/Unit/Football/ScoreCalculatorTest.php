@@ -217,6 +217,23 @@ final class ScoreCalculatorTest extends TestCase
         self::assertLessThan(50.0, $minutesScore((new ScoreCalculator())->score($model(false), $candidates)));
     }
 
+    public function testSquareRootScaleTamesASkewedMetric(): void
+    {
+        $metric = static fn (bool $sqrt) => new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['DF'], 0.0, [
+            new Component('attack', 'Attack', '', 1.0, [new Metric('goals_p90', 'Goals per 90', ['goals'], MetricMode::Per90, 1.0, sqrt: $sqrt)]),
+        ], normalization: Normalization::Standard);
+        // Twenty defenders who almost never score, one attacking full-back who often does.
+        $candidates = [...array_map(fn (int $i) => $this->candidate($i, "Defender {$i}", goals: (float) ($i % 2), group: 'DF'), range(1, 20)),
+            $this->candidate(21, 'Full-back', goals: 12.0, group: 'DF')];
+        $fullBack = static fn (array $results) => array_values(array_filter($results, static fn ($r) => $r->candidate->name === 'Full-back'))[0]->score;
+
+        $raw = $fullBack((new ScoreCalculator())->score($metric(false), $candidates));
+        $sqrt = $fullBack((new ScoreCalculator())->score($metric(true), $candidates));
+
+        self::assertLessThan($raw, $sqrt, 'less extreme on a square-root scale');
+        self::assertGreaterThan(80.0, $sqrt, 'but still far above his peers');
+    }
+
     public function testZCapLimitsHowFarOneMetricCanCarryAPlayer(): void
     {
         $values = [...array_fill(0, 20, 1.0), ...array_fill(0, 20, 2.0), 50.0];

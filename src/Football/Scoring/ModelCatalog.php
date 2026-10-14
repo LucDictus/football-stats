@@ -29,11 +29,14 @@ final class ModelCatalog
      * ranking (a full-back's 1,256 attacking minutes made him the best defender; 15 out of 15
      * tackles scored as a perfect season). Changes:
      * - per-90 rates and success rates are shrunk toward the role average (empirical Bayes,
-     *   a prior worth 10 matches or 20 attempts): little evidence, little deviation;
+     *   a prior worth 10 matches or 40 attempts): little evidence, little deviation;
+     * - per-90 counts are standardised on a square-root scale (the variance-stabilising
+     *   transform for counts), so a few extreme values in a skewed metric do not dominate,
+     *   without capping the top (a ±3 cap was tried and flattened the elite: docs/methodology.md);
      * - no season totals: volume is measured once, by minutes (totals = rate × minutes would
      *   count minutes again);
      * - "average" is defined by the ranked players only, so scores built on very little data
-     *   do not stretch the scale; deviations beyond 3 standard deviations count as 3.
+     *   do not stretch the scale.
      */
     private static function positionalV2(): ScoringModel
     {
@@ -41,7 +44,7 @@ final class ModelCatalog
             new Metric('minutes', 'League minutes', ['minutes'], MetricMode::Total, 1.0),
         ]);
         $reliability = static fn (float $weight) => new Component('reliability', 'Reliability', 'Errors leading to a goal: fewer is better.', $weight, [
-            self::shrunkPer90('errors_p90', 'Errors leading to goal per 90', ['errors_leading_to_goal'], 1.0, lowerIsBetter: true),
+            self::shrunkPer90('errors_p90', 'Errors leading to goal per 90', ['errors_leading_to_goal'], 1.0, lowerIsBetter: true, sqrt: false),
         ]);
         $buildUp = static fn (float $weight) => new Component('build_up', 'Build-up', 'Moving the ball forward and keeping it: xGBuildup, final-third passes and accurate passes.', $weight, [
             self::shrunkPer90('xg_buildup_p90', 'xGBuildup per 90', ['xg_buildup'], 0.4),
@@ -113,7 +116,7 @@ final class ModelCatalog
                 ],
                 'GK' => [
                     new Component('shot_stopping', 'Shot stopping', 'Goals prevented per 90: goals the shots he faced were expected to produce, minus the goals he conceded.', 0.7, [
-                        self::shrunkPer90('goals_prevented_p90', 'Goals prevented per 90', ['goals_prevented'], 1.0),
+                        self::shrunkPer90('goals_prevented_p90', 'Goals prevented per 90', ['goals_prevented'], 1.0, sqrt: false),
                     ]),
                     $reliability(0.1),
                     $availability,
@@ -121,28 +124,31 @@ final class ModelCatalog
             ],
             normalization: Normalization::Standard,
             referenceRankedOnly: true,
-            zCap: 3.0,
         );
     }
 
     /**
-     * A per-90 metric shrunk toward the group average with a prior worth 10 matches.
+     * A per-90 count shrunk toward the group average with a prior worth 10 matches, standardised
+     * on a square-root scale. Not for metrics that can be negative (goals prevented) or that are
+     * mostly zero where a single event should not widen the gap (errors): pass $sqrt false.
      *
      * @param non-empty-list<string> $fields
      */
-    private static function shrunkPer90(string $key, string $label, array $fields, float $weight, bool $lowerIsBetter = false): Metric
+    private static function shrunkPer90(string $key, string $label, array $fields, float $weight, bool $lowerIsBetter = false, bool $sqrt = true): Metric
     {
-        return new Metric($key, $label, $fields, MetricMode::Per90, $weight, $lowerIsBetter, shrinkage: 10.0);
+        return new Metric($key, $label, $fields, MetricMode::Per90, $weight, $lowerIsBetter, shrinkage: 10.0, sqrt: $sqrt);
     }
 
     /**
-     * A success rate shrunk toward the group average with a prior worth 20 attempts.
+     * A success rate shrunk toward the group average with a prior worth 40 attempts: success
+     * rates are noisy (at 60% over 40 attempts the binomial spread is ±7.7 points, about the
+     * real spread between players).
      *
      * @param non-empty-list<string> $sampleFields fields whose sum is the number of attempts
      */
     private static function shrunkRate(string $key, string $label, string $field, array $sampleFields, float $weight): Metric
     {
-        return new Metric($key, $label, [$field], MetricMode::Rate, $weight, shrinkage: 20.0, sampleFields: $sampleFields);
+        return new Metric($key, $label, [$field], MetricMode::Rate, $weight, shrinkage: 40.0, sampleFields: $sampleFields);
     }
 
     /**

@@ -6,8 +6,10 @@ model definition the API serves. This document adds the engineering detail.
 ## Models are versioned
 
 A model (`src/Football/Scoring/ModelCatalog.php`) defines its scope, who is eligible, its
-components, their metrics and all weights. A released model is never edited: a change is a
-new version. Every `ScoreRun` stores the full definition, its SHA-256 hash and the import
+components, their metrics and all weights. A new model is a **release candidate** until the
+review of its roadmap phase passes: until then it may still change, and its score runs are
+replaced. Once released, a model is never edited (its hash is pinned by a test): a change is
+a new version. Every `ScoreRun` stores the full definition, its SHA-256 hash and the import
 batches its statistics came from, so any published ranking can be explained and reproduced.
 `app:score` does not store a run that would be identical to the latest one.
 
@@ -29,12 +31,18 @@ How one ranking holds all positions:
    adding them would count minutes again (roadmap 3.3).
 2. **Shrinkage.** A rate built on little evidence is pulled toward the role average
    (empirical Bayes): `(rate × n + average × prior) / (n + prior)`, with n the player's
-   matches (per 90; prior 10 matches) or attempts (success rates; prior 20). The player page
-   shows both the raw and the adjusted value.
-3. **Standard scores within the role**, against the ranked players only: 50 + 10 × standard
-   deviations from their average. Deviations beyond 3 count as 3, so one skewed minor metric
-   cannot carry a player.
-4. The **composite** is the weighted mean of the components; the **score** is the composite
+   matches (per 90; prior 10 matches) or attempts (success rates; prior 40, because success
+   rates are noisy: at 60% over 40 attempts the binomial spread is ±7.7 points, about the
+   real spread between players). The player page shows the raw and the adjusted value.
+3. **Square-root scale for counts.** Per-90 counts are skewed: most defenders almost never
+   score, a few attacking full-backs often. On the raw scale such a minor metric can put a
+   player 5+ standard deviations above his peers and outweigh everything else. The square
+   root (the variance-stabilising transform for counts) tames that without cutting off the
+   top. Not used for goals prevented (can be negative) and errors (mostly zero: a root would
+   widen the gap between none and one).
+4. **Standard scores within the role**, against the ranked players only: 50 + 10 × standard
+   deviations from their average.
+5. The **composite** is the weighted mean of the components; the **score** is the composite
    standardised again within the role (against ranked players). Averaging several metrics
    pulls composites toward 50, more so the more (and the less correlated) metrics a role has;
    this step gives every role the same spread, so the score reads "how far above his
@@ -45,17 +53,17 @@ Avoiding overlap (roadmap 5.2): xGBuildup measures build-up without the player's
 and key passes; save % is left out because goals prevented already measures shot stopping.
 Duel success: aerial duels won % and tackles won % (SofaScore: tackles that won the ball).
 
-### Roadmap 4.3 checks (run #6)
+### Roadmap 4.3 checks (run #7)
 
-- **Does the striker rank highly for the right reasons?** Kane #5 (85.0) and Haaland #6 on
+- **Does the striker rank highly for the right reasons?** Kane #3 (86.8) and Haaland #9 on
   attacking output and quality.
-- **Can a midfielder rank highly without scoring many goals?** Yes: Kimmich #12 with 10 goals +
-  assists, on build-up (80.0) and creation (70.3).
+- **Can a midfielder rank highly without scoring many goals?** Yes: Kimmich #6 with 10 goals +
+  assists, on build-up (91.3) and creation (68.9).
 - **Can an outstanding defender reach the top?** Yes, and now centre-backs for their defending:
-  Willi Orban #18, Bastoni #23, van Dijk #33 (duel success 63.6). Nuno Mendes, a full-back whose
-  attacking numbers come from 1,256 minutes, went from #11 to #26.
-- **Can a goalkeeper compete for the top spot?** In principle (best: #30), but goals prevented
-  over one season is noisy, so goalkeeper results deserve the least trust.
+  Willi Orban #15, Bastoni #21, van Dijk #27 (duel success 65.7). Nuno Mendes, a full-back whose
+  attacking numbers come from 1,256 minutes, went from #11 (v1) to #22.
+- **Can a goalkeeper compete for the top spot?** In principle (best: Koffi #28), but goals
+  prevented over one season is noisy, so goalkeeper results deserve the least trust.
 
 ### How positional-v2 came about (experiments on the 2025/26 data)
 
@@ -70,20 +78,28 @@ Duel success: aerial duels won % and tackles won % (SofaScore: tackles that won 
    components far more effect than their weight (a full-back's attacking output made him the
    best defender), that small samples count fully (15 of 15 tackles), that players with very
    little data stretched each role's scale, and that minutes counted three times for forwards.
-   positional-v2 fixes these with shrinkage, rates plus minutes, a ±3 cap and the ranked-only
-   reference. Effect of each, measured: without the cap Mendes stays #14 and Olise at 99.1;
-   without shrinkage 15/15 tackles still counts as perfect.
+   The fixes: shrinkage, rates plus minutes, the ranked-only reference.
+4. **For the skew, a ±3 standard-deviation cap was tried first and rejected.** It bound mostly on
+   the main metrics: 125 capped metric scores, 30 of them in the top 10, so the elite were
+   flattened again (the problem v2 set out to fix). Variants measured on the same data:
+
+   | Variant | Capped scores (all / top 10) | Top 3 | Mendes |
+   |---|---|---|---|
+   | raw scale, cap ±3 | 125 / 30 | Fernandes 88.0, Dimarco 86.0, Olise 85.8 | #26 |
+   | raw scale, cap ±4 | 40 / 19 | Olise 93.0, Fernandes 92.5, Kane 91.9 | #17 |
+   | square root, cap ±3 | 74 / 23 | Fernandes 86.7, Dimarco 84.7, Olise 84.5 | #28 |
+   | **square root, no cap** (chosen) | 0 / 0 | Olise 93.2, Fernandes 90.3, Kane 86.8 | #22 |
 
 ### Known limitations of positional-v2
 
 - **Broad position labels.** "MF" covers wingers and holding midfielders alike, so attacking
-  midfielders stand far above that mixed group: 7 of the top 10 are midfielders. Finer roles
+  midfielders stand far above that mixed group: 8 of the top 10 are midfielders. Finer roles
   (inferred from the data, not the label) are planned.
 - **Defensive volume is not possession-adjusted.** Tackles and interceptions favour defenders of
-  teams that defend a lot (Saliba #271). Duel success partly offsets this; possession
+  teams that defend a lot (Saliba #270). Duel success partly offsets this; possession
   adjustment belongs to the impact model (roadmap 5.1).
 - **Errors leading to goal** are rare: most defenders have none, so one error still costs
-  noticeably, even after shrinkage and the cap.
+  noticeably, even after shrinkage (van Dijk: reliability 37.0).
 - **Scope** is still the domestic league only (Champions League: phase 6).
 
 ## positional-v1 (superseded by v2, kept for reproducibility)

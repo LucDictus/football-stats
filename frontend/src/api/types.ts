@@ -13,6 +13,7 @@ export interface ModelMetric {
   lower_is_better?: boolean
   shrinkage?: number
   sample_fields?: string[]
+  transform?: 'sqrt'
 }
 
 export interface ModelComponent {

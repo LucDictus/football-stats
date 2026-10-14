@@ -13,7 +13,8 @@ namespace App\Football\Scoring;
  *    model has roles ("90" then means exceptional for that role).
  * 3. Per group: metric values, and how much each player's data covers the model (confidence).
  *    The reference group is everyone, or only the players who will be ranked.
- * 4. Optional shrinkage pulls values built on little evidence toward the reference average.
+ * 4. Optional shrinkage pulls values built on little evidence toward the reference average;
+ *    an optional square-root transform reduces the skew of count metrics.
  * 5. Every metric is normalised (model's Normalization) against the reference group.
  * 6. A component is the weighted mean of its known metric scores; the composite is the
  *    weighted mean of the known components. What could not be measured is left out (never
@@ -110,7 +111,10 @@ final class ScoreCalculator
                 $adjusted[$metric->key] = $metric->shrinkage !== null
                     ? $this->shrink($values[$metric->key], $samples[$metric->key], $metric->shrinkage, $reference)
                     : $values[$metric->key];
-                $normalised[$metric->key] = $model->normalization->scores($adjusted[$metric->key], $metric->lowerIsBetter, $reference, $model->zCap);
+                $scale = $metric->sqrt
+                    ? array_map(static fn (?float $v) => $v === null ? null : sqrt(max(0.0, $v)), $adjusted[$metric->key])
+                    : $adjusted[$metric->key];
+                $normalised[$metric->key] = $model->normalization->scores($scale, $metric->lowerIsBetter, $reference, $model->zCap);
             }
         }
 
