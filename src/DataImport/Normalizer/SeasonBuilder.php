@@ -8,6 +8,7 @@ use App\DataImport\Identity\ClMatchResult;
 use App\DataImport\Identity\ClPlayerMatcher;
 use App\DataImport\Identity\IdentityOverrides;
 use App\DataImport\Identity\IdentityRegistry;
+use App\DataImport\Sofascore\ClRecordSelector;
 use App\DataImport\Sofascore\SofascoreClient;
 use App\DataImport\SourceName;
 use App\DataImport\Top5\Top5CsvReader;
@@ -65,6 +66,7 @@ final class SeasonBuilder
         private readonly ClPlayerMatcher $matcher,
         private readonly IdentityOverrides $overrides,
         private readonly IdentityRegistry $identities,
+        private readonly ClRecordSelector $clRecords,
     ) {
     }
 
@@ -82,9 +84,10 @@ final class SeasonBuilder
 
         $league = $this->merger->merge($this->records->payloads($top5Batch));
         $this->built = [];
-        $this->rejected = [];
-        $this->partialCl = [];
-        $cl = $this->primaryClRecords($this->records->payloads($clBatch));
+        $selection = $this->clRecords->select($this->records->payloads($clBatch));
+        $cl = $selection['records'];
+        $this->partialCl = $selection['partial'];
+        $this->rejected = $selection['rejected'];
         $this->manual = $this->overrides->sofascore();
         $matches = $this->matcher->match($league, $cl, $this->manual);
         // Linked records first: an unlinked record must never take a player this build matched exactly.
@@ -240,44 +243,6 @@ final class SeasonBuilder
         ));
 
         return $clOnly;
-    }
-
-    /**
-     * One CL record per player. Records without minutes are unusable. A player listed for
-     * two CL clubs (a transfer between CL clubs) keeps the club with the most minutes, and
-     * that record is marked partial: real numbers, but not the whole campaign.
-     *
-     * @param array<string, array<string, mixed>> $records external id => SofaScore record
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    private function primaryClRecords(array $records): array
-    {
-        $byPlayer = [];
-        foreach ($records as $externalId => $record) {
-            if (!isset($record['minutesPlayed'])) {
-                $this->rejected[] = "CL {$externalId}: {$record['player']['name']} has no minutes";
-                continue;
-            }
-            $byPlayer[$record['player']['id']][(string) $externalId] = $record;
-        }
-
-        $primary = [];
-        foreach ($byPlayer as $clubs) {
-            uasort($clubs, static fn (array $a, array $b) => $b['minutesPlayed'] <=> $a['minutesPlayed']);
-            $externalId = (string) array_key_first($clubs);
-            $primary[$externalId] = $clubs[$externalId];
-            if (count($clubs) > 1) {
-                $this->partialCl[$externalId] = sprintf(
-                    'one of %d CL clubs (%d of %d minutes)',
-                    count($clubs),
-                    $clubs[$externalId]['minutesPlayed'],
-                    array_sum(array_column($clubs, 'minutesPlayed')),
-                );
-            }
-        }
-
-        return $primary;
     }
 
     /**

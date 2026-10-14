@@ -8,6 +8,7 @@ use App\DataImport\Fotmob\FotmobClient;
 use App\DataImport\Identity\ClMatchResult;
 use App\DataImport\Identity\ClPlayerMatcher;
 use App\DataImport\Identity\IdentityOverrides;
+use App\DataImport\Sofascore\ClRecordSelector;
 use App\DataImport\Sofascore\SofascoreClient;
 use App\DataImport\Top5\Top5CsvReader;
 use App\Entity\ImportBatch;
@@ -52,6 +53,7 @@ final readonly class DataAudit
         private Top5StintMerger $merger,
         private ClPlayerMatcher $matcher,
         private IdentityOverrides $overrides,
+        private ClRecordSelector $clRecords,
     ) {
     }
 
@@ -66,7 +68,8 @@ final readonly class DataAudit
         $fotmobBatch = $this->batches->latest(FotmobClient::SOURCE, FotmobClient::DATASET, $season);
 
         $league = $this->merger->merge($this->records->payloads($top5Batch));
-        $clById = $this->records->payloads($clBatch);
+        // The records the season build uses (one per player, with minutes).
+        $clById = $this->clRecords->select($this->records->payloads($clBatch))['records'];
         $cl = array_values($clById);
         $matches = $this->matcher->match($league, $clById, $this->overrides->sofascore());
 
