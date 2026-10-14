@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\DataQuality;
 
+use App\DataImport\Top5\Top5CsvReader;
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
 use App\Football\Data\OriginCheck;
@@ -34,8 +35,7 @@ final class Top5StintMerger
     {
         $groups = [];
         foreach ($rows as $row) {
-            // Name + birth year identifies a player in this dataset.
-            $groups[$row['player'] . '|' . ($row['born'] !== '' ? (int) $row['born'] : $row['team'])][] = $row;
+            $groups[Top5CsvReader::playerKey($row)][] = $row;
         }
 
         // Split groups that cannot be one player.

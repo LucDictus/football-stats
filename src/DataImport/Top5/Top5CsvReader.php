@@ -86,11 +86,6 @@ final readonly class Top5CsvReader
                     continue;
                 }
                 $key = implode('|', [$row['player'], $row['born'], $row['team'], $row['league']]);
-                if (!is_numeric($row['playing_time_min'])) {
-                    // FBref minutes are the reference for every provider check; without them the row is unusable.
-                    $rejected[] = "line {$lineNumber}: {$key} has no minutes";
-                    continue;
-                }
                 if (isset($rows[$key])) {
                     $rejected[] = "line {$lineNumber}: duplicate of {$key}";
                     continue;
@@ -101,7 +96,32 @@ final readonly class Top5CsvReader
             fclose($fh);
         }
 
+        // FBref minutes are the reference for every provider check. A player with a stint
+        // without minutes is rejected as a whole: dropping one stint would undercount him.
+        $withoutMinutes = [];
+        foreach ($rows as $row) {
+            if (!is_numeric($row['playing_time_min'])) {
+                $withoutMinutes[self::playerKey($row)] = true;
+            }
+        }
+        foreach ($rows as $key => $row) {
+            if (isset($withoutMinutes[self::playerKey($row)])) {
+                $rejected[] = "{$key}: a stint of this player has no minutes";
+                unset($rows[$key]);
+            }
+        }
+
         return ['rows' => $rows, 'rejected' => $rejected];
+    }
+
+    /**
+     * Name + birth year identifies a player in this dataset (club when the birth year is unknown).
+     *
+     * @param array<string, string> $row
+     */
+    public static function playerKey(array $row): string
+    {
+        return $row['player'] . '|' . ($row['born'] !== '' ? (int) $row['born'] : $row['team']);
     }
 
     /** @return list<string> identity columns plus every league column in the field catalog */

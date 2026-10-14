@@ -30,11 +30,11 @@ final class Top5CsvReaderTest extends TestCase
     {
         $row = SourceFixtures::top5Row(['player' => 'A', 'team' => 'X']);
         $this->writeCsv(array_keys($row), [
-            array_values($row),
-            array_values(['season' => '2425'] + $row),     // other season: skipped, not rejected
-            array_values($row),                             // duplicate
+            $row,
+            ['season' => '2425'] + $row,     // other season: skipped, not rejected
+            $row,                            // duplicate
             ['too', 'few', 'columns'],
-            array_values(['player' => 'B'] + $row),
+            ['player' => 'B'] + $row,
         ]);
 
         $result = (new Top5CsvReader($this->directory))->read('2526');
@@ -45,11 +45,24 @@ final class Top5CsvReaderTest extends TestCase
         self::assertStringContainsString('3 columns', $result['rejected'][1]);
     }
 
+    public function testAPlayerWithAStintWithoutMinutesIsRejectedAsAWhole(): void
+    {
+        $arsenal = SourceFixtures::top5Row(['player' => 'A', 'team' => 'Arsenal', 'playing_time_min' => '1792']);
+        $leverkusen = SourceFixtures::top5Row(['player' => 'A', 'team' => 'Leverkusen', 'league' => 'GER-Bundesliga', 'playing_time_min' => '']);
+        $other = SourceFixtures::top5Row(['player' => 'B']);
+        $this->writeCsv(array_keys($arsenal), [$arsenal, $leverkusen, $other]);
+
+        $result = (new Top5CsvReader($this->directory))->read('2526');
+
+        self::assertSame(['B|1995|Club|ENG-Premier League'], array_keys($result['rows']));
+        self::assertCount(2, $result['rejected']);
+    }
+
     public function testFailsWhenTheDatasetLostAColumn(): void
     {
         $row = SourceFixtures::top5Row();
         unset($row['us_xg']);
-        $this->writeCsv(array_keys($row), [array_values($row)]);
+        $this->writeCsv(array_keys($row), [$row]);
 
         $this->expectExceptionMessage('us_xg');
         (new Top5CsvReader($this->directory))->read('2526');
@@ -62,16 +75,18 @@ final class Top5CsvReaderTest extends TestCase
     }
 
     /**
-     * @param list<string>       $header
-     * @param list<list<string>> $lines
+     * Rows keyed by column are written in header order; a plain list is written as is.
+     *
+     * @param list<string>                             $header
+     * @param list<array<string, string>|list<string>> $rows
      */
-    private function writeCsv(array $header, array $lines): void
+    private function writeCsv(array $header, array $rows): void
     {
         $fh = fopen($this->directory . '/data/master/player_seasons.csv', 'w');
         self::assertNotFalse($fh);
         fputcsv($fh, $header, escape: '');
-        foreach ($lines as $line) {
-            fputcsv($fh, $line, escape: '');
+        foreach ($rows as $row) {
+            fputcsv($fh, array_is_list($row) ? $row : array_map(static fn (string $column) => $row[$column], $header), escape: '');
         }
         fclose($fh);
     }

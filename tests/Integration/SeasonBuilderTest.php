@@ -143,15 +143,43 @@ final class SeasonBuilderTest extends KernelTestCase
         self::assertSame(4.0, $this->statsOf('Player B', StatsScope::ChampionsLeague)->value('goals'));
     }
 
-    public function testAPlayerWithTwoClRecordsKeepsOneAndReportsTheOther(): void
+    public function testPlayerListedForTwoClClubsKeepsTheMainClubMarkedPartial(): void
     {
         $this->importTop5([F::top5Row(['player' => 'Kylian Mbappé', 'born' => '1998', 'team' => 'Real Madrid', 'league' => 'ESP-La Liga', 'ss_player_id' => '826643.0'])]);
-        $this->importCl([F::sofascoreRecord(826643, 'Kylian Mbappé', 2829, 'Real Madrid'), F::sofascoreRecord(826643, 'Kylian Mbappé', 1, 'Other Club')]);
+        $this->importCl([
+            F::sofascoreRecord(826643, 'Kylian Mbappé', 1, 'Other Club', ['minutesPlayed' => 200, 'goals' => 1]),
+            F::sofascoreRecord(826643, 'Kylian Mbappé', 2829, 'Real Madrid', ['minutesPlayed' => 700, 'goals' => 8]),
+        ]);
 
         $result = $this->build();
+        $stats = $this->statsOf('Kylian Mbappé', StatsScope::ChampionsLeague);
 
-        self::assertCount(1, $result['rejected']);
-        self::assertStringContainsString('already has CL statistics', $result['rejected'][0]);
+        self::assertSame(1, $result['cl_partial']);
+        self::assertSame(8.0, $stats->value('goals'));
+        self::assertSame(OriginStatus::Partial, $stats->originStatus(Origin::Sofascore));
+        self::assertSame('one of 2 CL clubs (700 of 900 minutes)', $stats->originReason(Origin::Sofascore));
+        self::assertFalse($stats->trusted('goals'));
+    }
+
+    public function testExactIdMatchWinsOverALinkFromAnEarlierBuild(): void
+    {
+        // Build 1: CL record 900 is linked to P by name (P's league row has no SofaScore id).
+        $this->importTop5([F::top5Row(['player' => 'Pierre Højbjerg', 'born' => '1995', 'team' => 'Marseille', 'league' => 'FRA-Ligue 1'])]);
+        $this->importCl([F::sofascoreRecord(900, 'Pierre-Emile Højbjerg', 1641, 'Olympique de Marseille', ['goals' => 1])]);
+        $this->build();
+
+        // Build 2: P's league row now carries id 901, and SofaScore lists both 900 and 901.
+        $this->importTop5([F::top5Row(['player' => 'Pierre Højbjerg', 'born' => '1995', 'team' => 'Marseille', 'league' => 'FRA-Ligue 1', 'ss_player_id' => '901.0'])]);
+        $this->importCl([
+            F::sofascoreRecord(900, 'Pierre-Emile Højbjerg', 1641, 'Olympique de Marseille', ['goals' => 1]),
+            F::sofascoreRecord(901, 'Pierre-Emile Højbjerg', 1641, 'Olympique de Marseille', ['goals' => 9]),
+        ]);
+        $result = $this->build();
+
+        self::assertSame(9.0, $this->statsOf('Pierre Højbjerg', StatsScope::ChampionsLeague)->value('goals'));
+        self::assertSame([], $result['rejected']);
+        self::assertSame(1, $result['cl_only'], 'record 900 becomes a separate CL-only player');
+        self::assertCount(1, $result['relinked'], 'id 900 moves away from P');
     }
 
     public function testEmptyImportIsRefused(): void

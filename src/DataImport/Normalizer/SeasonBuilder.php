@@ -53,6 +53,9 @@ final class SeasonBuilder
     /** @var list<string> */
     private array $rejected = [];
 
+    /** @var array<string, string> CL external id => why its SofaScore record covers part of the campaign */
+    private array $partialCl = [];
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly ImportBatchRepository $batches,
@@ -78,11 +81,14 @@ final class SeasonBuilder
         }
 
         $league = $this->merger->merge($this->records->payloads($top5Batch));
-        $cl = $this->records->payloads($clBatch);
-        $this->manual = $this->overrides->sofascore();
-        $matches = $this->matcher->match($league, $cl, $this->manual);
         $this->built = [];
         $this->rejected = [];
+        $this->partialCl = [];
+        $cl = $this->primaryClRecords($this->records->payloads($clBatch));
+        $this->manual = $this->overrides->sofascore();
+        $matches = $this->matcher->match($league, $cl, $this->manual);
+        // Linked records first: an unlinked record must never take a player this build matched exactly.
+        uksort($cl, static fn ($a, $b) => ($matches->linkFor((string) $a) === null) <=> ($matches->linkFor((string) $b) === null));
 
         return $this->em->wrapInTransaction(function () use ($league, $cl, $matches, $top5Batch, $clBatch): array {
             $season = $this->season();
@@ -108,6 +114,7 @@ final class SeasonBuilder
                 'batches' => ['league' => $top5Batch->getId(), 'cl' => $clBatch->getId()],
                 'league_players' => count($league),
                 'cl_players' => count($cl),
+                'cl_partial' => count($this->partialCl),
                 'cl_linked' => count($matches->links),
                 'cl_only' => $clOnly,
                 'rejected' => $this->rejected,
@@ -182,36 +189,34 @@ final class SeasonBuilder
      * @param array<string, mixed>        $record  SofaScore CL record
      * @param array<string, PlayerSeason> $seasons league player key => built season
      *
-     * @return bool true when the player has Champions League data only
+     * @return bool true when a CL-only season was created
      */
     private function buildClSeason(string $externalId, array $record, Season $season, ImportBatch $batch, ClMatchResult $matches, array $seasons): bool
     {
-        if (!isset($record['minutesPlayed'])) {
-            $this->rejected[] = "CL {$externalId}: no minutes";
-
-            return false;
-        }
         $sofascoreId = (string) $record['player']['id'];
         $link = $matches->linkFor($externalId);
         $playerSeason = $link !== null ? $seasons[$link['player']->key] : null;
+        $player = $playerSeason?->getPlayer();
 
-        $player = $playerSeason?->getPlayer()
-            ?? $this->identities->player(SourceName::SOFASCORE, $sofascoreId)
-            ?? $this->identities->createPlayer($record['player']['name'], null, null);
-        // Not linked this time but known from an earlier build: keep the identity (and its season).
-        $playerSeason ??= $this->built[spl_object_id($player)] ?? null;
-        if ($playerSeason?->getStats(StatsScope::ChampionsLeague) !== null) {
-            $this->rejected[] = "CL {$externalId}: {$record['player']['name']} already has CL statistics (listed for two clubs?)";
-
-            return false;
+        if ($player === null) {
+            $known = $this->identities->player(SourceName::SOFASCORE, $sofascoreId);
+            $knownSeason = $known !== null ? ($this->built[spl_object_id($known)] ?? null) : null;
+            if ($known !== null && $knownSeason?->getStats(StatsScope::ChampionsLeague) === null) {
+                // Not linked this time, but known from an earlier build and still free: keep the identity.
+                $player = $known;
+                $playerSeason = $knownSeason;
+            } else {
+                // New, or the stored player now has another CL record (an exact match this build).
+                $player = $this->identities->createPlayer($record['player']['name'], null, null);
+            }
         }
         $this->identities->identifyPlayer($player, SourceName::SOFASCORE, $sofascoreId, $link['method'] ?? 'source id');
 
         $team = $this->clTeam($record['team'], $matches);
         $goalkeeper = $playerSeason?->isGoalkeeper() ?? SofascoreClient::looksLikeGoalkeeper($record);
 
+        $clOnly = $playerSeason === null;
         if ($playerSeason === null) {
-            // CL-only: the season holds CL statistics only.
             $playerSeason = new PlayerSeason($player, $season, null, $goalkeeper ? 'GK' : null, $team);
             $this->built[spl_object_id($player)] = $playerSeason;
             $this->em->persist($playerSeason);
@@ -219,6 +224,7 @@ final class SeasonBuilder
 
         [$values, $origins] = $this->clValues($record, $goalkeeper);
         $minutes = (float) $record['minutesPlayed'];
+        $partial = $this->partialCl[$externalId] ?? null;
         $playerSeason->addStats(new PlayerCompetitionStats(
             $playerSeason,
             StatsScope::ChampionsLeague,
@@ -226,10 +232,52 @@ final class SeasonBuilder
             $minutes,
             $values,
             $origins,
-            [Origin::Sofascore->value => ['status' => OriginStatus::Ok->value, 'minutes' => $minutes, 'reason' => null]],
+            [Origin::Sofascore->value => [
+                'status' => ($partial !== null ? OriginStatus::Partial : OriginStatus::Ok)->value,
+                'minutes' => $minutes,
+                'reason' => $partial,
+            ]],
         ));
 
-        return $link === null;
+        return $clOnly;
+    }
+
+    /**
+     * One CL record per player. Records without minutes are unusable. A player listed for
+     * two CL clubs (a transfer between CL clubs) keeps the club with the most minutes, and
+     * that record is marked partial: real numbers, but not the whole campaign.
+     *
+     * @param array<string, array<string, mixed>> $records external id => SofaScore record
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function primaryClRecords(array $records): array
+    {
+        $byPlayer = [];
+        foreach ($records as $externalId => $record) {
+            if (!isset($record['minutesPlayed'])) {
+                $this->rejected[] = "CL {$externalId}: {$record['player']['name']} has no minutes";
+                continue;
+            }
+            $byPlayer[$record['player']['id']][(string) $externalId] = $record;
+        }
+
+        $primary = [];
+        foreach ($byPlayer as $clubs) {
+            uasort($clubs, static fn (array $a, array $b) => $b['minutesPlayed'] <=> $a['minutesPlayed']);
+            $externalId = (string) array_key_first($clubs);
+            $primary[$externalId] = $clubs[$externalId];
+            if (count($clubs) > 1) {
+                $this->partialCl[$externalId] = sprintf(
+                    'one of %d CL clubs (%d of %d minutes)',
+                    count($clubs),
+                    $clubs[$externalId]['minutesPlayed'],
+                    array_sum(array_column($clubs, 'minutesPlayed')),
+                );
+            }
+        }
+
+        return $primary;
     }
 
     /**

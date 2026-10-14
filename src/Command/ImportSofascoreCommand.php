@@ -48,21 +48,10 @@ final class ImportSofascoreCommand extends Command
             $io->text(sprintf('%d pages saved in %s', $this->client->fetchSnapshot($tournament, $season, $snapshot), $snapshot));
         }
 
-        // One record per player: the build cannot combine a player listed for two CL clubs yet.
+        // Stored as delivered: the season build decides what to do with incomplete records.
         $payloads = [];
-        $players = [];
-        $rejected = [];
         foreach ($this->client->readSnapshot($snapshot) as $result) {
-            $playerId = $result['player']['id'];
-            $key = $playerId . '|' . $result['team']['id'];
-            if (!isset($result['minutesPlayed'])) {
-                $rejected[] = "{$key}: {$result['player']['name']} has no minutes";
-            } elseif (isset($players[$playerId])) {
-                $rejected[] = "{$key}: {$result['player']['name']} is also listed for another club";
-            } else {
-                $payloads[$key] = $result;
-                $players[$playerId] = true;
-            }
+            $payloads[$result['player']['id'] . '|' . $result['team']['id']] = $result;
         }
 
         $batch = $this->importer->import(
@@ -75,13 +64,9 @@ final class ImportSofascoreCommand extends Command
                 competitionCode: 'CL',
             ),
             $payloads,
-            count($rejected),
-            ['fields' => SofascoreClient::FIELDS, 'snapshot' => basename($snapshot), 'rejected' => $rejected],
+            notes: ['fields' => SofascoreClient::FIELDS, 'snapshot' => basename($snapshot)],
         );
 
-        if ($rejected !== []) {
-            $io->warning(['Rejected records:', ...$rejected]);
-        }
         $io->success(sprintf('Batch #%d: %d Champions League players.', $batch->getId(), $batch->getRecordCount()));
 
         return Command::SUCCESS;

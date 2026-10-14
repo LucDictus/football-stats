@@ -14,8 +14,8 @@ What the imported data can and cannot tell the model. Every number below is meas
 
 | Source | Dataset | Competitions | Records | Rejected | Version | Imported |
 |---|---|---|---:|---:|---|---|
-| [top5-football-dataset](https://github.com/m-mahadi/top5-football-dataset) | player_seasons | PL,PD,SA,BL1,FL1 | 2,839 | 0 | `8940299c2c` | 2026-10-14 (batch #4) |
-| [sofascore](https://api.sofascore.com/api/v1/unique-tournament/7/season/76953/statistics) | player_season_statistics | CL | 878 | 0 | – | 2026-10-14 (batch #5) |
+| [top5-football-dataset](https://github.com/m-mahadi/top5-football-dataset) | player_seasons | PL,PD,SA,BL1,FL1 | 2,839 | 0 | `8940299c2c` | 2026-10-14 (batch #6) |
+| [sofascore](https://api.sofascore.com/api/v1/unique-tournament/7/season/76953/statistics) | player_season_statistics | CL | 878 | 0 | – | 2026-10-14 (batch #7) |
 | [fotmob](https://data.fotmob.com/stats/42/season/28184/{stat}.json) | player_stat_lists | CL | 1,441 | 0 | – | 2026-10-14 (batch #3) |
 
 League data: 2,839 stint rows → **2,691 players** (148 transferred during the season), **1,598 with 900+ minutes** (114 goalkeepers).

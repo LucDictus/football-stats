@@ -28,7 +28,7 @@ final class BuildSeasonCommand extends Command
             ['Season' => $result['season']],
             ['Batches used' => sprintf('league #%d, CL #%d', $result['batches']['league'], $result['batches']['cl'])],
             ['League players' => $result['league_players']],
-            ['CL players' => sprintf('%d (%d linked to a league player, %d CL only)', $result['cl_players'], $result['cl_linked'], $result['cl_only'])],
+            ['CL players' => sprintf('%d (%d linked to a league player, %d CL only, %d for two CL clubs)', $result['cl_players'], $result['cl_linked'], $result['cl_only'], $result['cl_partial'])],
             ['New players' => $result['players_created']],
             ['New teams' => $result['teams_created']],
             ['New identifiers' => $result['identifiers_added']],
