@@ -63,9 +63,17 @@
 }
 
 .strength {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
   font-size: 13px;
   color: var(--text-2);
   white-space: nowrap;
+}
+
+/* Long measure names shorten; the score stays visible. */
+.strengthLabel {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }

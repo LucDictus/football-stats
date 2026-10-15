@@ -37,6 +37,10 @@ League data: 2,839 stint rows → **2,691 players** (148 transferred during the 
 | Assists | FBref `fb_ast` | 100% | 100% |  | 0 / 636 | use; CL: use |  |
 | Shots | FBref `fb_sh` | 100% | 100% |  | 0 / 636 | use; CL: use |  |
 | Shots on target | FBref `fb_sot` | 100% | 100% |  | 0 / 636 | use; CL: use |  |
+| Big chances missed | SofaScore `ss_bigChancesMissed` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Penalties won | SofaScore `ss_penaltyWon` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Fouls won | SofaScore `ss_wasFouled` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Offsides | SofaScore `ss_offsides` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | **Attacking quality** | | | | | | | |
 | Expected goals (xG) | Understat `us_xg` | 94.4% | 92.3% | 27 | 87 / 636 | use, handle missing; CL: handle missing | League xG/xA is Understat's model, CL xG/xA is SofaScore's: different models, not directly addable |
 | Non-penalty xG | Understat `us_np_xg` | 94.4% | 92.3% | 27 | – | use, handle missing; no CL source |  |
@@ -55,6 +59,18 @@ League data: 2,839 stint rows → **2,691 players** (148 transferred during the 
 | Pass accuracy % | SofaScore `ss_accuratePassesPercentage` | 96.6% | 93.8% | 38 | 0 / 636 | use, handle missing; CL: use |  |
 | Accurate crosses | SofaScore `ss_accurateCrosses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | Successful dribbles | SofaScore `ss_successfulDribbles` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Dribble attempts | SofaScore `ss_totalContest` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Crosses | SofaScore `ss_totalCross` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Passes | SofaScore `ss_totalPasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Inaccurate passes | SofaScore `ss_inaccuratePasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Accurate passes in own half | SofaScore `ss_accurateOwnHalfPasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Accurate passes in the opposition half | SofaScore `ss_accurateOppositionHalfPasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Accurate long balls | SofaScore `ss_accurateLongBalls` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Long balls | SofaScore `ss_totalLongBalls` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Accurate chipped passes | SofaScore `ss_accurateChippedPasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Touches | SofaScore `ss_touches` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Dispossessed | SofaScore `ss_dispossessed` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Possession lost | SofaScore `ss_possessionLost` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | **Defending** | | | | | | | |
 | Tackles | SofaScore `ss_tackles` | 96.6% | 93.8% | 38 | 0 / 636 | use, handle missing; CL: use |  |
 | Tackles won | SofaScore `ss_tacklesWon` | 96.6% | 93.8% | 38 | 0 / 636 | use, handle missing; CL: use |  |
@@ -65,7 +81,16 @@ League data: 2,839 stint rows → **2,691 players** (148 transferred during the 
 | Possession won in the attacking third | SofaScore `ss_possessionWonAttThird` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | Aerial duels won | SofaScore `ss_aerialDuelsWon` | 96.6% | 93.8% | 38 | 0 / 636 | use, handle missing; CL: use |  |
 | Aerial duels lost | SofaScore `ss_aerialLost` | 96.6% | 93.8% | 38 | 0 / 636 | use, handle missing; CL: use |  |
+| Ground duels won | SofaScore `ss_groundDuelsWon` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Duels lost | SofaScore `ss_duelLost` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source | Ground and aerial |
+| Dribbled past | SofaScore `ss_dribbledPast` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Fouls committed | SofaScore `ss_fouls` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Penalties conceded | SofaScore `ss_penaltyConceded` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Own goals | SofaScore `ss_ownGoals` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Yellow cards | SofaScore `ss_yellowCards` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Red cards | SofaScore `ss_redCards` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | Errors leading to goal | SofaScore `ss_errorLeadToGoal` | 96.6% | 93.8% | 38 | 0 / 636 | use, handle missing; CL: use |  |
+| Errors leading to shot | SofaScore `ss_errorLeadToShot` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | Aerial duels won % | derived | 77.1% | 76.3% | 8 | – | caution; CL: derived the same way | won / (won + lost), at least 20 duels |
 | Tackle success % | derived | 75% | 74.3% | 8 | – | caution; CL: derived the same way | tackles won / tackles, at least 15 tackles |
 | **Goalkeeping** | | | | | | | |
@@ -74,6 +99,16 @@ League data: 2,839 stint rows → **2,691 players** (148 transferred during the 
 | Save % | derived | 99.1% | 99.1% |  | – | use; CL: derived the same way | saves / (saves + goals conceded) |
 | Goals prevented | SofaScore `ss_goalsPrevented` | 99.1% | 99.1% |  | 0 / 55 | use; CL: use | SofaScore post-shot model |
 | Clean sheets | SofaScore `ss_cleanSheet` | 99.1% | 99.1% |  | 0 / 55 | use; CL: use | Mostly a team outcome |
+| Punches | SofaScore `ss_punches` | 99.1% | 99.1% |  | – | use; no CL source |  |
+| High claims | SofaScore `ss_highClaims` | 99.1% | 99.1% |  | – | use; no CL source |  |
+| Crosses not claimed | SofaScore `ss_crossesNotClaimed` | 99.1% | 99.1% |  | – | use; no CL source |  |
+| Runs out | SofaScore `ss_runsOut` | 99.1% | 99.1% |  | – | use; no CL source |  |
+| Successful runs out | SofaScore `ss_successfulRunsOut` | 99.1% | 99.1% |  | – | use; no CL source |  |
+| Penalties faced | SofaScore `ss_penaltyFaced` | 99.1% | 99.1% |  | – | use; no CL source |  |
+| Penalty saves | SofaScore `ss_penaltySave` | 99.1% | 99.1% |  | – | use; no CL source |  |
+| **Physical** | | | | | | | |
+| Distance covered (km) | SofaScore `ss_kilometersCovered` | 96.2% | 93.6% | 37 | – | use, handle missing; no CL source |  |
+| Sprints | SofaScore `ss_numberOfSprints` | 96.2% | 93.6% | 37 | – | use, handle missing; no CL source |  |
 
 **Not available from any free source:**
 

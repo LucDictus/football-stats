@@ -76,16 +76,21 @@ final class RoleInference
         }
     }
 
-    /** The nearest compatible role, or the group's default when the statistics cannot tell. */
-    public function infer(?string $group, ?PlayerCompetitionStats $stats): ?string
+    /**
+     * The nearest compatible role, or the group's default when the statistics cannot tell.
+     *
+     * @return array{0: string, 1: string}|null role and source (RoleCatalog::SOURCE_INFERRED or SOURCE_DEFAULT)
+     */
+    public function infer(?string $group, ?PlayerCompetitionStats $stats): ?array
     {
-        $default = self::DEFAULT_ROLES[$group] ?? null;
+        $default = isset(self::DEFAULT_ROLES[$group]) ? [self::DEFAULT_ROLES[$group], RoleCatalog::SOURCE_DEFAULT] : null;
         $profile = $stats !== null ? self::raw($stats) : null;
         if ($group === null || $profile === null || $this->centroids === []) {
             return $default;
         }
+        $role = $this->nearest($this->standardise($profile), RoleCatalog::rolesFor($group), null);
 
-        return $this->nearest($this->standardise($profile), RoleCatalog::rolesFor($group), null) ?? $default;
+        return $role !== null ? [$role, RoleCatalog::SOURCE_INFERRED] : $default;
     }
 
     /**

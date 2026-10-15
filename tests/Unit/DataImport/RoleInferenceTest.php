@@ -20,18 +20,18 @@ final class RoleInferenceTest extends TestCase
     {
         $inference = new RoleInference($this->labelled());
 
-        self::assertSame('CB', $inference->infer('DF', $this->stats(clearances: 6.0, dribbles: 0.2)));
-        self::assertSame('W', $inference->infer('MF', $this->stats(clearances: 0.3, dribbles: 3.0)));
+        self::assertSame(['CB', 'inferred'], $inference->infer('DF', $this->stats(clearances: 6.0, dribbles: 0.2)));
+        self::assertSame(['W', 'inferred'], $inference->infer('MF', $this->stats(clearances: 0.3, dribbles: 3.0)));
         // A defender who dribbles like a winger is still only one of the defensive roles.
-        self::assertSame('CB', $inference->infer('DF', $this->stats(clearances: 0.3, dribbles: 3.0)));
+        self::assertSame(['CB', 'inferred'], $inference->infer('DF', $this->stats(clearances: 0.3, dribbles: 3.0)));
     }
 
     public function testWithoutStatisticsTheGroupsMostCommonRoleIsUsed(): void
     {
         $inference = new RoleInference($this->labelled());
 
-        self::assertSame('CM', $inference->infer('MF', null));
-        self::assertSame('ST', $inference->infer('FW', $this->stats(clearances: 1.0, dribbles: 1.0, minutes: 300.0)), 'too few minutes for per-90 rates');
+        self::assertSame(['CM', 'default'], $inference->infer('MF', null), 'no statistics: a default, not an inference');
+        self::assertSame(['ST', 'default'], $inference->infer('FW', $this->stats(clearances: 1.0, dribbles: 1.0, minutes: 300.0)), 'too few minutes for per-90 rates');
         self::assertNull($inference->infer(null, null));
     }
 

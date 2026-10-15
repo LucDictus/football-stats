@@ -15,77 +15,179 @@ batches its statistics came from, so any published ranking can be explained and 
 
 ## mvp-v3 (roadmap phase 5, release candidate, the current model)
 
-**As mvp-v2, but every player is compared with his own role (striker, winger, attacking,
-central or defensive midfielder, full-back, centre-back, goalkeeper) instead of a broad
-position group, on components that fit the role, and against a replacement-level player of
-that role.**
+**A player's score = 50% positional excellence + 50% contribution in goals. Positional excellence
+compares him with the other players in his role, on the statistics that the data shows matter for
+that role, weighted by how much they matter. No component or weight in that half is chosen by hand.**
 
-### Why
+### How a score is built
 
-"Midfielder" (the source's position group) covered wingers, playmakers and holding
-midfielders: one comparison group, one set of components, one replacement level. Wingers and
-attacking midfielders stood out against holding midfielders, and holding midfielders were
-measured on chance creation they are not asked to provide.
+1. **Role.** Every player has one of eight roles: striker, winger, attacking midfielder, central
+   midfielder, defensive midfielder, full-back, centre-back, goalkeeper (see *Roles* below).
+2. **Positional excellence** (50%): how far he stands above the others in his role on the role's
+   standards, as a score where 50 is the role's average and every 10 points is one standard
+   deviation.
+3. **Contribution** (50%): the goals he added above a replacement-level player of his role, in
+   the same unit for every role (see mvp-v1 and mvp-v2 below).
+4. Final score = 50% × positional + 50% × contribution score. Exceptional seasons can pass 100.
+
+### The positional standards: how a statistic earns points
+
+The question for every role: *which statistics show that a player is good at this role, and how
+much should each count?* The answer is measured on two full seasons (2024/25 and 2025/26, about
+2,700 players a season), with one principle: **a statistic counts when the players who do more of
+it play in teams that win, and when it is a stable trait of the player rather than luck.** Football
+is won by goal difference; possession is taken into account so that a team's style is not mistaken
+for quality.
+
+For each role, every statistic in the data with a clear direction (58 candidates: goals, xG,
+passes, duels, tackles, saves and so on; failures like errors, lost duels and cards count against)
+goes through the same steps:
+
+| Step | What happens | Why |
+|---|---|---|
+| 1. Per 90 or as a rate | Counts per 90 minutes, successes as a share of attempts | Compare players with different playing time |
+| 2. Small samples | Pulled toward the role average, the more the fewer matches (or attempts) the number rests on. How strongly comes from the data: a statistic that repeats less between seasons is pulled more | 3 goals in 2 matches is not a 135-goal season |
+| 3. Square-root scale (counts) | The standard variance-stabilising transform for counts | A few extreme values must not dominate |
+| 4. Possession | The part that the team's possession explains is removed, from the statistic and from the team's results | A team with the ball passes more, one without defends more: style, not quality |
+| 5. Link with winning | Correlation with the team's goal difference per match. **Used only if positive and significant in each season on its own** | A link that does not replicate is likely chance |
+| 6. Repeatability | Correlation for the same players between the two seasons | What repeats measures the player; what does not is mostly luck |
+| 7. Counted once | Statistics that correlate 0.8 or more become one measure (their average) | Key passes and big chances created measure nearly the same thing |
+| 8. Weight | Link with winning × repeatability, scaled to 100% per role | A measure counts as much as it goes with winning *and* is the player's own doing |
+
+The measures a player is then scored on, per role (weights rounded; the full tables, with every
+statistic, the numbers behind each decision and the reason a statistic is not used, are in
+[standards.md](standards.md)):
+
+| Role | Measures (weight) |
+|---|---|
+| Strikers | passes in the opposition half · final third 18%, key passes 15%, non-penalty xG 14%, shots on target 12%, xA · big chances created 11%, non-penalty goals 11%, possession won in the attacking third 8%, xGBuildup 8%, assists 2% |
+| Wingers | non-penalty xG 21%, accurate final-third passes 15%, shots on target 13%, non-penalty goals 12%, xA · big chances created 12%, xGBuildup 11%, key passes 9%, assists 4%, penalties won 3% |
+| Attacking midfielders | xA · big chances created 24%, non-penalty xG 23%, shots on target 17%, non-penalty goals 15%, possession won in the attacking third 13%, assists 9% |
+| Central midfielders | passes in the opposition half · final third 65%, xGBuildup 35% |
+| Defensive midfielders | passes in the opposition half · final third 31%, xA · key passes · big chances created 19%, assists 15%, shots on target 13%, possession won in the attacking third 9%, xGBuildup 6%, fewer errors leading to a shot 4%, shots on target % 2%, non-penalty goals 2% |
+| Full-backs | passes in the opposition half · final third 29%, non-penalty xG 17%, aerial duels won % 14%, xA · big chances created 13%, possession won in the attacking third 10%, assists 9%, xGBuildup 8% |
+| Centre-backs | xGBuildup 26%, passes in the opposition half · final third 24%, aerial duels won 17%, non-penalty xG 10%, shots on target 7%, big chances created 6%, non-penalty goals 5%, assists 4% |
+| Goalkeepers | xGBuildup 100% |
+
+(Exact weights per role: [standards.md](standards.md), section *How a … earns points*.)
+
+**What the data showed:**
+
+- **Defensive action counts do not go with winning.** Tackles, interceptions, clearances, blocks
+  and recoveries have no replicated link with team results in any role, with possession taken
+  into account; clearances mostly lean negative. They measure how much defending a team has to do, not
+  how well. Of the duels, only aerial duels (centre-backs: duels won; full-backs: win rate)
+  qualify. How well a team defends counts in the contribution half (its goals conceded against
+  the league).
+- **Progressive passing goes with winning in every outfield role**: passes into the opposition
+  half and the final third, and involvement in build-up (xGBuildup). For central midfielders it
+  is all that qualifies.
+- **Strikers are measured on link-up as much as on finishing.** Strikers who combine (key passes,
+  passes into the final third) play in winning teams as much as strikers who shoot and score.
+  A pure finisher is therefore an average striker in the positional half: Haaland's positional
+  score is 50.1, and his contribution (100.7, the goals he added) carries him to #15.
+- **Goalkeepers: only build-up qualifies.** Goals prevented has a positive link with winning in
+  both seasons (0.32 and 0.13) but not significant in the second (112 goalkeepers); it repeats
+  only 0.13 between seasons, so over one season it is mostly luck. A goalkeeper's shot stopping
+  counts once: in the contribution, as goals prevented, shrunk for luck.
+- **Finishing outcomes repeat less than the chances behind them**: npxG repeats more than
+  non-penalty goals in every attacking role, so it weighs more.
+
+**Validation** (standards derived from 2024/25 alone, tested on 2025/26; [standards.md](standards.md)):
+the standards rate the same players most consistently between seasons (repeatability 0.59, against
+0.48 to 0.53 for equal weights, all candidates equally, or link with winning only). For predicting
+next season's team results they are level with the alternatives (r 0.34 to 0.38 over 82 teams; such
+differences are within chance).
+
+### Worked example: Harry Kane (striker, run #19)
+
+| Measure | Weight | His value per 90 | After small-sample pull | His score (50 = average striker) |
+|---|---|---|---|---|
+| Passes in the opposition half · final third | 18% | 15.0 · 10.2 | 14.5 · 9.6 | 55.2 |
+| Key passes | 15% | 1.51 | 1.36 | 56.6 |
+| Non-penalty xG | 14% | 0.80 | 0.66 | 64.4 |
+| Shots on target | 12% | 2.54 | 2.07 | 79.3 |
+| xA · big chances created | 11% | 0.28 · 0.68 | 0.22 · 0.43 | 74.4 |
+| Non-penalty goals | 11% | 0.98 | 0.71 | 77.6 |
+| Possession won in the attacking third | 8% | 0.57 | 0.55 | 49.2 |
+| xGBuildup | 8% | 0.40 | 0.29 | 73.2 |
+| Assists | 2% | 0.19 | 0.13 | 53.5 |
+
+His measure scores, weighted, average 65.2; compared with all strikers' averages that is 76.9 on
+the positional scale (each role's averages are standardised again, so every role spreads the
+same). His contribution score is 110.9. Final: 50% × 76.9 + 50% × 110.9 = **93.9**, #3. (Bayern
+have the most possession in the Bundesliga, so his passing and xG are adjusted down a little
+before scoring.)
+
+### What is still a convention
+
+The positional standards contain no hand-picked statistics or weights. These choices remain, each
+the same for every role and documented:
+
+- Statistical conventions: 900+ league minutes to be ranked, significance at 5%, "the same thing"
+  at correlation 0.8, a square-root scale for counts, 80% coverage for a statistic to be tested.
+- Which statistics are candidates: by their definition (successes for, failures against; volumes
+  of attempts, sums of other statistics and team outcomes left out; [standards.md](standards.md)
+  lists every exclusion with its reason).
+- The 50/50 blend of positional excellence and contribution.
+- The contribution model's parameters (mvp-v1, mvp-v2): the 50/30/20 split of a chance between
+  shooter, passer and build-up, the shrinkage of finishing and goalkeeping, the 20th-percentile
+  replacement level, one goal per error leading to a goal.
 
 ### Roles
 
 Roles come from the EA SPORTS FC positions in the Top-5 dataset (details in
-[data-model.md](data-model.md#roles)). 1,415 of the 1,522 ranked players have one; the other
-107 (about 1 in 14) are inferred from their statistics: the role whose typical profile is
-nearest. That inference is right for 68% of labelled players with 900+ minutes (872 of
-1,286, each left out of the profiles in turn). Its misses are between roles that overlap:
-attacking midfielder ↔ winger, central ↔ defensive midfielder; a k-nearest-neighbours
-classifier did no better (65–68%). The player page says when a role was inferred.
+[data-model.md](data-model.md#roles)): the club line-up position, otherwise the best position; a
+wide midfielder in the line-up whose best position is full-back is a wing-back in a back three,
+so a full-back; and the role must suit the source's position group (a winger listed as a defender
+is a full-back; a role the group cannot play is inferred instead). Players without an EA FC
+position get the role whose typical statistical profile is nearest. That inference is right for
+68% of labelled players with 900+ minutes (872 of 1,292, each left out in turn), against 47% for
+simply giving each group its most common role; its misses are between roles that overlap
+(attacking midfielder ↔ winger, central ↔ defensive midfielder). Players with too few statistics
+to infer from get the group's most common role, labelled *default*. The player page says where a
+role came from.
 
-| Role | Components (weight) |
-|---|---|
-| Strikers | attacking output 35%, attacking quality 30%, link-up 10%, pressing 5%, availability 20% |
-| Wingers | chance creation 25%, attacking output 20%, ball carrying 15%, attacking quality 10%, pressing 10%, availability 20% |
-| Attacking midfielders | chance creation 30%, attacking output 20%, build-up 15%, ball carrying 10%, pressing 5%, availability 20% |
-| Central midfielders | build-up 30%, defending 20%, chance creation 15%, attacking output 15%, availability 20% |
-| Defensive midfielders | defending 30%, build-up 30%, duel success 10%, chance creation 10%, availability 20% |
-| Full-backs | defensive actions 20%, wide creation (key passes, accurate crosses, xA) 20%, duel success 15%, build-up 15%, ball carrying 10%, availability 20% |
-| Centre-backs | defensive actions 25%, duel success 25%, build-up 20%, attacking threat 10%, availability 20% |
-| Goalkeepers | as mvp-v2: shot stopping 50%, distribution 15%, reliability 10%, availability 25% |
+### Result (run #19)
 
-New statistics (SofaScore, league only): successful dribbles (ball carrying), accurate crosses
-(wide creation), possession won in the attacking third (pressing, possession-adjusted like
-the other defensive counts; `app:score` prints the fit per role). The weights are judgement
-calls, like those of every earlier model.
+Top 10: Olise (W), Dimarco (FB), Kane (ST), Undav (AM), Yamal (W), Lautaro Martínez (ST),
+Mbappé (ST), Luis Díaz (W), Guéhi (CB), Schlotterbeck (CB). Best per role: winger Olise #1,
+full-back Dimarco #2, striker Kane #3, attacking midfielder Undav #4, centre-back Guéhi #9,
+defensive midfielder Rice #12, central midfielder Aleix García #34, goalkeeper Joan García #35.
 
-### Result (run #16)
+| Role | Ranked | In the top 100 | Share of the role |
+|---|---|---|---|
+| Strikers | 186 | 13 | 7.0% |
+| Wingers | 193 | 17 | 8.8% |
+| Attacking midfielders | 148 | 13 | 8.8% |
+| Central midfielders | 168 | 8 | 4.8% |
+| Defensive midfielders | 150 | 9 | 6.0% |
+| Full-backs | 250 | 11 | 4.4% |
+| Centre-backs | 322 | 27 | 8.4% |
+| Goalkeepers | 114 | 2 | 1.8% |
 
-| | mvp-v2 (run #14) | mvp-v3 (run #16) |
-|---|---|---|
-| Top 10 | 5 FW, 5 MF | 4 strikers, 4 wingers, 1 attacking midfielder, 1 full-back |
-| Top 100 attackers (ST + W) / midfielders (AM + CM + DM) | – | 34 / 28 |
-| Best per role | | W Olise #1, ST Kane #2, FB Dimarco #5, AM Bruno Fernandes #8, DM Kimmich #12, CB Orban #14, CM Baumgartner #19, GK Nübel #33 |
-
-Top 100 per role (share of the role's ranked players): strikers 19 (10.2%), wingers 15 (7.8%),
-central midfielders 13 (7.6%), attacking midfielders 9 (6.3%), centre-backs 20 (6.1%),
-goalkeepers 6 (5.3%), full-backs 12 (4.9%), defensive midfielders 6 (4.2%).
-
-- **Holding midfielders rise**, measured on defending and build-up and no longer against
-  playmakers: Tchouaméni #205 → #61, Elliot Anderson #162 → #59.
-- **Attacking midfielders fall**: their replacement level is now that of attacking
-  midfielders (0.126 goals per 90), not of all midfielders (0.068), and their positional peers
-  are the other playmakers: Wirtz #81 → #185, Bellingham #73 → #156, Enzo Fernández #16 → #102.
-- **Replacement level per 90 by role**: strikers 0.159, attacking midfielders 0.126, wingers
-  0.119, central midfielders 0.063, defensive midfielders and full-backs 0.040, centre-backs
-  −0.004, goalkeepers −0.008. A goal above replacement is still a goal in every role.
-- Overlap report: [overlap-mvp-v3.md](overlap-mvp-v3.md).
+The top 100 holds 30 attackers (strikers, wingers), 30 midfielders and 38 defenders. Compared with
+mvp-v2 (run #14): players whose quality the old hand-picked components missed rise (Ginter #229 →
+#52, Hakimi #185 → #41, Saka #156 → #38); attacking and central midfielders whose numbers were
+mainly volume fall (Fornals #27 → #294, Enzo Fernández #16 → #212, Baumgartner #26 → #205).
 
 ### Known limitations of mvp-v3
 
-- **Roles come from a video game's position data.** EA SPORTS FC positions are curated and
-  updated for the season, but they are a label, not a measurement of where a player played;
-  a player who changed role mid-season keeps one role.
-- **Inferred roles are right two times in three**; about 1 in 14 ranked players has one.
-  Vinícius Júnior, for example, has no EA FC position and is inferred as an attacking
-  midfielder.
-- **Smaller comparison groups** (143 to 327 ranked players per role instead of 113 to 683 per
-  group) make each role's average and replacement level a little less stable.
-- The limitations of mvp-v2 below still apply.
+- **Winning is the yardstick, and good players play for good teams.** Possession is taken into
+  account, team strength itself is not (it cannot be separated from the players' quality with
+  season totals). Statistics that go with winning partly reflect the team around the player.
+- **No measure of defensive quality exists in this data** beyond aerial duels: defensive action
+  counts do not go with winning, and goals conceded with a player on and off the pitch does not
+  repeat between seasons (0.0 to 0.2). Defending counts through the team's results in the
+  contribution half.
+- **Goalkeepers are rated on build-up in the positional half**, and their shot stopping in the
+  contribution; only 2 make the top 100.
+- **Roles from a video game's position data**: curated for the season, but a label, not a
+  measurement; inferred roles are right two times in three, and EA FC data is missing for a
+  quarter of La Liga rows (name matching in the dataset), so most inferred roles are there.
+- **Two seasons**: the standards will be derived again as more seasons arrive (a new standards id
+  and model version).
+- The limitations of mvp-v2 below still apply, apart from what is listed here.
 
 ## mvp-v2 (roadmap phase 5, released)
 

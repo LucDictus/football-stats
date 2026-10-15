@@ -49,6 +49,8 @@ final readonly class ScoringModel
          * everywhere: comparison, replacement level, possession fit.
          */
         public bool $byRole = false,
+        /** Id of the data-derived standards the role components come from (config/standards/<id>.json). */
+        public ?string $standards = null,
     ) {
         if (($impact === null) !== ($impactWeight === 0.0) || $impactWeight < 0 || $impactWeight > 1) {
             throw new \InvalidArgumentException("Model {$key}-v{$version}: an impact model needs a weight between 0 and 1, and a weight needs an impact model");
@@ -101,7 +103,8 @@ final readonly class ScoringModel
             + ($this->referenceRankedOnly ? ['reference' => 'ranked players'] : [])
             + ($this->zCap !== null ? ['z_cap' => $this->zCap] : [])
             + ($this->impact !== null ? ['impact' => $this->impact->toArray() + ['weight' => $this->impactWeight]] : [])
-            + ($this->byRole ? ['grouping' => 'role'] : []);
+            + ($this->byRole ? ['grouping' => 'role'] : [])
+            + ($this->standards !== null ? ['standards' => $this->standards] : []);
     }
 
     /**

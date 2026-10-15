@@ -10,6 +10,7 @@ use App\Entity\ScoreRun;
 use App\Entity\Season;
 use App\Football\Scoring\ModelCatalog;
 use App\Football\Scoring\ScoreRunner;
+use App\Football\Standards\StandardsFile;
 use App\Tests\Support\PipelineTrait;
 use App\Tests\Support\SourceFixtures as F;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -73,7 +74,7 @@ final class ApiTest extends WebTestCase
     {
         // No EA SPORTS FC positions in the fixtures, and nothing to infer from: the group's most common role.
         $pedri = $this->getJson('/api/players/' . $this->playerId('Pedri'));
-        self::assertSame(['MF', 'CM', 'inferred'], [$pedri['season']['position_group'], $pedri['season']['role'], $pedri['season']['role_source']]);
+        self::assertSame(['MF', 'CM', 'default'], [$pedri['season']['position_group'], $pedri['season']['role'], $pedri['season']['role_source']]);
         self::assertSame('CM', $pedri['score']['role']);
 
         self::assertSame(['Pedri'], array_map(static fn ($r) => $r['player']['name'], $this->getJson('/api/rankings?model=mvp-v3&position=CM')['rows']));
@@ -105,7 +106,9 @@ final class ApiTest extends WebTestCase
 
         self::assertSame('GK', $data['score']['role']);
         self::assertSame('standard', $data['score']['normalization']);
-        self::assertSame(['shot_stopping', 'distribution', 'reliability', 'availability'], array_column($data['score']['components'], 'key'));
+        // The default model's goalkeeper components are the measures derived for goalkeepers.
+        $standards = StandardsFile::read(self::getContainer()->getParameter('kernel.project_dir') . '/config/standards/standards-v1.json');
+        self::assertSame(array_column($standards['roles']['GK']['measures'], 'key'), array_column($data['score']['components'], 'key'));
         self::assertSame(3, $this->getJson('/api/rankings')['total'], 'the default model ranks every position');
     }
 

@@ -6,7 +6,7 @@ Every score should be explainable from data, rules and evidence.
 
 - Data coverage report (what the data can and cannot tell): [docs/data-coverage.md](docs/data-coverage.md)
 - New to the code? Start with [docs/onboarding.md](docs/onboarding.md)
-- How scores are made: [docs/methodology.md](docs/methodology.md); what drives them per position: [docs/overlap-mvp-v3.md](docs/overlap-mvp-v3.md) (generated per model)
+- How scores are made: [docs/methodology.md](docs/methodology.md); the data-derived standards per role: [docs/standards.md](docs/standards.md) (generated); what drives the score per position: [docs/overlap-mvp-v3.md](docs/overlap-mvp-v3.md) (generated per model)
 - Data model and identity rules: [docs/data-model.md](docs/data-model.md)
 - Baseline code and data audit: [docs/audit.md](docs/audit.md)
 - Stack: Symfony 7.4 LTS, Doctrine ORM, PostgreSQL 16, PHPUnit; React 19 + TypeScript + Vite frontend
@@ -38,6 +38,7 @@ php bin/console app:import:sofascore-cl    # needs the curl binary (SofaScore bl
 php bin/console app:import:fotmob-cl
 php bin/console app:data:audit             # writes docs/data-coverage.md
 php bin/console app:build-season           # players, teams, season stats (safe to re-run)
+php bin/console app:standards:derive       # positional standards from two seasons → config/standards/, docs/standards.md
 php bin/console app:score                  # ranking with the default model (mvp-v3), stored as a score run
 php bin/console app:analyse:overlap        # writes docs/overlap-<model>.md: what drives the score per position
 php -S 127.0.0.1:8010 -t public            # API + data inspector: http://127.0.0.1:8010
@@ -68,7 +69,7 @@ src/
   DataQuality/   stint merging, provider consistency checks, data audit
   Entity/        raw layer and domain model (see docs/data-model.md)
   Api/           JSON presenters for the API
-  Football/      assessment scope, field catalog, scoring models and engine, model analysis
+  Football/      assessment scope, field catalog, scoring models and engine, standards, model analysis
   Inspector/     read-only SQL for the inspector pages
   Repository/    Doctrine repositories
 tests/           Unit/ (pure logic), Integration/ (pipeline on the test DB), Functional/ (HTTP)

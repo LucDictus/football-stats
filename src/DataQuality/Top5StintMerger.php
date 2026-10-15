@@ -69,6 +69,26 @@ final class Top5StintMerger
     }
 
     /**
+     * The EA SPORTS FC role from the first stint (most minutes first) that has a position: after a
+     * transfer the dataset sometimes has it on one club's row only.
+     *
+     * @param list<array<string, string>> $stints
+     *
+     * @return array{0: string, 1: string}|null
+     */
+    private static function eaFcRole(array $stints): ?array
+    {
+        foreach ($stints as $stint) {
+            $role = RoleCatalog::fromEaFc(($stint['fifa_club_position'] ?? '') ?: null, ($stint['fifa_best_position'] ?? '') ?: null);
+            if ($role !== null) {
+                return $role;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param list<array<string, string>> $stints
      * @param string|null                 $identityConflict  why the providers' records cannot be attributed
      * @param bool                        $sharedSofascoreId the SofaScore id also belongs to another player
@@ -154,7 +174,7 @@ final class Top5StintMerger
             ], $stints),
             array_intersect_key($origins, array_filter($values, static fn ($v) => $v !== null)),
             // Optional columns: older dataset versions have no EA SPORTS FC data.
-            RoleCatalog::fromEaFc(($main['fifa_club_position'] ?? '') ?: null, ($main['fifa_best_position'] ?? '') ?: null),
+            self::eaFcRole($stints),
         );
     }
 

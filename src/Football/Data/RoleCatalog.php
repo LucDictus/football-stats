@@ -43,6 +43,8 @@ final class RoleCatalog
     public const SOURCE_CLUB_POSITION = 'ea_fc_club';
     public const SOURCE_BEST_POSITION = 'ea_fc_best';
     public const SOURCE_INFERRED = 'inferred';
+    /** No EA FC position and no statistics to infer from: the group's most common role. */
+    public const SOURCE_DEFAULT = 'default';
     /** Goalkeepers without an EA FC position: the source's position group. */
     public const SOURCE_POSITION = 'position';
 
@@ -68,6 +70,20 @@ final class RoleCatalog
         }
 
         return null;
+    }
+
+    /**
+     * The EA FC role checked against the source's position group: a role the group cannot play
+     * is not used (null: infer it), except a wide midfielder or winger listed as a defender,
+     * who is a wing-back, so a full-back.
+     */
+    public static function forGroup(string $role, ?string $group): ?string
+    {
+        if ($group === null || in_array($role, self::rolesFor($group), true)) {
+            return $role;
+        }
+
+        return $group === 'DF' && $role === 'W' ? 'FB' : null;
     }
 
     /** @return list<string> roles compatible with a broad position group */

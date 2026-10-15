@@ -9,13 +9,17 @@ export interface ModelMetric {
   key: string
   label: string
   fields: string[]
-  mode: 'total' | 'per90' | 'rate'
+  mode: 'total' | 'per90' | 'rate' | 'ratio'
   weight: number
   lower_is_better?: boolean
   shrinkage?: number
   sample_fields?: string[]
   transform?: 'sqrt'
   possession_adjusted?: boolean
+  /** Linear possession adjustment from the standards. */
+  possession?: { slope: number; mean: number }
+  /** Estimate from another provider when this one has no record of the player. */
+  proxy?: { terms: [string, number][]; scale: number }
 }
 
 export interface ModelComponent {
@@ -46,6 +50,8 @@ export interface ScoringModel {
   /** Blended models: contribution in goals and its weight in the final score. */
   /** 'role': players are grouped by finer role (striker, winger, ...) instead of position group. */
   grouping?: 'role'
+  /** Id of the data-derived standards the role components come from. */
+  standards?: string
   impact?: {
     shooter_share: number
     passer_share: number
@@ -178,7 +184,7 @@ export interface PlayerProfile {
     position_group: PositionGroup | null
     /** Finer role, from EA SPORTS FC positions or inferred from statistics. */
     role: PositionGroup | null
-    role_source: 'ea_fc_club' | 'ea_fc_best' | 'inferred' | 'position' | null
+    role_source: 'ea_fc_club' | 'ea_fc_best' | 'inferred' | 'default' | 'position' | null
     team: string | null
     stints: {
       team: string

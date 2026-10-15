@@ -39,9 +39,32 @@ final readonly class Metric
          * ball has more to defend (PossessionAdjustment). Single-field per-90 metrics only.
          */
         public bool $possessionAdjusted = false,
+        /**
+         * Linear possession adjustment (standards): after shrinkage and transform, the value minus
+         * slope × (team possession share − possession mean). Fitted from the data per role.
+         */
+        public ?float $possessionSlope = null,
+        public ?float $possessionMean = null,
+        /**
+         * Per-90 counts: when the field's provider has no record of the player, an estimate from
+         * another provider: Σ coefficient × field per 90, × scale (calibrated in the standards).
+         *
+         * @var list<array{0: string, 1: float}>
+         */
+        public array $proxy = [],
+        public ?float $proxyScale = null,
     ) {
         if ($shrinkage !== null && $mode === MetricMode::Rate && $sampleFields === []) {
             throw new \InvalidArgumentException("Metric {$key}: a shrunk rate needs sample fields");
+        }
+        if ($mode === MetricMode::Ratio && $sampleFields === []) {
+            throw new \InvalidArgumentException("Metric {$key}: a ratio needs its attempts as sample fields");
+        }
+        if (($proxy === []) !== ($proxyScale === null) || ($proxy !== [] && $mode !== MetricMode::Per90)) {
+            throw new \InvalidArgumentException("Metric {$key}: a proxy needs its scale, and only per-90 counts have one");
+        }
+        if (($possessionSlope === null) !== ($possessionMean === null)) {
+            throw new \InvalidArgumentException("Metric {$key}: a possession slope needs the possession mean it was fitted around");
         }
         if ($possessionAdjusted && ($mode !== MetricMode::Per90 || count($fields) !== 1)) {
             throw new \InvalidArgumentException("Metric {$key}: only a single-field per-90 metric can be adjusted for possession");
@@ -52,7 +75,7 @@ final readonly class Metric
      * Optional settings appear only when used, so older model definitions (and their hashes)
      * stay exactly the same.
      *
-     * @return array{key: string, label: string, fields: list<string>, mode: string, weight: float, lower_is_better?: true, shrinkage?: float, sample_fields?: list<string>, transform?: string, possession_adjusted?: true}
+     * @return array{key: string, label: string, fields: list<string>, mode: string, weight: float, lower_is_better?: true, shrinkage?: float, sample_fields?: list<string>, transform?: string, possession_adjusted?: true, possession?: array{slope: float, mean: float}, proxy?: array{terms: list<array{0: string, 1: float}>, scale: float}}
      */
     public function toArray(): array
     {
@@ -61,6 +84,8 @@ final readonly class Metric
             + ($this->shrinkage !== null ? ['shrinkage' => $this->shrinkage] : [])
             + ($this->sampleFields !== [] ? ['sample_fields' => $this->sampleFields] : [])
             + ($this->sqrt ? ['transform' => 'sqrt'] : [])
-            + ($this->possessionAdjusted ? ['possession_adjusted' => true] : []);
+            + ($this->possessionAdjusted ? ['possession_adjusted' => true] : [])
+            + ($this->possessionSlope !== null ? ['possession' => ['slope' => $this->possessionSlope, 'mean' => (float) $this->possessionMean]] : [])
+            + ($this->proxy !== [] ? ['proxy' => ['terms' => $this->proxy, 'scale' => (float) $this->proxyScale]] : []);
     }
 }

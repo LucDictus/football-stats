@@ -20,7 +20,10 @@ export function RankingPage() {
   const models = useQuery({ queryKey: ['models'], queryFn: api.models })
   const modelId = params.get('model') ?? models.data?.default
   const raw = params.get('position')
-  const position = POSITION_ORDER.includes(raw as PositionGroup) ? (raw as PositionGroup) : null
+  // A position the model does not rank (an old link, e.g. ?position=MF for a model by role) is ignored.
+  const modelGroups = models.data?.models.find((m) => m.id === modelId)?.position_groups
+  const known = POSITION_ORDER.includes(raw as PositionGroup) ? (raw as PositionGroup) : null
+  const position = known && modelGroups && !modelGroups.includes(known) ? null : known
 
   const update = (changes: Record<string, string | null>) => {
     const next = new URLSearchParams(params)
@@ -39,7 +42,7 @@ export function RankingPage() {
     initialPageParam: { offset: 0, run: undefined as number | undefined },
     getNextPageParam: (last) =>
       last.offset + last.rows.length < last.total ? { offset: last.offset + last.rows.length, run: last.run.id } : undefined,
-    enabled: modelId !== undefined,
+    enabled: modelId !== undefined && modelGroups !== undefined,
   })
 
   const first = query.data?.pages[0]
@@ -241,10 +244,12 @@ function Row({ row, model, compare }: { row: RankingRow; model: ScoringModel; co
           ))}
         </span>
       ) : (
-        <span className={styles.strength} title={`Strongest component for ${row.position ? POSITION_PLURAL[row.position] : 'this player'}`}>
+        <span className={styles.strength} title={`${best ? best.label + ': ' : ''}his strongest measure among ${row.position ? POSITION_PLURAL[row.position] : 'his peers'}`}>
           {best && (
             <>
-              <span className="muted">Best:</span> {best.label} <span className="num">{formatScore(best.score)}</span>
+              <span className="muted">Best:</span>
+              <span className={styles.strengthLabel}>{best.label}</span>
+              <span className="num">{formatScore(best.score)}</span>
             </>
           )}
         </span>

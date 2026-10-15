@@ -54,6 +54,7 @@ const ROLE_SOURCES: Record<NonNullable<PlayerProfile['season']['role_source']>, 
   ea_fc_club: 'from his EA SPORTS FC club position',
   ea_fc_best: 'from his EA SPORTS FC best position',
   inferred: 'inferred from his statistics (no EA SPORTS FC position)',
+  default: 'the most common one for his position (no EA SPORTS FC position, too few statistics)',
   position: 'from his listed position',
 }
 

@@ -39,6 +39,10 @@ services:
         arguments:
             $directory: '%app.top5_dataset_dir%'
 
+    App\DataImport\Top5\Top5TeamResults:
+        arguments:
+            $directory: '%app.top5_dataset_dir%'
+
 when@test:
     services:
         # Tests that expect a 404 or exception should not print it as an error.

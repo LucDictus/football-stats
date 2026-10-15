@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\DataQuality;
 
 use App\DataQuality\Top5StintMerger;
+use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
 use App\Football\Data\OriginStatus;
 use App\Football\Data\RoleCatalog;
@@ -162,6 +163,13 @@ final class Top5StintMergerTest extends TestCase
         self::assertSame(['W', RoleCatalog::SOURCE_CLUB_POSITION], $role(['fifa_club_position' => 'LM', 'fifa_best_position' => 'LW']));
         self::assertNull($role(['fifa_club_position' => '', 'fifa_best_position' => '']));
         self::assertNull($role([]), 'older dataset versions have no EA SPORTS FC columns');
+
+        // After a transfer the position can be on the smaller stint's row only.
+        $moved = $this->mergeOne([
+            $this->row(['team' => 'Big', 'playing_time_min' => '1500', 'fifa_club_position' => '', 'fifa_best_position' => '']),
+            $this->row(['team' => 'Small', 'playing_time_min' => '500', 'fifa_club_position' => 'ST', 'fifa_best_position' => 'ST']),
+        ]);
+        self::assertSame(['ST', RoleCatalog::SOURCE_CLUB_POSITION], $moved->role);
     }
 
     /**
@@ -181,12 +189,11 @@ final class Top5StintMergerTest extends TestCase
             'fb_gls' => '5', 'fb_ast' => '3', 'fb_sh' => '40', 'fb_sot' => '15',
             'us_np_xg' => '4.5', 'us_xa' => '2.5', 'us_xg_chain' => '8.0', 'us_xg_buildup' => '3.0',
         ];
-        foreach (['ss_penaltyGoals', 'ss_keyPasses', 'ss_bigChancesCreated', 'ss_accurateFinalThirdPasses', 'ss_accuratePasses',
-            'ss_accuratePassesPercentage', 'ss_tackles', 'ss_tacklesWon', 'ss_interceptions', 'ss_outfielderBlocks', 'ss_clearances',
-            'ss_ballRecovery', 'ss_aerialDuelsWon', 'ss_aerialLost', 'ss_errorLeadToGoal', 'ss_saves', 'ss_goalsConceded',
-            'ss_goalsPrevented', 'ss_cleanSheet', 'ss_expectedGoals', 'ss_expectedAssists', 'ss_penaltiesTaken',
-            'ss_accurateCrosses', 'ss_successfulDribbles', 'ss_possessionWonAttThird'] as $column) {
-            $row[$column] = $column === 'ss_tackles' ? '40' : '1';
+        // Every other SofaScore column of the catalog: 1, tackles 40 (so tackle success is defined).
+        foreach (FieldCatalog::all() as $field) {
+            if ($field->leagueColumn !== null && str_starts_with($field->leagueColumn, 'ss_') && !isset($row[$field->leagueColumn])) {
+                $row[$field->leagueColumn] = $field->leagueColumn === 'ss_tackles' ? '40' : '1';
+            }
         }
 
         return $overrides + $row;

@@ -9,7 +9,7 @@ export function componentsFor(model: ScoringModel, position: PositionGroup | nul
 /** Whether any defensive metric is adjusted for team possession. */
 export function adjustsForPossession(model: ScoringModel): boolean {
   const groups = model.roles ? Object.values(model.roles) : [model.components]
-  return groups.some((components) => components.some((c) => c.metrics.some((m) => m.possession_adjusted)))
+  return groups.some((components) => components.some((c) => c.metrics.some((m) => m.possession_adjusted || m.possession)))
 }
 
 export function isRoleModel(model: ScoringModel): boolean {

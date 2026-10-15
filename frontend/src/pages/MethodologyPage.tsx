@@ -10,7 +10,7 @@ import { POSITION_LABELS } from '../lib/format'
 import { adjustsForPossession, componentsFor, describeScale, isRoleModel } from '../lib/model'
 import styles from './MethodologyPage.module.css'
 
-const MODE_LABELS = { total: 'season total', per90: 'per 90', rate: 'success rate' } as const
+const MODE_LABELS = { total: 'season total', per90: 'per 90', rate: 'success rate', ratio: 'success rate' } as const
 
 /** The model definition comes from the API, so this page can never drift from the code. */
 export function MethodologyPage() {
@@ -58,9 +58,9 @@ export function MethodologyPage() {
           </li>
           {model && adjustsForPossession(model) && (
             <li>
-              <strong>Defending against opportunity.</strong> A team without the ball has more to defend, so defensive actions
-              per 90 are adjusted for the team’s possession (and goalkeepers’ passing, which rises with it). How strongly each
-              depends on possession is measured from the data, per position.
+              <strong>Style is not quality.</strong> A team with the ball passes more, one without has more to defend, so statistics
+              are adjusted for the team’s possession. How strongly each depends on possession is measured from the data, per
+              position.
             </li>
           )}
           <li>
@@ -166,6 +166,21 @@ function ModelSection({ model }: { model: ScoringModel }) {
       {model.impact && <ImpactSection impact={model.impact} />}
 
       {model.impact && <h3 className={styles.subhead}>Positional excellence ({Math.round((1 - model.impact.weight) * 100)}%)</h3>}
+      {model.standards && (
+        <div className={styles.standards}>
+          <p>
+            Nothing in this half is chosen by hand. For every role, two full seasons of data decide which statistics count and how
+            much: a statistic counts when the players who do more of it play in teams that win, in each season on its own and with
+            each team’s possession taken into account, and when it repeats from one season to the next (a stable trait, not luck).
+            Its weight is its link with winning times its repeatability. Statistics that measure the same thing count once.
+          </p>
+          <p className="muted">
+            What the data found: progressive passing goes with winning in every outfield role; chance creation and expected goals
+            for attackers; counts of tackles, interceptions and clearances do not (they show how much a team has to defend, not
+            how well), so defending counts through the team’s goals conceded in the contribution. Standards {model.standards}.
+          </p>
+        </div>
+      )}
       {roles.length > 0 && (
         <div className={styles.roleTabs} role="group" aria-label="Position">
           {roles.map((r) => (
@@ -195,8 +210,11 @@ function ModelSection({ model }: { model: ScoringModel }) {
                       {' '}
                       · {MODE_LABELS[m.mode]}
                       {m.lower_is_better ? ', fewer is better' : ''}
-                      {m.shrinkage ? `, small samples pulled toward average (${m.shrinkage} ${m.mode === 'rate' ? 'attempts' : 'matches'})` : ''}
-                      {m.transform === 'sqrt' ? ', square-root scale' : ''} ·{' '}
+                      {m.shrinkage
+                        ? `, small samples pulled toward average (${Number(m.shrinkage.toFixed(1))} ${m.mode === 'per90' || m.mode === 'total' ? 'matches' : 'attempts'})`
+                        : ''}
+                      {m.transform === 'sqrt' ? ', square-root scale' : ''}
+                      {m.possession ? ', adjusted for team possession' : ''} ·{' '}
                       {Math.round(m.weight * 100)}%
                     </span>
                   </li>

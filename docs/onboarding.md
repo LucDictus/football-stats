@@ -62,6 +62,7 @@ src/
     Data/             the vocabulary: Field, FieldCatalog, Origin, OriginStatus, RoleCatalog
     Scoring/          models (ModelCatalog), the pure ScoreCalculator, ScoreRunner
     Analysis/         checks on a model's results (OverlapAnalysis → docs/overlap-<model>.md)
+    Standards/        data-derived positional standards (StandardsDeriver → config/standards/, docs/standards.md)
   Inspector/          read-only SQL for the inspector pages
   Repository/
 config/
@@ -143,6 +144,7 @@ php bin/console app:import:sofascore-cl       # raw: CL stats (--no-fetch to reu
 php bin/console app:import:fotmob-cl          # raw: cross-check data
 php bin/console app:build-season              # domain: rebuild players/stats (idempotent)
 php bin/console app:data:audit                # docs/data-coverage.md
+php bin/console app:standards:derive          # standards per role from two seasons (frozen JSON + docs/standards.md)
 php bin/console app:score                     # ranking run with the default model (mvp-v3)
 php bin/console app:score -m baseline-v1      # or any released model
 php bin/console app:analyse:overlap           # docs/overlap-<model>.md: what drives the score per position
@@ -200,6 +202,10 @@ appears in the definition only when used (like `shrinkage`, `sqrt`, `referenceRa
 so older models keep reproducing. The API and the methodology page read the definition, so they follow
 automatically. Role models (`roles:` per position group) compare each group only with itself;
 see `docs/methodology.md` for why the composite is standardised again within the role.
+The positional half of mvp-v3 is not written by hand: `app:standards:derive` measures, per role,
+which statistics go with winning and repeat between seasons, and writes the weights to
+`config/standards/<id>.json`, which `ModelCatalog` reads. Deriving again with new data means a
+new standards id and a new model version (a released model's file never changes).
 Contribution in goals lives in `Football/Scoring/Impact/` (`ImpactModel`, `ImpactCalculator`);
 a model with `impact:` blends it with the positional score. `app:analyse:overlap` shows, per
 position, which information drives a model's final score (`Football/Analysis/`); rerun it for

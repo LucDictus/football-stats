@@ -181,19 +181,24 @@ final class SeasonBuilder
             ));
         }
 
-        $values = array_filter($merged->values, static fn ($v) => $v !== null);
-        $playerSeason->addStats(new PlayerCompetitionStats(
+        $playerSeason->addStats(self::leagueStats($playerSeason, $merged, $batch));
+        $this->em->persist($playerSeason);
+
+        return $playerSeason;
+    }
+
+    /** League statistics of a merged player season: known values only, with provenance and trust checks. */
+    public static function leagueStats(PlayerSeason $playerSeason, MergedPlayerSeason $merged, ImportBatch $batch): PlayerCompetitionStats
+    {
+        return new PlayerCompetitionStats(
             $playerSeason,
             StatsScope::League,
             $batch,
             $merged->minutes,
-            $values,
+            array_filter($merged->values, static fn ($v) => $v !== null),
             array_map(static fn (Origin $origin) => $origin->value, $merged->valueOrigins),
             array_map(static fn (OriginCheck $c) => ['status' => $c->status->value, 'minutes' => $c->minutes, 'reason' => $c->reason], $merged->checks),
-        ));
-        $this->em->persist($playerSeason);
-
-        return $playerSeason;
+        );
     }
 
     /**
@@ -204,7 +209,7 @@ final class SeasonBuilder
      *
      * @return array{inferred: int, accuracy: array{evaluated: int, correct: int}}
      */
-    private static function inferRoles(array $seasons): array
+    public static function inferRoles(array $seasons): array
     {
         $labelled = [];
         foreach ($seasons as $s) {
@@ -218,10 +223,10 @@ final class SeasonBuilder
         $inferred = 0;
         foreach ($seasons as $s) {
             if ($s->getRole() === null) {
-                $role = $inference->infer($s->getPositionGroup(), $s->getStats(StatsScope::League));
-                if ($role !== null) {
-                    $s->setRole($role, RoleCatalog::SOURCE_INFERRED);
-                    ++$inferred;
+                $inferredRole = $inference->infer($s->getPositionGroup(), $s->getStats(StatsScope::League));
+                if ($inferredRole !== null) {
+                    $s->setRole($inferredRole[0], $inferredRole[1]);
+                    $inferred += (int) ($inferredRole[1] === RoleCatalog::SOURCE_INFERRED);
                 }
             }
         }
@@ -231,17 +236,24 @@ final class SeasonBuilder
 
     /**
      * The role from EA SPORTS FC; a goalkeeper is a goalkeeper whatever the game says (and an
-     * outfield player is never one). Null: to be inferred from statistics (RoleInference).
+     * outfield player is never one), and the role must suit the source's position group
+     * (RoleCatalog::forGroup). Null: to be inferred from statistics (RoleInference).
      *
      * @return array{0: ?string, 1: ?string} role, source
      */
-    private static function role(MergedPlayerSeason $merged): array
+    public static function role(MergedPlayerSeason $merged): array
     {
         if ($merged->goalkeeper) {
             return ['GK', $merged->role !== null && $merged->role[0] === 'GK' ? $merged->role[1] : RoleCatalog::SOURCE_POSITION];
         }
 
-        return $merged->role !== null && $merged->role[0] !== 'GK' ? $merged->role : [null, null];
+        if ($merged->role === null || $merged->role[0] === 'GK') {
+            return [null, null];
+        }
+        $group = $merged->position !== null ? substr($merged->position, 0, 2) : null;
+        $role = RoleCatalog::forGroup($merged->role[0], in_array($group, PlayerSeason::POSITION_GROUPS, true) ? $group : null);
+
+        return $role === null ? [null, null] : [$role, $merged->role[1]];
     }
 
     /**

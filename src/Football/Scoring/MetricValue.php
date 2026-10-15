@@ -12,7 +12,16 @@ final class MetricValue
 {
     public static function of(Metric $metric, PlayerCompetitionStats $stats): ?float
     {
+        if ($metric->mode === MetricMode::Ratio) {
+            $successes = self::usableSum($stats, $metric->fields);
+            $attempts = self::usableSum($stats, $metric->sampleFields);
+
+            return $successes === null || $attempts === null || $attempts <= 0 ? null : $successes / $attempts;
+        }
         $sum = 0.0;
+        if ($metric->mode === MetricMode::Per90 && $metric->proxy !== [] && self::proxy($metric, $stats) !== null && self::primaryUnknown($metric, $stats)) {
+            return self::proxy($metric, $stats)[0];
+        }
         foreach ($metric->fields as $field) {
             $value = match ($metric->mode) {
                 MetricMode::Total => $stats->trusted($field) ? $stats->value($field) : null,
@@ -35,6 +44,9 @@ final class MetricValue
      */
     public static function sample(Metric $metric, PlayerCompetitionStats $stats): ?float
     {
+        if ($metric->mode === MetricMode::Ratio) {
+            return self::usableSum($stats, $metric->sampleFields);
+        }
         if ($metric->mode === MetricMode::Rate) {
             $attempts = 0.0;
             foreach ($metric->sampleFields as $field) {
@@ -46,6 +58,9 @@ final class MetricValue
             }
 
             return $attempts;
+        }
+        if ($metric->mode === MetricMode::Per90 && $metric->proxy !== [] && self::primaryUnknown($metric, $stats)) {
+            return self::proxy($metric, $stats)[1] ?? null;
         }
         if ($metric->mode === MetricMode::Per90) {
             $matches = null;
@@ -62,5 +77,58 @@ final class MetricValue
         }
 
         return null;
+    }
+
+    private static function primaryUnknown(Metric $metric, PlayerCompetitionStats $stats): bool
+    {
+        foreach ($metric->fields as $field) {
+            if ($stats->per90($field) === null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * The proxy estimate per 90 and its sample in matches; null when unknown.
+     *
+     * @return array{0: float, 1: float}|null
+     */
+    private static function proxy(Metric $metric, PlayerCompetitionStats $stats): ?array
+    {
+        $sum = 0.0;
+        $matches = INF;
+        foreach ($metric->proxy as [$field, $coefficient]) {
+            $value = $stats->per90($field);
+            $origin = $stats->origin($field);
+            if ($value === null || $origin === null) {
+                return null;
+            }
+            $sum += $coefficient * $value;
+            $matches = min($matches, ($origin === Origin::Derived ? $stats->getMinutes() : (float) $stats->originMinutes($origin)) / 90);
+        }
+
+        return [max(0.0, $sum) * (float) $metric->proxyScale, $matches];
+    }
+
+    /**
+     * Sum of fields from usable providers ("-field" subtracts); null when one is unknown.
+     *
+     * @param list<string> $fields
+     */
+    private static function usableSum(PlayerCompetitionStats $stats, array $fields): ?float
+    {
+        $sum = 0.0;
+        foreach ($fields as $field) {
+            $name = ltrim($field, '-');
+            $value = $stats->fieldStatus($name)->usable() ? $stats->value($name) : null;
+            if ($value === null) {
+                return null;
+            }
+            $sum += str_starts_with($field, '-') ? -$value : $value;
+        }
+
+        return $sum;
     }
 }

@@ -65,10 +65,11 @@ final class ScoreCalculator
         }
 
         $possession = self::possessionAdjustment($model, $candidates);
+        $teamPossession = self::usesPossessionSlopes($model) ? PossessionAdjustment::possession($candidates) : [];
 
         $scored = [];
         foreach ($groups as $group => $members) {
-            $groupScores = $this->scoreGroup($model, $model->componentsFor($model->comparesWithinRole() ? $group : null), $members, $possession);
+            $groupScores = $this->scoreGroup($model, $model->componentsFor($model->comparesWithinRole() ? $group : null), $members, $possession, $teamPossession);
             if ($model->comparesWithinRole()) {
                 $composites = array_map(static fn (array $s) => $s['composite'], $groupScores);
                 $reference = $this->reference($model, array_map(static fn (array $s) => $s['confidence'], $groupScores));
@@ -180,15 +181,31 @@ final class ScoreCalculator
         return $fieldsByRole === [] ? null : PossessionAdjustment::fit($candidates, $fieldsByRole);
     }
 
+    private static function usesPossessionSlopes(ScoringModel $model): bool
+    {
+        foreach ($model->positionGroups as $group) {
+            foreach ($model->componentsFor($model->comparesWithinRole() ? $group : null) as $component) {
+                foreach ($component->metrics as $metric) {
+                    if ($metric->possessionSlope !== null) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Scores one comparison group on its components.
      *
      * @param list<Component>        $components
      * @param list<ScoringCandidate> $members
+     * @param array<string, float>   $teamPossession team key => estimated possession share (models with possession slopes)
      *
      * @return list<array{candidate: ScoringCandidate, score: ?float, raw: ?float, composite: ?float, confidence: float, components: array<string, mixed>}>
      */
-    private function scoreGroup(ScoringModel $model, array $components, array $members, ?PossessionAdjustment $possession): array
+    private function scoreGroup(ScoringModel $model, array $components, array $members, ?PossessionAdjustment $possession, array $teamPossession = []): array
     {
         // Metric values (possession-adjusted where the metric says so) and their sample sizes,
         // per metric, indexed like $members.
@@ -223,6 +240,15 @@ final class ScoreCalculator
                 $scale = $metric->sqrt
                     ? array_map(static fn (?float $v) => $v === null ? null : sqrt(max(0.0, $v)), $adjusted[$metric->key])
                     : $adjusted[$metric->key];
+                if ($metric->possessionSlope !== null) {
+                    // Remove what the team's possession explains (fitted in the standards); unknown possession: as is.
+                    $scale = array_map(static function (?float $v, ScoringCandidate $c) use ($metric, $teamPossession) {
+                        $key = PossessionAdjustment::teamKey($c);
+                        $p = $key !== null ? ($teamPossession[$key] ?? null) : null;
+
+                        return $v === null || $p === null ? $v : $v - $metric->possessionSlope * ($p - (float) $metric->possessionMean);
+                    }, $scale, $members);
+                }
                 $normalised[$metric->key] = $model->normalization->scores($scale, $metric->lowerIsBetter, $reference, $model->zCap);
             }
         }

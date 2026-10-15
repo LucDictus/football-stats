@@ -104,6 +104,46 @@ final class PossessionAdjustment
         return new self($exposure, $fits);
     }
 
+    /**
+     * The estimated possession share p of every team (key: teamKey()), from the same passing
+     * data and rule as fit(): accurate passes per minute of its outfield players over that plus
+     * its league's average.
+     *
+     * @param list<ScoringCandidate> $candidates
+     *
+     * @return array<string, float>
+     */
+    public static function possession(array $candidates): array
+    {
+        $teams = [];
+        foreach ($candidates as $c) {
+            $s = $c->stats;
+            if ($c->team === null || $c->league === null || $c->positionGroup === null || $c->positionGroup === 'GK' || $s->originStatus(Origin::Sofascore) !== OriginStatus::Ok) {
+                continue;
+            }
+            $key = self::key($c);
+            $teams[$key] ??= ['league' => $c->league, 'minutes' => 0.0, 'passes' => 0.0];
+            $teams[$key]['minutes'] += (float) $s->originMinutes(Origin::Sofascore);
+            $teams[$key]['passes'] += $s->value('accurate_passes') ?? 0.0;
+        }
+        $teams = array_filter($teams, static fn (array $t) => $t['minutes'] >= self::MIN_TEAM_MINUTES);
+        $passRate = array_map(static fn (array $t) => $t['passes'] / $t['minutes'], $teams);
+        $leaguePasses = self::leagueMeans(array_map(static fn (array $t, float $r) => ['league' => $t['league'], 'value' => $r], $teams, $passRate));
+
+        $possession = [];
+        foreach ($teams as $key => $t) {
+            $possession[$key] = $passRate[$key] / ($passRate[$key] + $leaguePasses[$t['league']]);
+        }
+
+        return $possession;
+    }
+
+    /** The key of a player's team in possession(). */
+    public static function teamKey(ScoringCandidate $c): ?string
+    {
+        return $c->team === null || $c->league === null ? null : self::key($c);
+    }
+
     /** Multiplier for a player's per-90 count of $field: 1.0 when his team, position or the field is unknown. */
     public function factor(ScoringCandidate $c, string $field): float
     {

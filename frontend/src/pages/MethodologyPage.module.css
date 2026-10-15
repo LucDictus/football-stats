@@ -162,3 +162,12 @@
 .impact p {
   margin: 0 0 12px;
 }
+
+.standards {
+  margin: 0 0 18px;
+  max-width: 760px;
+}
+
+.standards p {
+  margin: 0 0 10px;
+}

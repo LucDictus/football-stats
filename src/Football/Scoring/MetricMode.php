@@ -12,4 +12,9 @@ enum MetricMode: string
     case Per90 = 'per90';
     /** A percentage as it is (e.g. aerial duels won %): ok or partial providers, a rate holds on part of a season. */
     case Rate = 'rate';
+    /**
+     * Successes over attempts, from counts: the fields over the metric's sample fields ("-field"
+     * subtracts, e.g. ground duels = all duels lost minus aerial duels lost). Ok or partial providers.
+     */
+    case Ratio = 'ratio';
 }
