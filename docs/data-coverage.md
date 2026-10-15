@@ -64,6 +64,9 @@ League data: 2,839 stint rows → **2,691 players** (148 transferred during the 
 | Passes | SofaScore `ss_totalPasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | Inaccurate passes | SofaScore `ss_inaccuratePasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | Accurate passes in own half | SofaScore `ss_accurateOwnHalfPasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Passes in own half | SofaScore `ss_totalOwnHalfPasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Passes in the opposition half | SofaScore `ss_totalOppositionHalfPasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
+| Chipped passes | SofaScore `ss_totalChippedPasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | Accurate passes in the opposition half | SofaScore `ss_accurateOppositionHalfPasses` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | Accurate long balls | SofaScore `ss_accurateLongBalls` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |
 | Long balls | SofaScore `ss_totalLongBalls` | 96.6% | 93.8% | 38 | – | use, handle missing; no CL source |  |

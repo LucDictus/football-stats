@@ -12,6 +12,9 @@ final readonly class Top5TeamResults
 {
     private const CSV = '/data/schedule/matches.csv';
 
+    /** Teams named differently in the match list than in the player data: match name => player-data name. */
+    private const ALIASES = ['Paris FC' => 'Paris'];
+
     public function __construct(private string $directory)
     {
     }
@@ -40,11 +43,13 @@ final readonly class Top5TeamResults
                     continue;
                 }
                 $m = array_combine(array_map('strval', $header), array_map('strval', $line));
-                // Played matches only: "2–1" (en dash); postponed and future matches have no score.
-                if ($m['season'] !== $seasonCode || preg_match('/^(\d+)–(\d+)$/u', $m['score'], $score) !== 1) {
+                // Played league matches only: "2–1" (en dash; postponed and future matches have no score),
+                // not the relegation and European play-offs some leagues add after the season.
+                if ($m['season'] !== $seasonCode || preg_match('/^(\d+)–(\d+)$/u', $m['score'], $score) !== 1 || self::playOff($m['round'] ?? '')) {
                     continue;
                 }
                 foreach ([[$m['home_team'], (int) $score[1] - (int) $score[2]], [$m['away_team'], (int) $score[2] - (int) $score[1]]] as [$team, $difference]) {
+                    $team = self::ALIASES[$team] ?? $team;
                     $key = $m['league'] . '|' . $team;
                     $teams[$key] ??= ['difference' => 0, 'matches' => 0];
                     $teams[$key]['difference'] += $difference;
@@ -55,6 +60,12 @@ final readonly class Top5TeamResults
             fclose($fh);
         }
 
-        return array_map(static fn (array $t) => ['goal_difference' => $t['difference'] / $t['matches'], 'matches' => $t['matches']], $teams);
+        return array_map(static fn (array $t) => ['goal_difference' => (float) ($t['difference'] / $t['matches']), 'matches' => $t['matches']], $teams);
+    }
+
+    /** A round of a play-off ("Relegation/Promotion play-offs", "Semi-finals", "First Round"), not of the league. */
+    public static function playOff(string $round): bool
+    {
+        return preg_match('/play-?off|final|round/i', $round) === 1;
     }
 }

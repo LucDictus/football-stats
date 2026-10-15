@@ -54,94 +54,94 @@ statistics, never its results) rate the 2024/25 players. Two tests on 2025/26:
 
 | Method | Team results r | Beyond last season's results | Teams | Repeatability r | Players |
 |---|---|---|---|---|---|
-| The standards: weight = link with winning × repeatability | 0.37 | 0.00 | 82 | 0.59 | 1022 |
-| The same measures, weighted equally | 0.34 | -0.01 | 82 | 0.50 | 1022 |
-| Every candidate statistic, weighted equally ("every good statistic counts") | 0.38 | 0.12 | 82 | 0.53 | 1027 |
-| The same measures, weighted by link with winning only | 0.34 | -0.06 | 82 | 0.48 | 1022 |
+| The standards: weight = link with winning × repeatability | 0.37 | 0.00 | 82 | 0.59 | 1017 |
+| The same measures, weighted equally | 0.34 | -0.03 | 82 | 0.50 | 1017 |
+| Every candidate statistic, weighted equally ("every good statistic counts") | 0.39 | 0.12 | 82 | 0.52 | 1027 |
+| The same measures, weighted by link with winning only | 0.34 | -0.07 | 82 | 0.49 | 1017 |
 
 With about 80 teams a difference in r below 0.2 is within chance; the repeatability comparison, over
 1,000+ players, is the sharper test.
 
 ## Strikers
 
-380 player seasons with 900+ minutes (185 in 2024/25 + 195 in 2025/26), 105 players in the role in both seasons.
+382 player seasons with 900+ minutes (185 in 2024/25 + 197 in 2025/26), 105 players in the role in both seasons.
 
 ### How a striker earns points
 
 | Weight | Measure | Link with winning | Repeatability |
 |---|---|---|---|
-| 18% | Accurate passes in the opposition half · Accurate final-third passes | 0.22 | 0.83 |
-| 15% | Key passes | 0.25 | 0.60 |
+| 18% | Accurate passes in the opposition half · Accurate final-third passes | 0.22 | 0.82 |
+| 15% | Key passes | 0.24 | 0.60 |
 | 14% | Non-penalty xG | 0.29 | 0.51 |
-| 12% | Shots on target | 0.26 | 0.48 |
-| 11% | Expected assists (xA) · Big chances created | 0.27 | 0.41 |
+| 13% | Shots on target | 0.26 | 0.48 |
+| 11% | Expected assists (xA) · Big chances created | 0.27 | 0.40 |
 | 11% | Non-penalty goals | 0.29 | 0.37 |
-| 8% | Possession won in the attacking third | 0.24 | 0.36 |
-| 8% | xGBuildup | 0.25 | 0.33 |
+| 9% | Possession won in the attacking third | 0.24 | 0.36 |
+| 8% | xGBuildup | 0.25 | 0.32 |
 | 2% | Assists | 0.20 | 0.09 |
 
 ### Every candidate statistic
 
 | Statistic | Players | Link with winning (2024/25 / 2025/26) | Repeatability | Used | Why not |
 |---|---|---|---|---|---|
-| Non-penalty goals | 358 | 0.24 / 0.38 | 0.37 | yes |  |
-| Non-penalty xG | 366 | 0.27 / 0.31 | 0.51 | yes |  |
-| Shots on target | 380 | 0.24 / 0.30 | 0.48 | yes |  |
-| Shots on target % | 380 | 0.05 / 0.20 | 0.31 |  | No significant link with winning in each season |
-| Big chances missed (counts against) | 358 | -0.22 / -0.20 | 0.46 |  | No significant link with winning in each season |
-| Offsides (counts against) | 358 | -0.02 / 0.03 | 0.64 |  | No significant link with winning in each season |
-| Penalties won | 358 | 0.06 / 0.08 | 0.28 |  | No significant link with winning in each season |
-| Fouls won | 358 | -0.04 / 0.09 | 0.63 |  | No significant link with winning in each season |
-| Assists | 380 | 0.19 / 0.23 | 0.09 | yes |  |
-| Expected assists (xA) | 366 | 0.28 / 0.28 | 0.46 | yes |  |
-| Key passes | 358 | 0.28 / 0.22 | 0.60 | yes |  |
-| Big chances created | 358 | 0.24 / 0.26 | 0.30 | yes |  |
-| Accurate crosses | 358 | 0.05 / 0.04 | 0.79 |  | No significant link with winning in each season |
-| Cross accuracy % | 343 | – | – |  | Does not repeat from one season to the next |
-| xGBuildup | 366 | 0.29 / 0.21 | 0.33 | yes |  |
-| Accurate passes | 358 | 0.15 / 0.08 | 0.86 |  | No significant link with winning in each season |
-| Pass accuracy % | 364 | 0.15 / 0.06 | 0.78 |  | No significant link with winning in each season |
-| Inaccurate passes (counts against) | 358 | 0.01 / -0.02 | 0.74 |  | No significant link with winning in each season |
-| Accurate passes in own half | 358 | -0.05 / -0.06 | 0.75 |  | No significant link with winning in each season |
-| Accurate passes in the opposition half | 358 | 0.23 / 0.15 | 0.84 | yes |  |
-| Accurate final-third passes | 358 | 0.28 / 0.21 | 0.80 | yes |  |
-| Accurate long balls | 358 | 0.07 / 0.04 | 0.79 |  | No significant link with winning in each season |
-| Long-ball accuracy % | 362 | 0.06 / 0.06 | 0.47 |  | No significant link with winning in each season |
-| Accurate chipped passes | 358 | 0.18 / 0.08 | 0.77 |  | No significant link with winning in each season |
-| Touches | 358 | 0.15 / 0.10 | 0.84 |  | No significant link with winning in each season |
-| Successful dribbles | 358 | 0.03 / 0.03 | 0.69 |  | No significant link with winning in each season |
-| Dribble success % | 364 | 0.02 / -0.07 | 0.13 |  | No significant link with winning in each season |
-| Dispossessed (counts against) | 358 | -0.02 / -0.06 | 0.61 |  | No significant link with winning in each season |
-| Possession lost (counts against) | 358 | -0.01 / -0.04 | 0.78 |  | No significant link with winning in each season |
-| Tackles won | 358 | 0.13 / 0.00 | 0.69 |  | No significant link with winning in each season |
-| Tackle success % | 363 | 0.12 / 0.00 | 0.11 |  | No significant link with winning in each season |
-| Interceptions | 358 | 0.01 / 0.02 | 0.50 |  | No significant link with winning in each season |
-| Blocks | 184 | – | – |  | Known for too few players in this role |
-| Clearances | 358 | -0.05 / -0.13 | 0.58 |  | No significant link with winning in each season |
-| Ball recoveries | 358 | 0.13 / 0.03 | 0.62 |  | No significant link with winning in each season |
-| Possession won in the attacking third | 358 | 0.29 / 0.18 | 0.36 | yes |  |
-| Ground duels won | 358 | 0.04 / 0.06 | 0.71 |  | No significant link with winning in each season |
-| Ground duels won % | 364 | 0.03 / -0.03 | 0.44 |  | No significant link with winning in each season |
-| Aerial duels won | 358 | -0.07 / -0.04 | 0.88 |  | No significant link with winning in each season |
-| Aerial duels won % | 364 | -0.03 / 0.05 | 0.70 |  | No significant link with winning in each season |
-| Duels lost (counts against) | 358 | 0.03 / -0.01 | 0.58 |  | No significant link with winning in each season |
-| Dribbled past (counts against) | 358 | 0.00 / -0.12 | 0.54 |  | No significant link with winning in each season |
-| Fouls committed (counts against) | 358 | 0.03 / 0.00 | 0.64 |  | No significant link with winning in each season |
-| Yellow cards (counts against) | 358 | 0.19 / -0.03 | 0.44 |  | No significant link with winning in each season |
-| Red cards (counts against) | 358 | -0.01 / 0.04 | 0.31 |  | No significant link with winning in each season |
-| Penalties conceded (counts against) | 358 | – | – |  | Does not repeat from one season to the next |
-| Errors leading to a shot (counts against) | 358 | – | – |  | Does not repeat from one season to the next |
-| Errors leading to a goal (counts against) | 358 | – | – |  | Does not repeat from one season to the next |
-| Own goals (counts against) | 358 | – | – |  | Does not repeat from one season to the next |
-| Distance covered | 183 | – | – |  | Known for too few players in this role |
-| Sprints | 183 | – | – |  | Known for too few players in this role |
-| Goals prevented | 0 | – | – |  | Known for too few players in this role |
-| High claims | 0 | – | – |  | Known for too few players in this role |
-| Punches | 0 | – | – |  | Known for too few players in this role |
-| Crosses not claimed (counts against) | 0 | – | – |  | Known for too few players in this role |
-| Successful runs out | 0 | – | – |  | Known for too few players in this role |
-| Runs out success % | 0 | – | – |  | Known for too few players in this role |
-| Penalty save % | 0 | – | – |  | Known for too few players in this role |
+| Non-penalty goals | 360 | 0.24 / 0.38 | 0.37 | yes |  |
+| Non-penalty xG | 368 | 0.27 / 0.31 | 0.51 | yes |  |
+| Shots on target | 382 | 0.23 / 0.30 | 0.48 | yes |  |
+| Shots on target % | 382 | 0.05 / 0.19 | 0.31 |  | No significant link with winning in each season |
+| Goals per non-penalty shot | 357 | 0.12 / 0.28 | 0.26 |  | No significant link with winning in each season |
+| Big chances missed (counts against) | 360 | -0.22 / -0.19 | 0.46 |  | No significant link with winning in each season |
+| Offsides (counts against) | 360 | -0.02 / 0.03 | 0.64 |  | No significant link with winning in each season |
+| Penalties won | 360 | 0.06 / 0.08 | 0.28 |  | No significant link with winning in each season |
+| Fouls won | 360 | -0.04 / 0.09 | 0.63 |  | No significant link with winning in each season |
+| Assists | 382 | 0.19 / 0.23 | 0.09 | yes |  |
+| Expected assists (xA) | 368 | 0.28 / 0.27 | 0.45 | yes |  |
+| Key passes | 360 | 0.28 / 0.21 | 0.60 | yes |  |
+| Big chances created | 360 | 0.24 / 0.26 | 0.29 | yes |  |
+| Accurate crosses | 360 | 0.05 / 0.05 | 0.79 |  | No significant link with winning in each season |
+| Cross accuracy % | 345 | – | – |  | Does not repeat from one season to the next |
+| xGBuildup | 368 | 0.29 / 0.21 | 0.32 | yes |  |
+| Inaccurate passes (counts against) | 360 | 0.01 / -0.02 | 0.74 |  | No significant link with winning in each season |
+| Accurate passes in own half | 360 | -0.05 / -0.06 | 0.75 |  | No significant link with winning in each season |
+| Pass accuracy in own half % | 365 | 0.11 / 0.09 | 0.50 |  | No significant link with winning in each season |
+| Accurate passes in the opposition half | 360 | 0.23 / 0.15 | 0.84 | yes |  |
+| Pass accuracy in the opposition half % | 366 | 0.23 / 0.10 | 0.66 |  | No significant link with winning in each season |
+| Accurate final-third passes | 360 | 0.28 / 0.21 | 0.80 | yes |  |
+| Accurate long balls | 360 | 0.07 / 0.04 | 0.79 |  | No significant link with winning in each season |
+| Long-ball accuracy % | 364 | 0.05 / 0.04 | 0.42 |  | No significant link with winning in each season |
+| Accurate chipped passes | 360 | 0.18 / 0.09 | 0.77 |  | No significant link with winning in each season |
+| Chipped pass accuracy % | 363 | 0.13 / 0.06 | 0.27 |  | No significant link with winning in each season |
+| Touches | 360 | 0.15 / 0.10 | 0.84 |  | No significant link with winning in each season |
+| Successful dribbles | 360 | 0.03 / 0.03 | 0.68 |  | No significant link with winning in each season |
+| Dribble success % | 366 | 0.01 / -0.07 | 0.12 |  | No significant link with winning in each season |
+| Dispossessed (counts against) | 360 | -0.02 / -0.07 | 0.61 |  | No significant link with winning in each season |
+| Tackles won | 360 | 0.12 / 0.00 | 0.69 |  | No significant link with winning in each season |
+| Tackle success % | 365 | 0.13 / 0.01 | 0.12 |  | No significant link with winning in each season |
+| Interceptions | 360 | 0.01 / 0.02 | 0.50 |  | No significant link with winning in each season |
+| Blocks | 186 | – | – |  | Not in the 2024/25 data |
+| Clearances | 360 | -0.05 / -0.13 | 0.58 |  | No significant link with winning in each season |
+| Ball recoveries | 360 | 0.12 / 0.03 | 0.62 |  | No significant link with winning in each season |
+| Possession won in the attacking third | 360 | 0.29 / 0.18 | 0.36 | yes |  |
+| Ground duels won | 360 | 0.04 / 0.07 | 0.71 |  | No significant link with winning in each season |
+| Ground duels won % | 366 | 0.02 / -0.02 | 0.44 |  | No significant link with winning in each season |
+| Aerial duels won | 360 | -0.07 / -0.04 | 0.88 |  | No significant link with winning in each season |
+| Aerial duels lost (counts against) | 360 | 0.06 / 0.09 | 0.67 |  | No significant link with winning in each season |
+| Aerial duels won % | 366 | -0.01 / 0.06 | 0.68 |  | No significant link with winning in each season |
+| Dribbled past (counts against) | 360 | 0.00 / -0.12 | 0.54 |  | No significant link with winning in each season |
+| Fouls committed (counts against) | 360 | 0.03 / 0.01 | 0.64 |  | No significant link with winning in each season |
+| Yellow cards (counts against) | 360 | 0.18 / -0.03 | 0.44 |  | No significant link with winning in each season |
+| Red cards (counts against) | 360 | -0.01 / 0.04 | 0.31 |  | No significant link with winning in each season |
+| Penalties conceded (counts against) | 360 | – | – |  | Does not repeat from one season to the next |
+| Errors leading to a shot (counts against) | 360 | – | – |  | Does not repeat from one season to the next |
+| Errors leading to a goal (counts against) | 360 | – | – |  | Does not repeat from one season to the next |
+| Own goals (counts against) | 360 | – | – |  | Does not repeat from one season to the next |
+| Distance covered | 185 | – | – |  | Not in the 2024/25 data |
+| Sprints | 185 | – | – |  | Not in the 2024/25 data |
+| Goals prevented | 0 | – | – |  | Not in the 2024/25 data |
+| High claims | 0 | – | – |  | Not in the 2024/25 data |
+| Punches | 0 | – | – |  | Not in the 2024/25 data |
+| Crosses not claimed (counts against) | 0 | – | – |  | Not in the 2024/25 data |
+| Successful runs out | 0 | – | – |  | Not in the 2024/25 data |
+| Runs out success % | 0 | – | – |  | Not in the 2024/25 data |
 
 How the used statistics are prepared (k: pulled toward the average as if the player had k more
 matches or attempts at the average; possession: change per unit of possession share, on the statistic's
@@ -150,98 +150,98 @@ no record of the player):
 
 | Statistic | k | Possession slope | Proxy scale |
 |---|---|---|---|
-| Non-penalty goals | 19.2 | 0.645 | – |
-| Non-penalty xG | 14.6 | 0.683 | 1.1503 |
-| Shots on target | 11.7 | 1.044 | – |
-| Assists | 70.3 | 0.175 | – |
-| Expected assists (xA) | 15.9 | 0.346 | 1.4536 |
-| Key passes | 9.5 | 0.793 | – |
-| Big chances created | 26.3 | 0.378 | – |
-| xGBuildup | 20.9 | 0.416 | 0.0103 |
-| Accurate passes in the opposition half | 3.0 | 3.826 | – |
-| Accurate final-third passes | 3.6 | 3.325 | – |
-| Possession won in the attacking third | 32.6 | 0.108 | – |
+| Non-penalty goals | 16.9 | 0.681 | – |
+| Non-penalty xG | 12.7 | 0.721 | 1.1499 |
+| Shots on target | 10.4 | 1.088 | – |
+| Assists | 62.2 | 0.192 | – |
+| Expected assists (xA) | 13.8 | 0.368 | 1.4524 |
+| Key passes | 8.3 | 0.830 | – |
+| Big chances created | 23.1 | 0.405 | – |
+| xGBuildup | 18.2 | 0.445 | 0.0103 |
+| Accurate passes in the opposition half | 2.6 | 3.888 | – |
+| Accurate final-third passes | 3.2 | 3.389 | – |
+| Possession won in the attacking third | 28.6 | 0.118 | – |
 
 ## Wingers
 
-375 player seasons with 900+ minutes (182 in 2024/25 + 193 in 2025/26), 117 players in the role in both seasons.
+378 player seasons with 900+ minutes (182 in 2024/25 + 196 in 2025/26), 118 players in the role in both seasons.
 
 ### How a winger earns points
 
 | Weight | Measure | Link with winning | Repeatability |
 |---|---|---|---|
-| 21% | Non-penalty xG | 0.31 | 0.67 |
-| 15% | Accurate final-third passes | 0.20 | 0.71 |
-| 13% | Shots on target | 0.21 | 0.63 |
-| 12% | Non-penalty goals | 0.26 | 0.46 |
-| 12% | Expected assists (xA) · Big chances created | 0.29 | 0.40 |
+| 23% | Non-penalty xG | 0.31 | 0.67 |
+| 16% | Accurate final-third passes | 0.21 | 0.71 |
+| 14% | Shots on target | 0.20 | 0.63 |
+| 12% | Expected assists (xA) · Big chances created | 0.29 | 0.39 |
 | 11% | xGBuildup | 0.32 | 0.32 |
 | 9% | Key passes | 0.18 | 0.47 |
-| 4% | Assists | 0.30 | 0.14 |
-| 3% | Penalties won | 0.16 | 0.16 |
+| 7% | Non-penalty goals · Goals per non-penalty shot | 0.25 | 0.27 |
+| 4% | Assists | 0.30 | 0.13 |
+| 3% | Penalties won | 0.15 | 0.15 |
 
 ### Every candidate statistic
 
 | Statistic | Players | Link with winning (2024/25 / 2025/26) | Repeatability | Used | Why not |
 |---|---|---|---|---|---|
-| Non-penalty goals | 360 | 0.19 / 0.36 | 0.46 | yes |  |
-| Non-penalty xG | 374 | 0.33 / 0.30 | 0.67 | yes |  |
-| Shots on target | 375 | 0.15 / 0.28 | 0.63 | yes |  |
-| Shots on target % | 375 | 0.08 / 0.21 | 0.15 |  | No significant link with winning in each season |
-| Big chances missed (counts against) | 362 | -0.27 / -0.19 | 0.58 |  | No significant link with winning in each season |
-| Offsides (counts against) | 362 | -0.07 / -0.12 | 0.53 |  | No significant link with winning in each season |
-| Penalties won | 362 | 0.14 / 0.17 | 0.16 | yes |  |
-| Fouls won | 362 | -0.10 / 0.09 | 0.74 |  | No significant link with winning in each season |
-| Assists | 375 | 0.30 / 0.30 | 0.14 | yes |  |
-| Expected assists (xA) | 374 | 0.33 / 0.29 | 0.40 | yes |  |
-| Key passes | 362 | 0.16 / 0.20 | 0.47 | yes |  |
-| Big chances created | 362 | 0.28 / 0.27 | 0.36 | yes |  |
-| Accurate crosses | 362 | 0.00 / 0.00 | 0.66 |  | No significant link with winning in each season |
-| Cross accuracy % | 369 | -0.01 / 0.11 | 0.18 |  | No significant link with winning in each season |
-| xGBuildup | 374 | 0.41 / 0.23 | 0.32 | yes |  |
-| Accurate passes | 362 | -0.03 / 0.11 | 0.77 |  | No significant link with winning in each season |
-| Pass accuracy % | 369 | -0.05 / 0.00 | 0.76 |  | No significant link with winning in each season |
-| Inaccurate passes (counts against) | 362 | -0.01 / -0.09 | 0.71 |  | No significant link with winning in each season |
-| Accurate passes in own half | 362 | -0.23 / -0.09 | 0.76 |  | No significant link with winning in each season |
-| Accurate passes in the opposition half | 362 | 0.11 / 0.24 | 0.73 |  | No significant link with winning in each season |
-| Accurate final-third passes | 362 | 0.17 / 0.25 | 0.71 | yes |  |
-| Accurate long balls | 362 | -0.26 / 0.01 | 0.74 |  | No significant link with winning in each season |
-| Long-ball accuracy % | 366 | -0.21 / 0.09 | 0.43 |  | No significant link with winning in each season |
-| Accurate chipped passes | 362 | -0.19 / 0.05 | 0.78 |  | No significant link with winning in each season |
-| Touches | 362 | 0.00 / 0.17 | 0.76 |  | No significant link with winning in each season |
-| Successful dribbles | 362 | 0.06 / 0.15 | 0.77 |  | No significant link with winning in each season |
-| Dribble success % | 370 | 0.01 / 0.14 | 0.35 |  | No significant link with winning in each season |
-| Dispossessed (counts against) | 362 | 0.01 / -0.14 | 0.73 |  | No significant link with winning in each season |
-| Possession lost (counts against) | 362 | -0.03 / -0.12 | 0.72 |  | No significant link with winning in each season |
-| Tackles won | 362 | -0.09 / 0.02 | 0.66 |  | No significant link with winning in each season |
-| Tackle success % | 368 | -0.07 / 0.11 | 0.09 |  | No significant link with winning in each season |
-| Interceptions | 362 | -0.17 / 0.05 | 0.47 |  | No significant link with winning in each season |
-| Blocks | 185 | – | – |  | Known for too few players in this role |
-| Clearances | 362 | 0.02 / -0.12 | 0.61 |  | No significant link with winning in each season |
-| Ball recoveries | 362 | -0.07 / 0.17 | 0.62 |  | No significant link with winning in each season |
-| Possession won in the attacking third | 362 | 0.08 / 0.31 | 0.41 |  | No significant link with winning in each season |
-| Ground duels won | 362 | -0.05 / 0.12 | 0.83 |  | No significant link with winning in each season |
-| Ground duels won % | 370 | -0.02 / -0.01 | 0.50 |  | No significant link with winning in each season |
-| Aerial duels won | 362 | 0.04 / 0.04 | 0.79 |  | No significant link with winning in each season |
-| Aerial duels won % | 368 | 0.06 / 0.05 | 0.59 |  | No significant link with winning in each season |
-| Duels lost (counts against) | 362 | 0.02 / -0.12 | 0.81 |  | No significant link with winning in each season |
-| Dribbled past (counts against) | 362 | 0.09 / 0.05 | 0.56 |  | No significant link with winning in each season |
-| Fouls committed (counts against) | 362 | 0.14 / -0.15 | 0.72 |  | No significant link with winning in each season |
-| Yellow cards (counts against) | 362 | 0.11 / -0.10 | 0.27 |  | No significant link with winning in each season |
-| Red cards (counts against) | 362 | 0.24 / -0.07 | 0.03 |  | No significant link with winning in each season |
-| Penalties conceded (counts against) | 362 | – | – |  | Does not repeat from one season to the next |
-| Errors leading to a shot (counts against) | 362 | – | – |  | Does not repeat from one season to the next |
-| Errors leading to a goal (counts against) | 362 | 0.09 / 0.01 | 0.13 |  | No significant link with winning in each season |
-| Own goals (counts against) | 362 | – | – |  | Does not repeat from one season to the next |
-| Distance covered | 185 | – | – |  | Known for too few players in this role |
-| Sprints | 185 | – | – |  | Known for too few players in this role |
-| Goals prevented | 0 | – | – |  | Known for too few players in this role |
-| High claims | 0 | – | – |  | Known for too few players in this role |
-| Punches | 0 | – | – |  | Known for too few players in this role |
-| Crosses not claimed (counts against) | 0 | – | – |  | Known for too few players in this role |
-| Successful runs out | 0 | – | – |  | Known for too few players in this role |
-| Runs out success % | 0 | – | – |  | Known for too few players in this role |
-| Penalty save % | 0 | – | – |  | Known for too few players in this role |
+| Non-penalty goals | 363 | 0.19 / 0.35 | 0.46 | yes |  |
+| Non-penalty xG | 377 | 0.33 / 0.29 | 0.67 | yes |  |
+| Shots on target | 378 | 0.15 / 0.28 | 0.63 | yes |  |
+| Shots on target % | 378 | 0.08 / 0.21 | 0.15 |  | No significant link with winning in each season |
+| Goals per non-penalty shot | 359 | 0.16 / 0.31 | 0.14 | yes |  |
+| Big chances missed (counts against) | 365 | -0.26 / -0.18 | 0.58 |  | No significant link with winning in each season |
+| Offsides (counts against) | 365 | -0.07 / -0.12 | 0.53 |  | No significant link with winning in each season |
+| Penalties won | 365 | 0.14 / 0.17 | 0.15 | yes |  |
+| Fouls won | 365 | -0.11 / 0.09 | 0.73 |  | No significant link with winning in each season |
+| Assists | 378 | 0.30 / 0.30 | 0.13 | yes |  |
+| Expected assists (xA) | 377 | 0.33 / 0.28 | 0.40 | yes |  |
+| Key passes | 365 | 0.16 / 0.21 | 0.47 | yes |  |
+| Big chances created | 365 | 0.28 / 0.26 | 0.35 | yes |  |
+| Accurate crosses | 365 | 0.00 / 0.00 | 0.67 |  | No significant link with winning in each season |
+| Cross accuracy % | 372 | -0.01 / 0.10 | 0.18 |  | No significant link with winning in each season |
+| xGBuildup | 377 | 0.41 / 0.23 | 0.32 | yes |  |
+| Inaccurate passes (counts against) | 365 | -0.01 / -0.10 | 0.71 |  | No significant link with winning in each season |
+| Accurate passes in own half | 365 | -0.23 / -0.09 | 0.76 |  | No significant link with winning in each season |
+| Pass accuracy in own half % | 372 | -0.15 / 0.15 | 0.48 |  | No significant link with winning in each season |
+| Accurate passes in the opposition half | 365 | 0.11 / 0.24 | 0.73 |  | No significant link with winning in each season |
+| Pass accuracy in the opposition half % | 372 | 0.02 / 0.01 | 0.61 |  | No significant link with winning in each season |
+| Accurate final-third passes | 365 | 0.17 / 0.25 | 0.71 | yes |  |
+| Accurate long balls | 365 | -0.26 / 0.02 | 0.74 |  | No significant link with winning in each season |
+| Long-ball accuracy % | 369 | -0.19 / 0.08 | 0.41 |  | No significant link with winning in each season |
+| Accurate chipped passes | 365 | -0.19 / 0.05 | 0.78 |  | No significant link with winning in each season |
+| Chipped pass accuracy % | 371 | -0.05 / 0.07 | 0.32 |  | No significant link with winning in each season |
+| Touches | 365 | 0.00 / 0.18 | 0.76 |  | No significant link with winning in each season |
+| Successful dribbles | 365 | 0.06 / 0.15 | 0.76 |  | No significant link with winning in each season |
+| Dribble success % | 373 | 0.01 / 0.14 | 0.33 |  | No significant link with winning in each season |
+| Dispossessed (counts against) | 365 | 0.01 / -0.13 | 0.73 |  | No significant link with winning in each season |
+| Tackles won | 365 | -0.09 / 0.02 | 0.66 |  | No significant link with winning in each season |
+| Tackle success % | 371 | -0.07 / 0.11 | 0.09 |  | No significant link with winning in each season |
+| Interceptions | 365 | -0.17 / 0.06 | 0.47 |  | No significant link with winning in each season |
+| Blocks | 188 | – | – |  | Not in the 2024/25 data |
+| Clearances | 365 | 0.02 / -0.12 | 0.61 |  | No significant link with winning in each season |
+| Ball recoveries | 365 | -0.06 / 0.17 | 0.62 |  | No significant link with winning in each season |
+| Possession won in the attacking third | 365 | 0.08 / 0.31 | 0.40 |  | No significant link with winning in each season |
+| Ground duels won | 365 | -0.06 / 0.13 | 0.82 |  | No significant link with winning in each season |
+| Ground duels won % | 373 | -0.03 / 0.00 | 0.49 |  | No significant link with winning in each season |
+| Aerial duels won | 365 | 0.04 / 0.04 | 0.79 |  | No significant link with winning in each season |
+| Aerial duels lost (counts against) | 365 | -0.01 / -0.01 | 0.64 |  | No significant link with winning in each season |
+| Aerial duels won % | 371 | 0.06 / 0.05 | 0.55 |  | No significant link with winning in each season |
+| Dribbled past (counts against) | 365 | 0.09 / 0.04 | 0.57 |  | No significant link with winning in each season |
+| Fouls committed (counts against) | 365 | 0.14 / -0.15 | 0.72 |  | No significant link with winning in each season |
+| Yellow cards (counts against) | 365 | 0.11 / -0.10 | 0.28 |  | No significant link with winning in each season |
+| Red cards (counts against) | 365 | 0.24 / -0.07 | 0.03 |  | No significant link with winning in each season |
+| Penalties conceded (counts against) | 365 | – | – |  | Does not repeat from one season to the next |
+| Errors leading to a shot (counts against) | 365 | – | – |  | Does not repeat from one season to the next |
+| Errors leading to a goal (counts against) | 365 | 0.09 / 0.01 | 0.14 |  | No significant link with winning in each season |
+| Own goals (counts against) | 365 | – | – |  | Does not repeat from one season to the next |
+| Distance covered | 188 | – | – |  | Not in the 2024/25 data |
+| Sprints | 188 | – | – |  | Not in the 2024/25 data |
+| Goals prevented | 0 | – | – |  | Not in the 2024/25 data |
+| High claims | 0 | – | – |  | Not in the 2024/25 data |
+| Punches | 0 | – | – |  | Not in the 2024/25 data |
+| Crosses not claimed (counts against) | 0 | – | – |  | Not in the 2024/25 data |
+| Successful runs out | 0 | – | – |  | Not in the 2024/25 data |
+| Runs out success % | 0 | – | – |  | Not in the 2024/25 data |
 
 How the used statistics are prepared (k: pulled toward the average as if the player had k more
 matches or attempts at the average; possession: change per unit of possession share, on the statistic's
@@ -250,94 +250,95 @@ no record of the player):
 
 | Statistic | k | Possession slope | Proxy scale |
 |---|---|---|---|
-| Non-penalty goals | 19.1 | 0.525 | – |
-| Non-penalty xG | 9.6 | 0.560 | 1.1120 |
-| Shots on target | 10.8 | 0.851 | – |
-| Penalties won | 108.4 | 0.038 | – |
-| Assists | 65.1 | 0.223 | – |
-| Expected assists (xA) | 20.8 | 0.382 | 1.1793 |
-| Key passes | 16.6 | 0.799 | – |
-| Big chances created | 25.8 | 0.499 | – |
-| xGBuildup | 15.4 | 0.803 | 0.0100 |
-| Accurate final-third passes | 3.9 | 5.801 | – |
+| Non-penalty goals | 17.1 | 0.552 | – |
+| Non-penalty xG | 8.4 | 0.584 | 1.1121 |
+| Shots on target | 9.6 | 0.879 | – |
+| Goals per non-penalty shot | 771.8 | 0.011 | – |
+| Penalties won | 97.9 | 0.041 | – |
+| Assists | 60.3 | 0.236 | – |
+| Expected assists (xA) | 18.5 | 0.402 | 1.1804 |
+| Key passes | 14.9 | 0.833 | – |
+| Big chances created | 23.0 | 0.527 | – |
+| xGBuildup | 13.5 | 0.846 | 0.0099 |
+| Accurate final-third passes | 3.4 | 5.904 | – |
 
 ## Attacking midfielders
 
-292 player seasons with 900+ minutes (142 in 2024/25 + 150 in 2025/26), 88 players in the role in both seasons.
+293 player seasons with 900+ minutes (142 in 2024/25 + 151 in 2025/26), 88 players in the role in both seasons.
 
 ### How an attacking midfielder earns points
 
 | Weight | Measure | Link with winning | Repeatability |
 |---|---|---|---|
-| 24% | Expected assists (xA) · Big chances created | 0.27 | 0.61 |
-| 23% | Non-penalty xG | 0.28 | 0.57 |
-| 17% | Shots on target | 0.22 | 0.53 |
-| 15% | Non-penalty goals | 0.31 | 0.33 |
+| 26% | Expected assists (xA) · Big chances created | 0.27 | 0.61 |
+| 25% | Non-penalty xG | 0.28 | 0.57 |
+| 18% | Shots on target | 0.22 | 0.53 |
 | 13% | Possession won in the attacking third | 0.19 | 0.45 |
-| 9% | Assists | 0.23 | 0.27 |
+| 10% | Assists | 0.23 | 0.27 |
+| 9% | Non-penalty goals · Goals per non-penalty shot | 0.28 | 0.20 |
 
 ### Every candidate statistic
 
 | Statistic | Players | Link with winning (2024/25 / 2025/26) | Repeatability | Used | Why not |
 |---|---|---|---|---|---|
-| Non-penalty goals | 279 | 0.30 / 0.35 | 0.33 | yes |  |
-| Non-penalty xG | 286 | 0.27 / 0.29 | 0.57 | yes |  |
-| Shots on target | 292 | 0.19 / 0.26 | 0.53 | yes |  |
-| Shots on target % | 292 | 0.12 / 0.09 | 0.10 |  | No significant link with winning in each season |
-| Big chances missed (counts against) | 279 | -0.17 / -0.20 | 0.41 |  | No significant link with winning in each season |
-| Offsides (counts against) | 279 | -0.04 / -0.07 | 0.53 |  | No significant link with winning in each season |
-| Penalties won | 279 | 0.10 / 0.10 | 0.16 |  | No significant link with winning in each season |
-| Fouls won | 279 | 0.07 / -0.07 | 0.82 |  | No significant link with winning in each season |
-| Assists | 292 | 0.31 / 0.14 | 0.27 | yes |  |
-| Expected assists (xA) | 286 | 0.34 / 0.21 | 0.63 | yes |  |
-| Key passes | 279 | 0.24 / 0.04 | 0.71 |  | No significant link with winning in each season |
-| Big chances created | 279 | 0.28 / 0.19 | 0.55 | yes |  |
-| Accurate crosses | 279 | 0.05 / -0.07 | 0.80 |  | No significant link with winning in each season |
-| Cross accuracy % | 281 | 0.00 / 0.04 | 0.51 |  | No significant link with winning in each season |
-| xGBuildup | 286 | 0.42 / 0.09 | 0.17 |  | No significant link with winning in each season |
-| Accurate passes | 279 | 0.11 / -0.17 | 0.84 |  | No significant link with winning in each season |
-| Pass accuracy % | 281 | -0.06 / -0.19 | 0.77 |  | No significant link with winning in each season |
-| Inaccurate passes (counts against) | 279 | -0.18 / -0.05 | 0.65 |  | No significant link with winning in each season |
-| Accurate passes in own half | 279 | -0.06 / -0.26 | 0.77 |  | No significant link with winning in each season |
-| Accurate passes in the opposition half | 279 | 0.22 / -0.07 | 0.81 |  | No significant link with winning in each season |
-| Accurate final-third passes | 279 | 0.26 / -0.04 | 0.77 |  | No significant link with winning in each season |
-| Accurate long balls | 279 | 0.08 / -0.17 | 0.77 |  | No significant link with winning in each season |
-| Long-ball accuracy % | 281 | 0.00 / -0.14 | 0.56 |  | No significant link with winning in each season |
-| Accurate chipped passes | 279 | 0.17 / -0.09 | 0.80 |  | No significant link with winning in each season |
-| Touches | 279 | 0.13 / -0.14 | 0.76 |  | No significant link with winning in each season |
-| Successful dribbles | 279 | -0.04 / 0.03 | 0.74 |  | No significant link with winning in each season |
-| Dribble success % | 281 | 0.02 / -0.14 | 0.30 |  | No significant link with winning in each season |
-| Dispossessed (counts against) | 279 | 0.05 / -0.02 | 0.59 |  | No significant link with winning in each season |
-| Possession lost (counts against) | 279 | -0.13 / -0.04 | 0.67 |  | No significant link with winning in each season |
-| Tackles won | 279 | -0.12 / -0.02 | 0.50 |  | No significant link with winning in each season |
-| Tackle success % | 280 | 0.00 / 0.06 | 0.17 |  | No significant link with winning in each season |
-| Interceptions | 279 | 0.06 / 0.02 | 0.56 |  | No significant link with winning in each season |
-| Blocks | 142 | – | – |  | Known for too few players in this role |
-| Clearances | 279 | -0.06 / -0.08 | 0.54 |  | No significant link with winning in each season |
-| Ball recoveries | 279 | 0.05 / -0.09 | 0.51 |  | No significant link with winning in each season |
-| Possession won in the attacking third | 279 | 0.18 / 0.22 | 0.45 | yes |  |
-| Ground duels won | 279 | -0.04 / -0.04 | 0.73 |  | No significant link with winning in each season |
-| Ground duels won % | 281 | 0.06 / -0.16 | 0.53 |  | No significant link with winning in each season |
-| Aerial duels won | 279 | -0.09 / 0.21 | 0.74 |  | No significant link with winning in each season |
-| Aerial duels won % | 280 | -0.04 / 0.08 | 0.50 |  | No significant link with winning in each season |
-| Duels lost (counts against) | 279 | 0.12 / -0.20 | 0.63 |  | No significant link with winning in each season |
-| Dribbled past (counts against) | 279 | -0.04 / -0.04 | 0.61 |  | No significant link with winning in each season |
-| Fouls committed (counts against) | 279 | 0.12 / -0.03 | 0.67 |  | No significant link with winning in each season |
-| Yellow cards (counts against) | 279 | 0.17 / 0.08 | 0.38 |  | No significant link with winning in each season |
-| Red cards (counts against) | 279 | 0.18 / 0.26 | -0.02 |  | Does not repeat from one season to the next |
-| Penalties conceded (counts against) | 279 | – | – |  | Does not repeat from one season to the next |
-| Errors leading to a shot (counts against) | 279 | 0.19 / -0.09 | 0.07 |  | No significant link with winning in each season |
-| Errors leading to a goal (counts against) | 279 | – | – |  | Does not repeat from one season to the next |
-| Own goals (counts against) | 279 | – | – |  | Does not repeat from one season to the next |
-| Distance covered | 142 | – | – |  | Known for too few players in this role |
-| Sprints | 142 | – | – |  | Known for too few players in this role |
-| Goals prevented | 0 | – | – |  | Known for too few players in this role |
-| High claims | 0 | – | – |  | Known for too few players in this role |
-| Punches | 0 | – | – |  | Known for too few players in this role |
-| Crosses not claimed (counts against) | 0 | – | – |  | Known for too few players in this role |
-| Successful runs out | 0 | – | – |  | Known for too few players in this role |
-| Runs out success % | 0 | – | – |  | Known for too few players in this role |
-| Penalty save % | 0 | – | – |  | Known for too few players in this role |
+| Non-penalty goals | 280 | 0.30 / 0.35 | 0.33 | yes |  |
+| Non-penalty xG | 287 | 0.27 / 0.29 | 0.57 | yes |  |
+| Shots on target | 293 | 0.19 / 0.26 | 0.53 | yes |  |
+| Shots on target % | 293 | 0.12 / 0.09 | 0.10 |  | No significant link with winning in each season |
+| Goals per non-penalty shot | 275 | 0.21 / 0.23 | 0.17 | yes |  |
+| Big chances missed (counts against) | 280 | -0.17 / -0.20 | 0.41 |  | No significant link with winning in each season |
+| Offsides (counts against) | 280 | -0.05 / -0.07 | 0.53 |  | No significant link with winning in each season |
+| Penalties won | 280 | 0.10 / 0.10 | 0.16 |  | No significant link with winning in each season |
+| Fouls won | 280 | 0.07 / -0.07 | 0.82 |  | No significant link with winning in each season |
+| Assists | 293 | 0.31 / 0.14 | 0.27 | yes |  |
+| Expected assists (xA) | 287 | 0.34 / 0.21 | 0.63 | yes |  |
+| Key passes | 280 | 0.25 / 0.04 | 0.71 |  | No significant link with winning in each season |
+| Big chances created | 280 | 0.29 / 0.19 | 0.55 | yes |  |
+| Accurate crosses | 280 | 0.05 / -0.07 | 0.80 |  | No significant link with winning in each season |
+| Cross accuracy % | 282 | 0.00 / 0.04 | 0.48 |  | No significant link with winning in each season |
+| xGBuildup | 287 | 0.42 / 0.09 | 0.17 |  | No significant link with winning in each season |
+| Inaccurate passes (counts against) | 280 | -0.18 / -0.04 | 0.65 |  | No significant link with winning in each season |
+| Accurate passes in own half | 280 | -0.06 / -0.26 | 0.77 |  | No significant link with winning in each season |
+| Pass accuracy in own half % | 282 | 0.00 / -0.09 | 0.63 |  | No significant link with winning in each season |
+| Accurate passes in the opposition half | 280 | 0.22 / -0.07 | 0.81 |  | No significant link with winning in each season |
+| Pass accuracy in the opposition half % | 282 | -0.02 / -0.18 | 0.75 |  | No significant link with winning in each season |
+| Accurate final-third passes | 280 | 0.26 / -0.04 | 0.77 |  | No significant link with winning in each season |
+| Accurate long balls | 280 | 0.08 / -0.17 | 0.77 |  | No significant link with winning in each season |
+| Long-ball accuracy % | 282 | 0.01 / -0.13 | 0.51 |  | No significant link with winning in each season |
+| Accurate chipped passes | 280 | 0.17 / -0.10 | 0.80 |  | No significant link with winning in each season |
+| Chipped pass accuracy % | 282 | 0.01 / 0.01 | 0.39 |  | No significant link with winning in each season |
+| Touches | 280 | 0.13 / -0.14 | 0.76 |  | No significant link with winning in each season |
+| Successful dribbles | 280 | -0.04 / 0.03 | 0.74 |  | No significant link with winning in each season |
+| Dribble success % | 282 | 0.01 / -0.14 | 0.29 |  | No significant link with winning in each season |
+| Dispossessed (counts against) | 280 | 0.05 / -0.02 | 0.59 |  | No significant link with winning in each season |
+| Tackles won | 280 | -0.12 / -0.02 | 0.50 |  | No significant link with winning in each season |
+| Tackle success % | 281 | 0.00 / 0.07 | 0.17 |  | No significant link with winning in each season |
+| Interceptions | 280 | 0.07 / 0.02 | 0.56 |  | No significant link with winning in each season |
+| Blocks | 143 | – | – |  | Not in the 2024/25 data |
+| Clearances | 280 | -0.06 / -0.08 | 0.54 |  | No significant link with winning in each season |
+| Ball recoveries | 280 | 0.05 / -0.10 | 0.51 |  | No significant link with winning in each season |
+| Possession won in the attacking third | 280 | 0.18 / 0.21 | 0.45 | yes |  |
+| Ground duels won | 280 | -0.04 / -0.04 | 0.73 |  | No significant link with winning in each season |
+| Ground duels won % | 282 | 0.06 / -0.16 | 0.53 |  | No significant link with winning in each season |
+| Aerial duels won | 280 | -0.09 / 0.21 | 0.74 |  | No significant link with winning in each season |
+| Aerial duels lost (counts against) | 280 | 0.08 / -0.21 | 0.63 |  | No significant link with winning in each season |
+| Aerial duels won % | 281 | -0.04 / 0.07 | 0.48 |  | No significant link with winning in each season |
+| Dribbled past (counts against) | 280 | -0.04 / -0.04 | 0.61 |  | No significant link with winning in each season |
+| Fouls committed (counts against) | 280 | 0.12 / -0.03 | 0.67 |  | No significant link with winning in each season |
+| Yellow cards (counts against) | 280 | 0.17 / 0.09 | 0.38 |  | No significant link with winning in each season |
+| Red cards (counts against) | 280 | 0.18 / 0.25 | -0.02 |  | Does not repeat from one season to the next |
+| Penalties conceded (counts against) | 280 | – | – |  | Does not repeat from one season to the next |
+| Errors leading to a shot (counts against) | 280 | 0.19 / -0.10 | 0.07 |  | No significant link with winning in each season |
+| Errors leading to a goal (counts against) | 280 | – | – |  | Does not repeat from one season to the next |
+| Own goals (counts against) | 280 | – | – |  | Does not repeat from one season to the next |
+| Distance covered | 143 | – | – |  | Not in the 2024/25 data |
+| Sprints | 143 | – | – |  | Not in the 2024/25 data |
+| Goals prevented | 0 | – | – |  | Not in the 2024/25 data |
+| High claims | 0 | – | – |  | Not in the 2024/25 data |
+| Punches | 0 | – | – |  | Not in the 2024/25 data |
+| Crosses not claimed (counts against) | 0 | – | – |  | Not in the 2024/25 data |
+| Successful runs out | 0 | – | – |  | Not in the 2024/25 data |
+| Runs out success % | 0 | – | – |  | Not in the 2024/25 data |
 
 How the used statistics are prepared (k: pulled toward the average as if the player had k more
 matches or attempts at the average; possession: change per unit of possession share, on the statistic's
@@ -346,87 +347,88 @@ no record of the player):
 
 | Statistic | k | Possession slope | Proxy scale |
 |---|---|---|---|
-| Non-penalty goals | 29.1 | 0.367 | – |
-| Non-penalty xG | 12.8 | 0.514 | 1.0956 |
-| Shots on target | 12.9 | 0.791 | – |
-| Assists | 34.3 | 0.298 | – |
-| Expected assists (xA) | 8.1 | 0.564 | 1.1726 |
-| Big chances created | 13.3 | 0.594 | – |
-| Possession won in the attacking third | 26.8 | 0.152 | – |
+| Non-penalty goals | 26.4 | 0.389 | – |
+| Non-penalty xG | 11.4 | 0.539 | 1.0951 |
+| Shots on target | 11.6 | 0.823 | – |
+| Goals per non-penalty shot | 82.6 | 0.056 | – |
+| Assists | 31.0 | 0.318 | – |
+| Expected assists (xA) | 7.2 | 0.583 | 1.1706 |
+| Big chances created | 11.9 | 0.622 | – |
+| Possession won in the attacking third | 24.0 | 0.161 | – |
 
 ## Central midfielders
 
-371 player seasons with 900+ minutes (185 in 2024/25 + 186 in 2025/26), 130 players in the role in both seasons.
+373 player seasons with 900+ minutes (185 in 2024/25 + 188 in 2025/26), 130 players in the role in both seasons.
 
 ### How a central midfielder earns points
 
 | Weight | Measure | Link with winning | Repeatability |
 |---|---|---|---|
 | 65% | Accurate passes in the opposition half · Accurate final-third passes | 0.20 | 0.74 |
-| 35% | xGBuildup | 0.32 | 0.25 |
+| 35% | xGBuildup | 0.31 | 0.24 |
 
 ### Every candidate statistic
 
 | Statistic | Players | Link with winning (2024/25 / 2025/26) | Repeatability | Used | Why not |
 |---|---|---|---|---|---|
-| Non-penalty goals | 347 | 0.11 / 0.14 | 0.47 |  | No significant link with winning in each season |
-| Non-penalty xG | 352 | 0.02 / 0.22 | 0.72 |  | No significant link with winning in each season |
-| Shots on target | 371 | 0.04 / 0.06 | 0.60 |  | No significant link with winning in each season |
-| Shots on target % | 371 | 0.05 / -0.08 | 0.26 |  | No significant link with winning in each season |
-| Big chances missed (counts against) | 331 | 0.05 / -0.22 | 0.54 |  | No significant link with winning in each season |
-| Offsides (counts against) | 331 | 0.04 / -0.15 | 0.46 |  | No significant link with winning in each season |
-| Penalties won | 331 | – | – |  | Does not repeat from one season to the next |
-| Fouls won | 331 | 0.03 / -0.04 | 0.78 |  | No significant link with winning in each season |
-| Assists | 371 | 0.10 / 0.25 | 0.35 |  | No significant link with winning in each season |
-| Expected assists (xA) | 352 | 0.09 / 0.20 | 0.69 |  | No significant link with winning in each season |
-| Key passes | 331 | 0.06 / 0.24 | 0.71 |  | No significant link with winning in each season |
-| Big chances created | 331 | 0.12 / 0.13 | 0.58 |  | No significant link with winning in each season |
-| Accurate crosses | 331 | -0.07 / 0.11 | 0.68 |  | No significant link with winning in each season |
-| Cross accuracy % | 330 | – | – |  | Does not repeat from one season to the next |
-| xGBuildup | 352 | 0.32 / 0.33 | 0.25 | yes |  |
-| Accurate passes | 331 | 0.17 / 0.05 | 0.71 |  | No significant link with winning in each season |
-| Pass accuracy % | 336 | 0.01 / 0.00 | 0.71 |  | No significant link with winning in each season |
-| Inaccurate passes (counts against) | 331 | -0.11 / -0.05 | 0.76 |  | No significant link with winning in each season |
-| Accurate passes in own half | 331 | 0.08 / -0.08 | 0.70 |  | No significant link with winning in each season |
-| Accurate passes in the opposition half | 331 | 0.20 / 0.17 | 0.72 | yes |  |
-| Accurate final-third passes | 331 | 0.16 / 0.24 | 0.74 | yes |  |
-| Accurate long balls | 331 | 0.13 / 0.05 | 0.71 |  | No significant link with winning in each season |
-| Long-ball accuracy % | 335 | 0.00 / 0.07 | 0.39 |  | No significant link with winning in each season |
-| Accurate chipped passes | 331 | 0.15 / 0.08 | 0.74 |  | No significant link with winning in each season |
-| Touches | 331 | 0.11 / 0.07 | 0.73 |  | No significant link with winning in each season |
-| Successful dribbles | 331 | -0.17 / 0.01 | 0.76 |  | No significant link with winning in each season |
-| Dribble success % | 335 | 0.09 / 0.04 | 0.28 |  | No significant link with winning in each season |
-| Dispossessed (counts against) | 331 | 0.05 / -0.02 | 0.66 |  | No significant link with winning in each season |
-| Possession lost (counts against) | 331 | 0.05 / -0.06 | 0.77 |  | No significant link with winning in each season |
-| Tackles won | 331 | -0.04 / -0.02 | 0.67 |  | No significant link with winning in each season |
-| Tackle success % | 334 | 0.06 / -0.05 | 0.05 |  | No significant link with winning in each season |
-| Interceptions | 331 | 0.06 / -0.06 | 0.60 |  | No significant link with winning in each season |
-| Blocks | 166 | – | – |  | Known for too few players in this role |
-| Clearances | 331 | -0.06 / -0.07 | 0.66 |  | No significant link with winning in each season |
-| Ball recoveries | 331 | 0.09 / 0.13 | 0.60 |  | No significant link with winning in each season |
-| Possession won in the attacking third | 331 | 0.09 / 0.29 | 0.45 |  | No significant link with winning in each season |
-| Ground duels won | 331 | -0.07 / -0.03 | 0.80 |  | No significant link with winning in each season |
-| Ground duels won % | 336 | 0.05 / -0.06 | 0.56 |  | No significant link with winning in each season |
-| Aerial duels won | 331 | 0.11 / 0.07 | 0.83 |  | No significant link with winning in each season |
-| Aerial duels won % | 334 | 0.06 / 0.08 | 0.50 |  | No significant link with winning in each season |
-| Duels lost (counts against) | 331 | 0.08 / -0.02 | 0.82 |  | No significant link with winning in each season |
-| Dribbled past (counts against) | 331 | 0.10 / 0.00 | 0.73 |  | No significant link with winning in each season |
-| Fouls committed (counts against) | 331 | -0.03 / -0.02 | 0.69 |  | No significant link with winning in each season |
-| Yellow cards (counts against) | 331 | 0.14 / 0.08 | 0.41 |  | No significant link with winning in each season |
-| Red cards (counts against) | 331 | -0.08 / 0.01 | -0.04 |  | No significant link with winning in each season |
-| Penalties conceded (counts against) | 331 | 0.02 / 0.05 | 0.01 |  | No significant link with winning in each season |
-| Errors leading to a shot (counts against) | 331 | 0.16 / 0.07 | 0.18 |  | No significant link with winning in each season |
-| Errors leading to a goal (counts against) | 331 | -0.01 / -0.05 | 0.03 |  | No significant link with winning in each season |
-| Own goals (counts against) | 331 | – | – |  | Does not repeat from one season to the next |
-| Distance covered | 166 | – | – |  | Known for too few players in this role |
-| Sprints | 166 | – | – |  | Known for too few players in this role |
-| Goals prevented | 0 | – | – |  | Known for too few players in this role |
-| High claims | 0 | – | – |  | Known for too few players in this role |
-| Punches | 0 | – | – |  | Known for too few players in this role |
-| Crosses not claimed (counts against) | 0 | – | – |  | Known for too few players in this role |
-| Successful runs out | 0 | – | – |  | Known for too few players in this role |
-| Runs out success % | 0 | – | – |  | Known for too few players in this role |
-| Penalty save % | 0 | – | – |  | Known for too few players in this role |
+| Non-penalty goals | 349 | 0.11 / 0.15 | 0.47 |  | No significant link with winning in each season |
+| Non-penalty xG | 354 | 0.03 / 0.22 | 0.72 |  | No significant link with winning in each season |
+| Shots on target | 373 | 0.04 / 0.06 | 0.60 |  | No significant link with winning in each season |
+| Shots on target % | 373 | 0.05 / -0.08 | 0.25 |  | No significant link with winning in each season |
+| Goals per non-penalty shot | 333 | 0.12 / 0.08 | 0.30 |  | No significant link with winning in each season |
+| Big chances missed (counts against) | 333 | 0.04 / -0.21 | 0.54 |  | No significant link with winning in each season |
+| Offsides (counts against) | 333 | 0.04 / -0.14 | 0.46 |  | No significant link with winning in each season |
+| Penalties won | 333 | – | – |  | Does not repeat from one season to the next |
+| Fouls won | 333 | 0.03 / -0.03 | 0.78 |  | No significant link with winning in each season |
+| Assists | 373 | 0.10 / 0.24 | 0.35 |  | No significant link with winning in each season |
+| Expected assists (xA) | 354 | 0.09 / 0.20 | 0.69 |  | No significant link with winning in each season |
+| Key passes | 333 | 0.06 / 0.24 | 0.71 |  | No significant link with winning in each season |
+| Big chances created | 333 | 0.12 / 0.12 | 0.58 |  | No significant link with winning in each season |
+| Accurate crosses | 333 | -0.07 / 0.11 | 0.68 |  | No significant link with winning in each season |
+| Cross accuracy % | 332 | – | – |  | Does not repeat from one season to the next |
+| xGBuildup | 354 | 0.32 / 0.32 | 0.24 | yes |  |
+| Inaccurate passes (counts against) | 333 | -0.11 / -0.05 | 0.76 |  | No significant link with winning in each season |
+| Accurate passes in own half | 333 | 0.08 / -0.09 | 0.70 |  | No significant link with winning in each season |
+| Pass accuracy in own half % | 338 | 0.14 / 0.04 | 0.55 |  | No significant link with winning in each season |
+| Accurate passes in the opposition half | 333 | 0.20 / 0.16 | 0.72 | yes |  |
+| Pass accuracy in the opposition half % | 338 | 0.04 / 0.03 | 0.59 |  | No significant link with winning in each season |
+| Accurate final-third passes | 333 | 0.16 / 0.24 | 0.74 | yes |  |
+| Accurate long balls | 333 | 0.13 / 0.05 | 0.71 |  | No significant link with winning in each season |
+| Long-ball accuracy % | 337 | 0.00 / 0.06 | 0.40 |  | No significant link with winning in each season |
+| Accurate chipped passes | 333 | 0.15 / 0.07 | 0.74 |  | No significant link with winning in each season |
+| Chipped pass accuracy % | 337 | 0.03 / 0.04 | 0.34 |  | No significant link with winning in each season |
+| Touches | 333 | 0.11 / 0.06 | 0.73 |  | No significant link with winning in each season |
+| Successful dribbles | 333 | -0.17 / 0.01 | 0.76 |  | No significant link with winning in each season |
+| Dribble success % | 337 | 0.09 / 0.03 | 0.28 |  | No significant link with winning in each season |
+| Dispossessed (counts against) | 333 | 0.05 / -0.02 | 0.66 |  | No significant link with winning in each season |
+| Tackles won | 333 | -0.04 / -0.02 | 0.67 |  | No significant link with winning in each season |
+| Tackle success % | 336 | 0.06 / -0.06 | 0.04 |  | No significant link with winning in each season |
+| Interceptions | 333 | 0.06 / -0.06 | 0.60 |  | No significant link with winning in each season |
+| Blocks | 168 | – | – |  | Not in the 2024/25 data |
+| Clearances | 333 | -0.06 / -0.07 | 0.66 |  | No significant link with winning in each season |
+| Ball recoveries | 333 | 0.09 / 0.13 | 0.60 |  | No significant link with winning in each season |
+| Possession won in the attacking third | 333 | 0.09 / 0.29 | 0.45 |  | No significant link with winning in each season |
+| Ground duels won | 333 | -0.07 / -0.02 | 0.80 |  | No significant link with winning in each season |
+| Ground duels won % | 338 | 0.06 / -0.05 | 0.57 |  | No significant link with winning in each season |
+| Aerial duels won | 333 | 0.11 / 0.07 | 0.83 |  | No significant link with winning in each season |
+| Aerial duels lost (counts against) | 333 | -0.07 / -0.01 | 0.78 |  | No significant link with winning in each season |
+| Aerial duels won % | 336 | 0.07 / 0.09 | 0.47 |  | No significant link with winning in each season |
+| Dribbled past (counts against) | 333 | 0.10 / 0.00 | 0.73 |  | No significant link with winning in each season |
+| Fouls committed (counts against) | 333 | -0.03 / -0.02 | 0.69 |  | No significant link with winning in each season |
+| Yellow cards (counts against) | 333 | 0.15 / 0.09 | 0.41 |  | No significant link with winning in each season |
+| Red cards (counts against) | 333 | -0.08 / 0.01 | -0.04 |  | No significant link with winning in each season |
+| Penalties conceded (counts against) | 333 | 0.02 / 0.05 | 0.01 |  | No significant link with winning in each season |
+| Errors leading to a shot (counts against) | 333 | 0.16 / 0.07 | 0.18 |  | No significant link with winning in each season |
+| Errors leading to a goal (counts against) | 333 | -0.01 / -0.05 | 0.03 |  | No significant link with winning in each season |
+| Own goals (counts against) | 333 | – | – |  | Does not repeat from one season to the next |
+| Distance covered | 168 | – | – |  | Not in the 2024/25 data |
+| Sprints | 168 | – | – |  | Not in the 2024/25 data |
+| Goals prevented | 0 | – | – |  | Not in the 2024/25 data |
+| High claims | 0 | – | – |  | Not in the 2024/25 data |
+| Punches | 0 | – | – |  | Not in the 2024/25 data |
+| Crosses not claimed (counts against) | 0 | – | – |  | Not in the 2024/25 data |
+| Successful runs out | 0 | – | – |  | Not in the 2024/25 data |
+| Runs out success % | 0 | – | – |  | Not in the 2024/25 data |
 
 How the used statistics are prepared (k: pulled toward the average as if the player had k more
 matches or attempts at the average; possession: change per unit of possession share, on the statistic's
@@ -435,90 +437,90 @@ no record of the player):
 
 | Statistic | k | Possession slope | Proxy scale |
 |---|---|---|---|
-| xGBuildup | 13.7 | 1.003 | 0.0077 |
-| Accurate passes in the opposition half | 3.5 | 10.215 | – |
-| Accurate final-third passes | 3.3 | 6.894 | – |
+| xGBuildup | 12.2 | 1.049 | 0.0077 |
+| Accurate passes in the opposition half | 3.1 | 10.384 | – |
+| Accurate final-third passes | 2.9 | 7.000 | – |
 
 ## Defensive midfielders
 
-308 player seasons with 900+ minutes (157 in 2024/25 + 151 in 2025/26), 90 players in the role in both seasons.
+310 player seasons with 900+ minutes (157 in 2024/25 + 153 in 2025/26), 92 players in the role in both seasons.
 
 ### How a defensive midfielder earns points
 
 | Weight | Measure | Link with winning | Repeatability |
 |---|---|---|---|
-| 31% | Accurate passes in the opposition half · Accurate final-third passes | 0.37 | 0.67 |
-| 19% | Expected assists (xA) · Key passes · Big chances created | 0.22 | 0.67 |
-| 15% | Assists | 0.25 | 0.49 |
-| 13% | Shots on target | 0.19 | 0.56 |
-| 9% | Possession won in the attacking third | 0.16 | 0.48 |
-| 6% | xGBuildup | 0.42 | 0.11 |
-| 4% | Errors leading to a shot | 0.18 | 0.16 |
-| 2% | Shots on target % | 0.16 | 0.11 |
-| 2% | Non-penalty goals | 0.17 | 0.08 |
+| 27% | Accurate passes in the opposition half · Accurate final-third passes | 0.37 | 0.68 |
+| 16% | Key passes | 0.22 | 0.71 |
+| 14% | Expected assists (xA) · Big chances created | 0.21 | 0.61 |
+| 13% | Assists | 0.24 | 0.49 |
+| 11% | Shots on target | 0.18 | 0.58 |
+| 8% | Possession won in the attacking third | 0.15 | 0.47 |
+| 6% | xGBuildup | 0.42 | 0.14 |
+| 3% | Errors leading to a shot | 0.18 | 0.15 |
+| 1% | Non-penalty goals | 0.17 | 0.07 |
 
 ### Every candidate statistic
 
 | Statistic | Players | Link with winning (2024/25 / 2025/26) | Repeatability | Used | Why not |
 |---|---|---|---|---|---|
-| Non-penalty goals | 304 | 0.14 / 0.21 | 0.08 | yes |  |
-| Non-penalty xG | 308 | 0.12 / 0.18 | 0.49 |  | No significant link with winning in each season |
-| Shots on target | 308 | 0.17 / 0.22 | 0.56 | yes |  |
-| Shots on target % | 306 | 0.17 / 0.14 | 0.11 | yes |  |
-| Big chances missed (counts against) | 303 | -0.12 / -0.06 | 0.25 |  | No significant link with winning in each season |
-| Offsides (counts against) | 303 | 0.05 / -0.13 | 0.44 |  | No significant link with winning in each season |
-| Penalties won | 303 | – | – |  | Does not repeat from one season to the next |
-| Fouls won | 303 | -0.08 / -0.08 | 0.71 |  | No significant link with winning in each season |
-| Assists | 308 | 0.24 / 0.26 | 0.49 | yes |  |
-| Expected assists (xA) | 308 | 0.19 / 0.26 | 0.65 | yes |  |
-| Key passes | 303 | 0.18 / 0.27 | 0.71 | yes |  |
-| Big chances created | 303 | 0.14 / 0.26 | 0.58 | yes |  |
-| Accurate crosses | 303 | 0.12 / 0.15 | 0.80 |  | No significant link with winning in each season |
-| Cross accuracy % | 299 | – | – |  | Does not repeat from one season to the next |
-| xGBuildup | 308 | 0.41 / 0.45 | 0.11 | yes |  |
-| Accurate passes | 303 | 0.10 / 0.25 | 0.66 |  | No significant link with winning in each season |
-| Pass accuracy % | 304 | -0.04 / -0.05 | 0.75 |  | No significant link with winning in each season |
-| Inaccurate passes (counts against) | 303 | -0.09 / -0.17 | 0.73 |  | No significant link with winning in each season |
-| Accurate passes in own half | 303 | -0.19 / -0.10 | 0.52 |  | No significant link with winning in each season |
-| Accurate passes in the opposition half | 303 | 0.29 / 0.46 | 0.67 | yes |  |
-| Accurate final-third passes | 303 | 0.30 / 0.46 | 0.67 | yes |  |
-| Accurate long balls | 303 | 0.03 / 0.11 | 0.73 |  | No significant link with winning in each season |
-| Long-ball accuracy % | 304 | -0.04 / -0.03 | 0.50 |  | No significant link with winning in each season |
-| Accurate chipped passes | 303 | -0.01 / 0.08 | 0.76 |  | No significant link with winning in each season |
-| Touches | 303 | 0.13 / 0.28 | 0.69 |  | No significant link with winning in each season |
-| Successful dribbles | 303 | -0.07 / 0.03 | 0.64 |  | No significant link with winning in each season |
-| Dribble success % | 304 | 0.14 / 0.00 | 0.25 |  | No significant link with winning in each season |
-| Dispossessed (counts against) | 303 | 0.08 / 0.11 | 0.63 |  | No significant link with winning in each season |
-| Possession lost (counts against) | 303 | -0.06 / -0.17 | 0.80 |  | No significant link with winning in each season |
-| Tackles won | 303 | 0.02 / -0.09 | 0.49 |  | No significant link with winning in each season |
-| Tackle success % | 304 | -0.05 / 0.02 | 0.00 |  | No significant link with winning in each season |
-| Interceptions | 303 | 0.07 / -0.08 | 0.61 |  | No significant link with winning in each season |
-| Blocks | 148 | – | – |  | Known for too few players in this role |
-| Clearances | 303 | 0.01 / 0.00 | 0.67 |  | No significant link with winning in each season |
-| Ball recoveries | 303 | 0.12 / 0.14 | 0.59 |  | No significant link with winning in each season |
-| Possession won in the attacking third | 303 | 0.15 / 0.17 | 0.48 | yes |  |
-| Ground duels won | 303 | -0.05 / -0.10 | 0.74 |  | No significant link with winning in each season |
-| Ground duels won % | 304 | 0.05 / 0.08 | 0.44 |  | No significant link with winning in each season |
-| Aerial duels won | 303 | 0.03 / 0.07 | 0.84 |  | No significant link with winning in each season |
-| Aerial duels won % | 304 | 0.09 / 0.17 | 0.54 |  | No significant link with winning in each season |
-| Duels lost (counts against) | 303 | 0.08 / 0.18 | 0.66 |  | No significant link with winning in each season |
-| Dribbled past (counts against) | 303 | -0.03 / 0.06 | 0.64 |  | No significant link with winning in each season |
-| Fouls committed (counts against) | 303 | 0.02 / 0.24 | 0.63 |  | No significant link with winning in each season |
-| Yellow cards (counts against) | 303 | 0.12 / -0.02 | 0.47 |  | No significant link with winning in each season |
-| Red cards (counts against) | 303 | -0.02 / 0.03 | 0.15 |  | No significant link with winning in each season |
-| Penalties conceded (counts against) | 303 | – | – |  | Does not repeat from one season to the next |
-| Errors leading to a shot (counts against) | 303 | 0.16 / 0.22 | 0.16 | yes |  |
-| Errors leading to a goal (counts against) | 303 | – | – |  | Does not repeat from one season to the next |
-| Own goals (counts against) | 303 | – | – |  | Does not repeat from one season to the next |
-| Distance covered | 147 | – | – |  | Known for too few players in this role |
-| Sprints | 147 | – | – |  | Known for too few players in this role |
-| Goals prevented | 0 | – | – |  | Known for too few players in this role |
-| High claims | 0 | – | – |  | Known for too few players in this role |
-| Punches | 0 | – | – |  | Known for too few players in this role |
-| Crosses not claimed (counts against) | 0 | – | – |  | Known for too few players in this role |
-| Successful runs out | 0 | – | – |  | Known for too few players in this role |
-| Runs out success % | 0 | – | – |  | Known for too few players in this role |
-| Penalty save % | 0 | – | – |  | Known for too few players in this role |
+| Non-penalty goals | 305 | 0.13 / 0.22 | 0.07 | yes |  |
+| Non-penalty xG | 310 | 0.12 / 0.16 | 0.56 |  | No significant link with winning in each season |
+| Shots on target | 310 | 0.17 / 0.20 | 0.58 | yes |  |
+| Shots on target % | 308 | 0.17 / 0.13 | 0.11 |  | No significant link with winning in each season |
+| Goals per non-penalty shot | 299 | 0.10 / 0.18 | -0.13 |  | No significant link with winning in each season |
+| Big chances missed (counts against) | 305 | -0.12 / -0.05 | 0.33 |  | No significant link with winning in each season |
+| Offsides (counts against) | 305 | 0.05 / -0.13 | 0.45 |  | No significant link with winning in each season |
+| Penalties won | 305 | – | – |  | Does not repeat from one season to the next |
+| Fouls won | 305 | -0.08 / -0.08 | 0.71 |  | No significant link with winning in each season |
+| Assists | 310 | 0.24 / 0.25 | 0.49 | yes |  |
+| Expected assists (xA) | 310 | 0.19 / 0.26 | 0.65 | yes |  |
+| Key passes | 305 | 0.18 / 0.27 | 0.71 | yes |  |
+| Big chances created | 305 | 0.14 / 0.26 | 0.56 | yes |  |
+| Accurate crosses | 305 | 0.12 / 0.16 | 0.79 |  | No significant link with winning in each season |
+| Cross accuracy % | 300 | – | – |  | Does not repeat from one season to the next |
+| xGBuildup | 310 | 0.41 / 0.45 | 0.14 | yes |  |
+| Inaccurate passes (counts against) | 305 | -0.09 / -0.17 | 0.73 |  | No significant link with winning in each season |
+| Accurate passes in own half | 305 | -0.19 / -0.09 | 0.53 |  | No significant link with winning in each season |
+| Pass accuracy in own half % | 306 | -0.08 / 0.03 | 0.57 |  | No significant link with winning in each season |
+| Accurate passes in the opposition half | 305 | 0.29 / 0.46 | 0.68 | yes |  |
+| Pass accuracy in the opposition half % | 306 | 0.06 / 0.05 | 0.54 |  | No significant link with winning in each season |
+| Accurate final-third passes | 305 | 0.30 / 0.47 | 0.68 | yes |  |
+| Accurate long balls | 305 | 0.03 / 0.11 | 0.74 |  | No significant link with winning in each season |
+| Long-ball accuracy % | 306 | -0.04 / -0.03 | 0.47 |  | No significant link with winning in each season |
+| Accurate chipped passes | 305 | -0.01 / 0.08 | 0.78 |  | No significant link with winning in each season |
+| Chipped pass accuracy % | 306 | -0.10 / -0.04 | 0.25 |  | No significant link with winning in each season |
+| Touches | 305 | 0.13 / 0.28 | 0.70 |  | No significant link with winning in each season |
+| Successful dribbles | 305 | -0.07 / 0.03 | 0.63 |  | No significant link with winning in each season |
+| Dribble success % | 306 | 0.13 / 0.01 | 0.23 |  | No significant link with winning in each season |
+| Dispossessed (counts against) | 305 | 0.08 / 0.11 | 0.63 |  | No significant link with winning in each season |
+| Tackles won | 305 | 0.02 / -0.09 | 0.50 |  | No significant link with winning in each season |
+| Tackle success % | 306 | -0.04 / 0.02 | 0.01 |  | No significant link with winning in each season |
+| Interceptions | 305 | 0.07 / -0.08 | 0.62 |  | No significant link with winning in each season |
+| Blocks | 150 | – | – |  | Not in the 2024/25 data |
+| Clearances | 305 | 0.01 / 0.00 | 0.66 |  | No significant link with winning in each season |
+| Ball recoveries | 305 | 0.12 / 0.14 | 0.60 |  | No significant link with winning in each season |
+| Possession won in the attacking third | 305 | 0.15 / 0.16 | 0.47 | yes |  |
+| Ground duels won | 305 | -0.05 / -0.10 | 0.74 |  | No significant link with winning in each season |
+| Ground duels won % | 306 | 0.05 / 0.08 | 0.44 |  | No significant link with winning in each season |
+| Aerial duels won | 305 | 0.03 / 0.06 | 0.85 |  | No significant link with winning in each season |
+| Aerial duels lost (counts against) | 305 | 0.03 / 0.07 | 0.71 |  | No significant link with winning in each season |
+| Aerial duels won % | 306 | 0.08 / 0.17 | 0.51 |  | No significant link with winning in each season |
+| Dribbled past (counts against) | 305 | -0.02 / 0.07 | 0.65 |  | No significant link with winning in each season |
+| Fouls committed (counts against) | 305 | 0.02 / 0.24 | 0.63 |  | No significant link with winning in each season |
+| Yellow cards (counts against) | 305 | 0.12 / -0.03 | 0.48 |  | No significant link with winning in each season |
+| Red cards (counts against) | 305 | -0.03 / 0.03 | 0.14 |  | No significant link with winning in each season |
+| Penalties conceded (counts against) | 305 | – | – |  | Does not repeat from one season to the next |
+| Errors leading to a shot (counts against) | 305 | 0.16 / 0.22 | 0.15 | yes |  |
+| Errors leading to a goal (counts against) | 305 | – | – |  | Does not repeat from one season to the next |
+| Own goals (counts against) | 305 | – | – |  | Does not repeat from one season to the next |
+| Distance covered | 149 | – | – |  | Not in the 2024/25 data |
+| Sprints | 149 | – | – |  | Not in the 2024/25 data |
+| Goals prevented | 0 | – | – |  | Not in the 2024/25 data |
+| High claims | 0 | – | – |  | Not in the 2024/25 data |
+| Punches | 0 | – | – |  | Not in the 2024/25 data |
+| Crosses not claimed (counts against) | 0 | – | – |  | Not in the 2024/25 data |
+| Successful runs out | 0 | – | – |  | Not in the 2024/25 data |
+| Runs out success % | 0 | – | – |  | Not in the 2024/25 data |
 
 How the used statistics are prepared (k: pulled toward the average as if the player had k more
 matches or attempts at the average; possession: change per unit of possession share, on the statistic's
@@ -527,31 +529,30 @@ no record of the player):
 
 | Statistic | k | Possession slope | Proxy scale |
 |---|---|---|---|
-| Non-penalty goals | 176.0 | 0.064 | – |
-| Shots on target | 15.4 | 0.334 | – |
-| Shots on target % | 117.1 | 0.049 | – |
-| Assists | 28.1 | 0.335 | – |
-| Expected assists (xA) | 11.0 | 0.536 | 1.0134 |
-| Key passes | 7.0 | 1.485 | – |
-| Big chances created | 16.0 | 0.669 | – |
-| xGBuildup | 9.5 | 1.315 | 0.0072 |
-| Accurate passes in the opposition half | 2.8 | 12.056 | – |
-| Accurate final-third passes | 3.9 | 7.911 | – |
-| Possession won in the attacking third | 26.8 | 0.301 | – |
-| Errors leading to a shot | 141.9 | 0.013 | – |
+| Non-penalty goals | 167.0 | 0.067 | – |
+| Shots on target | 13.1 | 0.360 | – |
+| Assists | 25.1 | 0.355 | – |
+| Expected assists (xA) | 9.7 | 0.557 | 1.0153 |
+| Key passes | 6.2 | 1.523 | – |
+| Big chances created | 14.9 | 0.688 | – |
+| xGBuildup | 8.2 | 1.368 | 0.0072 |
+| Accurate passes in the opposition half | 2.4 | 12.231 | – |
+| Accurate final-third passes | 3.4 | 8.063 | – |
+| Possession won in the attacking third | 25.2 | 0.312 | – |
+| Errors leading to a shot | 165.6 | 0.012 | – |
 
 ## Full-backs
 
-507 player seasons with 900+ minutes (259 in 2024/25 + 248 in 2025/26), 172 players in the role in both seasons.
+511 player seasons with 900+ minutes (259 in 2024/25 + 252 in 2025/26), 173 players in the role in both seasons.
 
 ### How a full-back earns points
 
 | Weight | Measure | Link with winning | Repeatability |
 |---|---|---|---|
-| 29% | Accurate passes in the opposition half · Accurate final-third passes | 0.23 | 0.62 |
-| 17% | Non-penalty xG | 0.15 | 0.55 |
+| 28% | Accurate passes in the opposition half · Accurate final-third passes | 0.23 | 0.62 |
+| 16% | Non-penalty xG | 0.15 | 0.56 |
+| 16% | Expected assists (xA) | 0.16 | 0.51 |
 | 14% | Aerial duels won % | 0.14 | 0.52 |
-| 13% | Expected assists (xA) · Big chances created | 0.14 | 0.47 |
 | 10% | Possession won in the attacking third | 0.15 | 0.33 |
 | 9% | Assists | 0.20 | 0.22 |
 | 8% | xGBuildup | 0.34 | 0.12 |
@@ -560,64 +561,64 @@ no record of the player):
 
 | Statistic | Players | Link with winning (2024/25 / 2025/26) | Repeatability | Used | Why not |
 |---|---|---|---|---|---|
-| Non-penalty goals | 501 | 0.10 / 0.15 | 0.39 |  | No significant link with winning in each season |
-| Non-penalty xG | 507 | 0.13 / 0.18 | 0.55 | yes |  |
-| Shots on target | 507 | 0.05 / 0.06 | 0.51 |  | No significant link with winning in each season |
-| Shots on target % | 503 | 0.00 / 0.01 | 0.17 |  | No significant link with winning in each season |
-| Big chances missed (counts against) | 501 | -0.18 / -0.13 | 0.31 |  | No significant link with winning in each season |
-| Offsides (counts against) | 501 | -0.02 / 0.00 | 0.31 |  | No significant link with winning in each season |
-| Penalties won | 501 | 0.12 / 0.01 | 0.06 |  | No significant link with winning in each season |
-| Fouls won | 501 | -0.06 / 0.01 | 0.76 |  | No significant link with winning in each season |
-| Assists | 507 | 0.21 / 0.19 | 0.22 | yes |  |
-| Expected assists (xA) | 507 | 0.16 / 0.15 | 0.51 | yes |  |
-| Key passes | 501 | 0.09 / 0.12 | 0.68 |  | No significant link with winning in each season |
-| Big chances created | 501 | 0.13 / 0.11 | 0.40 | yes |  |
-| Accurate crosses | 501 | 0.00 / 0.07 | 0.75 |  | No significant link with winning in each season |
-| Cross accuracy % | 504 | 0.06 / 0.12 | 0.34 |  | No significant link with winning in each season |
-| xGBuildup | 507 | 0.39 / 0.27 | 0.12 | yes |  |
-| Accurate passes | 501 | 0.10 / -0.03 | 0.60 |  | No significant link with winning in each season |
-| Pass accuracy % | 505 | -0.05 / 0.03 | 0.66 |  | No significant link with winning in each season |
-| Inaccurate passes (counts against) | 501 | -0.11 / 0.11 | 0.69 |  | No significant link with winning in each season |
-| Accurate passes in own half | 501 | -0.07 / -0.19 | 0.60 |  | No significant link with winning in each season |
-| Accurate passes in the opposition half | 501 | 0.26 / 0.15 | 0.60 | yes |  |
-| Accurate final-third passes | 501 | 0.28 / 0.20 | 0.63 | yes |  |
-| Accurate long balls | 501 | 0.03 / -0.09 | 0.67 |  | No significant link with winning in each season |
-| Long-ball accuracy % | 502 | -0.01 / 0.01 | 0.45 |  | No significant link with winning in each season |
-| Accurate chipped passes | 501 | 0.05 / 0.00 | 0.71 |  | No significant link with winning in each season |
-| Touches | 501 | 0.16 / -0.02 | 0.59 |  | No significant link with winning in each season |
-| Successful dribbles | 501 | 0.01 / -0.06 | 0.72 |  | No significant link with winning in each season |
-| Dribble success % | 503 | -0.06 / -0.12 | 0.17 |  | No significant link with winning in each season |
-| Dispossessed (counts against) | 501 | -0.03 / -0.05 | 0.60 |  | No significant link with winning in each season |
-| Possession lost (counts against) | 501 | -0.12 / 0.00 | 0.74 |  | No significant link with winning in each season |
-| Tackles won | 501 | 0.07 / 0.00 | 0.50 |  | No significant link with winning in each season |
-| Tackle success % | 504 | 0.02 / -0.03 | 0.19 |  | No significant link with winning in each season |
-| Interceptions | 501 | 0.00 / -0.04 | 0.54 |  | No significant link with winning in each season |
-| Blocks | 246 | – | – |  | Known for too few players in this role |
-| Clearances | 501 | -0.06 / -0.08 | 0.66 |  | No significant link with winning in each season |
-| Ball recoveries | 501 | 0.18 / -0.06 | 0.58 |  | No significant link with winning in each season |
-| Possession won in the attacking third | 501 | 0.14 / 0.16 | 0.33 | yes |  |
-| Ground duels won | 501 | 0.03 / -0.03 | 0.71 |  | No significant link with winning in each season |
-| Ground duels won % | 505 | -0.04 / -0.14 | 0.47 |  | No significant link with winning in each season |
-| Aerial duels won | 501 | 0.00 / 0.10 | 0.78 |  | No significant link with winning in each season |
-| Aerial duels won % | 504 | 0.13 / 0.14 | 0.52 | yes |  |
-| Duels lost (counts against) | 501 | -0.01 / -0.08 | 0.67 |  | No significant link with winning in each season |
-| Dribbled past (counts against) | 501 | -0.09 / -0.01 | 0.47 |  | No significant link with winning in each season |
-| Fouls committed (counts against) | 501 | 0.04 / -0.16 | 0.65 |  | No significant link with winning in each season |
-| Yellow cards (counts against) | 501 | -0.05 / -0.10 | 0.34 |  | No significant link with winning in each season |
-| Red cards (counts against) | 501 | -0.02 / 0.00 | 0.08 |  | No significant link with winning in each season |
-| Penalties conceded (counts against) | 501 | 0.17 / 0.00 | 0.08 |  | No significant link with winning in each season |
-| Errors leading to a shot (counts against) | 501 | -0.05 / 0.00 | -0.01 |  | No significant link with winning in each season |
-| Errors leading to a goal (counts against) | 501 | – | – |  | Does not repeat from one season to the next |
-| Own goals (counts against) | 501 | – | – |  | Does not repeat from one season to the next |
-| Distance covered | 246 | – | – |  | Known for too few players in this role |
-| Sprints | 246 | – | – |  | Known for too few players in this role |
-| Goals prevented | 0 | – | – |  | Known for too few players in this role |
-| High claims | 0 | – | – |  | Known for too few players in this role |
-| Punches | 0 | – | – |  | Known for too few players in this role |
-| Crosses not claimed (counts against) | 0 | – | – |  | Known for too few players in this role |
-| Successful runs out | 0 | – | – |  | Known for too few players in this role |
-| Runs out success % | 0 | – | – |  | Known for too few players in this role |
-| Penalty save % | 0 | – | – |  | Known for too few players in this role |
+| Non-penalty goals | 505 | 0.10 / 0.15 | 0.40 |  | No significant link with winning in each season |
+| Non-penalty xG | 511 | 0.13 / 0.18 | 0.56 | yes |  |
+| Shots on target | 511 | 0.05 / 0.07 | 0.51 |  | No significant link with winning in each season |
+| Shots on target % | 507 | 0.00 / 0.01 | 0.17 |  | No significant link with winning in each season |
+| Goals per non-penalty shot | 499 | 0.08 / 0.14 | 0.21 |  | No significant link with winning in each season |
+| Big chances missed (counts against) | 505 | -0.18 / -0.13 | 0.31 |  | No significant link with winning in each season |
+| Offsides (counts against) | 505 | -0.01 / 0.00 | 0.31 |  | No significant link with winning in each season |
+| Penalties won | 505 | 0.12 / 0.01 | 0.06 |  | No significant link with winning in each season |
+| Fouls won | 505 | -0.05 / 0.01 | 0.76 |  | No significant link with winning in each season |
+| Assists | 511 | 0.21 / 0.19 | 0.22 | yes |  |
+| Expected assists (xA) | 511 | 0.16 / 0.15 | 0.51 | yes |  |
+| Key passes | 505 | 0.09 / 0.12 | 0.68 |  | No significant link with winning in each season |
+| Big chances created | 505 | 0.13 / 0.10 | 0.40 |  | No significant link with winning in each season |
+| Accurate crosses | 505 | 0.00 / 0.08 | 0.75 |  | No significant link with winning in each season |
+| Cross accuracy % | 508 | 0.06 / 0.12 | 0.33 |  | No significant link with winning in each season |
+| xGBuildup | 511 | 0.39 / 0.27 | 0.12 | yes |  |
+| Inaccurate passes (counts against) | 505 | -0.10 / 0.11 | 0.69 |  | No significant link with winning in each season |
+| Accurate passes in own half | 505 | -0.07 / -0.19 | 0.60 |  | No significant link with winning in each season |
+| Pass accuracy in own half % | 509 | -0.03 / 0.05 | 0.55 |  | No significant link with winning in each season |
+| Accurate passes in the opposition half | 505 | 0.26 / 0.16 | 0.60 | yes |  |
+| Pass accuracy in the opposition half % | 509 | 0.08 / 0.07 | 0.57 |  | No significant link with winning in each season |
+| Accurate final-third passes | 505 | 0.28 / 0.21 | 0.62 | yes |  |
+| Accurate long balls | 505 | 0.03 / -0.09 | 0.67 |  | No significant link with winning in each season |
+| Long-ball accuracy % | 506 | -0.01 / 0.02 | 0.44 |  | No significant link with winning in each season |
+| Accurate chipped passes | 505 | 0.05 / 0.00 | 0.72 |  | No significant link with winning in each season |
+| Chipped pass accuracy % | 507 | 0.04 / 0.05 | 0.24 |  | No significant link with winning in each season |
+| Touches | 505 | 0.15 / -0.02 | 0.59 |  | No significant link with winning in each season |
+| Successful dribbles | 505 | 0.01 / -0.05 | 0.72 |  | No significant link with winning in each season |
+| Dribble success % | 507 | -0.06 / -0.12 | 0.16 |  | No significant link with winning in each season |
+| Dispossessed (counts against) | 505 | -0.03 / -0.06 | 0.59 |  | No significant link with winning in each season |
+| Tackles won | 505 | 0.07 / 0.00 | 0.50 |  | No significant link with winning in each season |
+| Tackle success % | 508 | 0.02 / -0.02 | 0.19 |  | No significant link with winning in each season |
+| Interceptions | 505 | 0.00 / -0.05 | 0.54 |  | No significant link with winning in each season |
+| Blocks | 250 | – | – |  | Not in the 2024/25 data |
+| Clearances | 505 | -0.06 / -0.08 | 0.65 |  | No significant link with winning in each season |
+| Ball recoveries | 505 | 0.18 / -0.06 | 0.58 |  | No significant link with winning in each season |
+| Possession won in the attacking third | 505 | 0.14 / 0.16 | 0.33 | yes |  |
+| Ground duels won | 505 | 0.03 / -0.03 | 0.71 |  | No significant link with winning in each season |
+| Ground duels won % | 509 | -0.04 / -0.15 | 0.46 |  | No significant link with winning in each season |
+| Aerial duels won | 505 | 0.00 / 0.10 | 0.78 |  | No significant link with winning in each season |
+| Aerial duels lost (counts against) | 505 | 0.12 / 0.00 | 0.57 |  | No significant link with winning in each season |
+| Aerial duels won % | 508 | 0.13 / 0.14 | 0.52 | yes |  |
+| Dribbled past (counts against) | 505 | -0.09 / -0.01 | 0.48 |  | No significant link with winning in each season |
+| Fouls committed (counts against) | 505 | 0.04 / -0.16 | 0.65 |  | No significant link with winning in each season |
+| Yellow cards (counts against) | 505 | -0.05 / -0.10 | 0.33 |  | No significant link with winning in each season |
+| Red cards (counts against) | 505 | -0.02 / 0.01 | 0.08 |  | No significant link with winning in each season |
+| Penalties conceded (counts against) | 505 | 0.17 / 0.00 | 0.08 |  | No significant link with winning in each season |
+| Errors leading to a shot (counts against) | 505 | -0.05 / 0.01 | -0.01 |  | No significant link with winning in each season |
+| Errors leading to a goal (counts against) | 505 | – | – |  | Does not repeat from one season to the next |
+| Own goals (counts against) | 505 | – | – |  | Does not repeat from one season to the next |
+| Distance covered | 250 | – | – |  | Not in the 2024/25 data |
+| Sprints | 250 | – | – |  | Not in the 2024/25 data |
+| Goals prevented | 0 | – | – |  | Not in the 2024/25 data |
+| High claims | 0 | – | – |  | Not in the 2024/25 data |
+| Punches | 0 | – | – |  | Not in the 2024/25 data |
+| Crosses not claimed (counts against) | 0 | – | – |  | Not in the 2024/25 data |
+| Successful runs out | 0 | – | – |  | Not in the 2024/25 data |
+| Runs out success % | 0 | – | – |  | Not in the 2024/25 data |
 
 How the used statistics are prepared (k: pulled toward the average as if the player had k more
 matches or attempts at the average; possession: change per unit of possession share, on the statistic's
@@ -626,95 +627,91 @@ no record of the player):
 
 | Statistic | k | Possession slope | Proxy scale |
 |---|---|---|---|
-| Non-penalty xG | 13.9 | 0.291 | 1.1210 |
-| Assists | 76.3 | 0.149 | – |
-| Expected assists (xA) | 20.1 | 0.266 | 1.0890 |
-| Big chances created | 30.3 | 0.250 | – |
-| xGBuildup | 18.0 | 0.908 | 0.0081 |
-| Accurate passes in the opposition half | 5.8 | 8.098 | – |
-| Accurate final-third passes | 5.2 | 6.160 | – |
-| Possession won in the attacking third | 35.6 | 0.234 | – |
-| Aerial duels won % | 58.0 | 0.046 | – |
+| Non-penalty xG | 12.2 | 0.303 | 1.1214 |
+| Assists | 69.9 | 0.158 | – |
+| Expected assists (xA) | 17.6 | 0.280 | 1.0887 |
+| xGBuildup | 15.9 | 0.956 | 0.0081 |
+| Accurate passes in the opposition half | 5.1 | 8.291 | – |
+| Accurate final-third passes | 4.6 | 6.290 | – |
+| Possession won in the attacking third | 31.6 | 0.248 | – |
+| Aerial duels won % | 41.5 | 0.054 | – |
 
 ## Centre-backs
 
-691 player seasons with 900+ minutes (348 in 2024/25 + 343 in 2025/26), 215 players in the role in both seasons.
+695 player seasons with 900+ minutes (348 in 2024/25 + 347 in 2025/26), 216 players in the role in both seasons.
 
 ### How a centre-back earns points
 
 | Weight | Measure | Link with winning | Repeatability |
 |---|---|---|---|
-| 26% | xGBuildup | 0.35 | 0.33 |
-| 24% | Accurate passes in the opposition half · Accurate final-third passes | 0.16 | 0.66 |
-| 17% | Aerial duels won | 0.11 | 0.74 |
-| 10% | Non-penalty xG | 0.15 | 0.31 |
-| 7% | Shots on target | 0.09 | 0.36 |
-| 6% | Big chances created | 0.12 | 0.22 |
-| 5% | Non-penalty goals | 0.14 | 0.18 |
-| 4% | Assists | 0.12 | 0.16 |
+| 36% | xGBuildup | 0.35 | 0.33 |
+| 34% | Accurate passes in the opposition half · Accurate final-third passes | 0.17 | 0.66 |
+| 15% | Non-penalty xG | 0.15 | 0.31 |
+| 8% | Non-penalty goals | 0.14 | 0.18 |
+| 8% | Big chances created | 0.12 | 0.21 |
 
 ### Every candidate statistic
 
 | Statistic | Players | Link with winning (2024/25 / 2025/26) | Repeatability | Used | Why not |
 |---|---|---|---|---|---|
-| Non-penalty goals | 661 | 0.18 / 0.10 | 0.18 | yes |  |
-| Non-penalty xG | 669 | 0.20 / 0.11 | 0.31 | yes |  |
-| Shots on target | 691 | 0.09 / 0.10 | 0.36 | yes |  |
-| Shots on target % | 690 | – | – |  | Does not repeat from one season to the next |
-| Big chances missed (counts against) | 647 | -0.13 / -0.04 | 0.15 |  | No significant link with winning in each season |
-| Offsides (counts against) | 647 | -0.02 / -0.02 | 0.33 |  | No significant link with winning in each season |
-| Penalties won | 647 | 0.13 / 0.01 | 0.13 |  | No significant link with winning in each season |
-| Fouls won | 647 | 0.00 / 0.04 | 0.72 |  | No significant link with winning in each season |
-| Assists | 691 | 0.09 / 0.16 | 0.16 | yes |  |
-| Expected assists (xA) | 669 | 0.07 / 0.15 | 0.30 |  | No significant link with winning in each season |
-| Key passes | 647 | 0.03 / 0.06 | 0.42 |  | No significant link with winning in each season |
-| Big chances created | 647 | 0.12 / 0.12 | 0.22 | yes |  |
-| Accurate crosses | 647 | 0.00 / -0.08 | 0.64 |  | No significant link with winning in each season |
-| Cross accuracy % | 570 | – | – |  | Does not repeat from one season to the next |
-| xGBuildup | 669 | 0.38 / 0.32 | 0.33 | yes |  |
-| Accurate passes | 647 | -0.04 / -0.05 | 0.62 |  | No significant link with winning in each season |
-| Pass accuracy % | 655 | -0.16 / -0.09 | 0.60 |  | No significant link with winning in each season |
-| Inaccurate passes (counts against) | 647 | -0.10 / 0.03 | 0.67 |  | No significant link with winning in each season |
-| Accurate passes in own half | 647 | -0.16 / -0.18 | 0.59 |  | No significant link with winning in each season |
-| Accurate passes in the opposition half | 647 | 0.17 / 0.17 | 0.65 | yes |  |
-| Accurate final-third passes | 647 | 0.14 / 0.16 | 0.66 | yes |  |
-| Accurate long balls | 647 | 0.14 / 0.01 | 0.74 |  | No significant link with winning in each season |
-| Long-ball accuracy % | 655 | 0.06 / 0.08 | 0.52 |  | No significant link with winning in each season |
-| Accurate chipped passes | 647 | 0.13 / 0.00 | 0.74 |  | No significant link with winning in each season |
-| Touches | 647 | -0.01 / -0.05 | 0.65 |  | No significant link with winning in each season |
-| Successful dribbles | 647 | 0.00 / -0.04 | 0.66 |  | No significant link with winning in each season |
-| Dribble success % | 628 | – | – |  | Does not repeat from one season to the next |
-| Dispossessed (counts against) | 647 | -0.05 / 0.01 | 0.46 |  | No significant link with winning in each season |
-| Possession lost (counts against) | 647 | -0.07 / 0.05 | 0.67 |  | No significant link with winning in each season |
-| Tackles won | 647 | 0.01 / -0.05 | 0.52 |  | No significant link with winning in each season |
-| Tackle success % | 654 | 0.03 / 0.03 | 0.00 |  | No significant link with winning in each season |
-| Interceptions | 647 | -0.05 / 0.02 | 0.35 |  | No significant link with winning in each season |
-| Blocks | 320 | – | – |  | Known for too few players in this role |
-| Clearances | 647 | 0.05 / -0.05 | 0.65 |  | No significant link with winning in each season |
-| Ball recoveries | 647 | 0.15 / -0.02 | 0.61 |  | No significant link with winning in each season |
-| Possession won in the attacking third | 647 | 0.13 / 0.07 | 0.27 |  | No significant link with winning in each season |
-| Ground duels won | 647 | 0.00 / -0.03 | 0.71 |  | No significant link with winning in each season |
-| Ground duels won % | 655 | 0.00 / 0.00 | 0.42 |  | No significant link with winning in each season |
-| Aerial duels won | 647 | 0.12 / 0.10 | 0.74 | yes |  |
-| Aerial duels won % | 655 | 0.10 / 0.04 | 0.53 |  | No significant link with winning in each season |
-| Duels lost (counts against) | 647 | -0.03 / -0.03 | 0.55 |  | No significant link with winning in each season |
-| Dribbled past (counts against) | 647 | 0.08 / 0.10 | 0.59 |  | No significant link with winning in each season |
-| Fouls committed (counts against) | 647 | -0.01 / -0.05 | 0.57 |  | No significant link with winning in each season |
-| Yellow cards (counts against) | 647 | 0.04 / 0.00 | 0.39 |  | No significant link with winning in each season |
-| Red cards (counts against) | 647 | – | – |  | Does not repeat from one season to the next |
-| Penalties conceded (counts against) | 647 | – | – |  | Does not repeat from one season to the next |
-| Errors leading to a shot (counts against) | 647 | 0.05 / 0.12 | 0.27 |  | No significant link with winning in each season |
-| Errors leading to a goal (counts against) | 647 | – | – |  | Does not repeat from one season to the next |
-| Own goals (counts against) | 647 | – | – |  | Does not repeat from one season to the next |
-| Distance covered | 319 | – | – |  | Known for too few players in this role |
-| Sprints | 319 | – | – |  | Known for too few players in this role |
-| Goals prevented | 0 | – | – |  | Known for too few players in this role |
-| High claims | 0 | – | – |  | Known for too few players in this role |
-| Punches | 0 | – | – |  | Known for too few players in this role |
-| Crosses not claimed (counts against) | 0 | – | – |  | Known for too few players in this role |
-| Successful runs out | 0 | – | – |  | Known for too few players in this role |
-| Runs out success % | 0 | – | – |  | Known for too few players in this role |
-| Penalty save % | 0 | – | – |  | Known for too few players in this role |
+| Non-penalty goals | 664 | 0.18 / 0.10 | 0.18 | yes |  |
+| Non-penalty xG | 672 | 0.20 / 0.11 | 0.31 | yes |  |
+| Shots on target | 695 | 0.09 / 0.10 | 0.36 |  | No significant link with winning in each season |
+| Shots on target % | 694 | – | – |  | Does not repeat from one season to the next |
+| Goals per non-penalty shot | 648 | 0.12 / 0.04 | 0.05 |  | No significant link with winning in each season |
+| Big chances missed (counts against) | 650 | -0.13 / -0.04 | 0.16 |  | No significant link with winning in each season |
+| Offsides (counts against) | 650 | -0.01 / -0.02 | 0.33 |  | No significant link with winning in each season |
+| Penalties won | 650 | 0.13 / 0.01 | 0.13 |  | No significant link with winning in each season |
+| Fouls won | 650 | 0.00 / 0.04 | 0.71 |  | No significant link with winning in each season |
+| Assists | 695 | 0.09 / 0.16 | 0.15 |  | No significant link with winning in each season |
+| Expected assists (xA) | 672 | 0.07 / 0.15 | 0.30 |  | No significant link with winning in each season |
+| Key passes | 650 | 0.03 / 0.07 | 0.42 |  | No significant link with winning in each season |
+| Big chances created | 650 | 0.12 / 0.12 | 0.21 | yes |  |
+| Accurate crosses | 650 | 0.00 / -0.08 | 0.64 |  | No significant link with winning in each season |
+| Cross accuracy % | 572 | – | – |  | Does not repeat from one season to the next |
+| xGBuildup | 672 | 0.38 / 0.32 | 0.33 | yes |  |
+| Inaccurate passes (counts against) | 650 | -0.09 / 0.02 | 0.67 |  | No significant link with winning in each season |
+| Accurate passes in own half | 650 | -0.16 / -0.18 | 0.59 |  | No significant link with winning in each season |
+| Pass accuracy in own half % | 658 | -0.02 / 0.02 | 0.50 |  | No significant link with winning in each season |
+| Accurate passes in the opposition half | 650 | 0.17 / 0.18 | 0.65 | yes |  |
+| Pass accuracy in the opposition half % | 658 | -0.05 / -0.04 | 0.58 |  | No significant link with winning in each season |
+| Accurate final-third passes | 650 | 0.14 / 0.16 | 0.66 | yes |  |
+| Accurate long balls | 650 | 0.14 / 0.01 | 0.74 |  | No significant link with winning in each season |
+| Long-ball accuracy % | 658 | 0.06 / 0.09 | 0.52 |  | No significant link with winning in each season |
+| Accurate chipped passes | 650 | 0.13 / 0.01 | 0.73 |  | No significant link with winning in each season |
+| Chipped pass accuracy % | 658 | 0.10 / 0.05 | 0.45 |  | No significant link with winning in each season |
+| Touches | 650 | -0.01 / -0.05 | 0.66 |  | No significant link with winning in each season |
+| Successful dribbles | 650 | 0.00 / -0.04 | 0.65 |  | No significant link with winning in each season |
+| Dribble success % | 631 | – | – |  | Does not repeat from one season to the next |
+| Dispossessed (counts against) | 650 | -0.05 / 0.02 | 0.46 |  | No significant link with winning in each season |
+| Tackles won | 650 | 0.01 / -0.05 | 0.51 |  | No significant link with winning in each season |
+| Tackle success % | 657 | 0.03 / 0.04 | 0.00 |  | No significant link with winning in each season |
+| Interceptions | 650 | -0.05 / 0.02 | 0.32 |  | No significant link with winning in each season |
+| Blocks | 323 | – | – |  | Known for too few players in this role |
+| Clearances | 650 | 0.05 / -0.05 | 0.65 |  | No significant link with winning in each season |
+| Ball recoveries | 650 | 0.15 / -0.03 | 0.60 |  | No significant link with winning in each season |
+| Possession won in the attacking third | 650 | 0.13 / 0.07 | 0.27 |  | No significant link with winning in each season |
+| Ground duels won | 650 | 0.00 / -0.03 | 0.71 |  | No significant link with winning in each season |
+| Ground duels won % | 658 | 0.00 / 0.00 | 0.41 |  | No significant link with winning in each season |
+| Aerial duels won | 650 | 0.12 / 0.10 | 0.73 |  | No significant link with winning in each season |
+| Aerial duels lost (counts against) | 650 | -0.04 / -0.09 | 0.50 |  | No significant link with winning in each season |
+| Aerial duels won % | 658 | 0.10 / 0.04 | 0.52 |  | No significant link with winning in each season |
+| Dribbled past (counts against) | 650 | 0.08 / 0.10 | 0.58 |  | No significant link with winning in each season |
+| Fouls committed (counts against) | 650 | -0.01 / -0.05 | 0.56 |  | No significant link with winning in each season |
+| Yellow cards (counts against) | 650 | 0.04 / 0.00 | 0.39 |  | No significant link with winning in each season |
+| Red cards (counts against) | 650 | – | – |  | Does not repeat from one season to the next |
+| Penalties conceded (counts against) | 650 | – | – |  | Does not repeat from one season to the next |
+| Errors leading to a shot (counts against) | 650 | 0.05 / 0.12 | 0.26 |  | No significant link with winning in each season |
+| Errors leading to a goal (counts against) | 650 | – | – |  | Does not repeat from one season to the next |
+| Own goals (counts against) | 650 | – | – |  | Does not repeat from one season to the next |
+| Distance covered | 322 | – | – |  | Not in the 2024/25 data |
+| Sprints | 322 | – | – |  | Not in the 2024/25 data |
+| Goals prevented | 0 | – | – |  | Not in the 2024/25 data |
+| High claims | 0 | – | – |  | Not in the 2024/25 data |
+| Punches | 0 | – | – |  | Not in the 2024/25 data |
+| Crosses not claimed (counts against) | 0 | – | – |  | Not in the 2024/25 data |
+| Successful runs out | 0 | – | – |  | Not in the 2024/25 data |
+| Runs out success % | 0 | – | – |  | Not in the 2024/25 data |
 
 How the used statistics are prepared (k: pulled toward the average as if the player had k more
 matches or attempts at the average; possession: change per unit of possession share, on the statistic's
@@ -723,88 +720,85 @@ no record of the player):
 
 | Statistic | k | Possession slope | Proxy scale |
 |---|---|---|---|
-| Non-penalty goals | 96.7 | 0.035 | – |
-| Non-penalty xG | 66.9 | 0.041 | 1.1435 |
-| Shots on target | 46.4 | 0.072 | – |
-| Assists | 95.2 | 0.051 | – |
-| Big chances created | 96.1 | 0.035 | – |
-| xGBuildup | 9.0 | 1.267 | 0.0056 |
-| Accurate passes in the opposition half | 4.9 | 9.565 | – |
-| Accurate final-third passes | 6.7 | 4.933 | – |
-| Aerial duels won | 9.4 | -0.095 | – |
+| Non-penalty goals | 87.4 | 0.038 | – |
+| Non-penalty xG | 58.6 | 0.046 | 1.1429 |
+| Big chances created | 90.3 | 0.037 | – |
+| xGBuildup | 7.9 | 1.312 | 0.0056 |
+| Accurate passes in the opposition half | 4.3 | 9.757 | – |
+| Accurate final-third passes | 6.0 | 5.058 | – |
 
 ## Goalkeepers
 
-231 player seasons with 900+ minutes (119 in 2024/25 + 112 in 2025/26), 78 players in the role in both seasons.
+233 player seasons with 900+ minutes (119 in 2024/25 + 114 in 2025/26), 79 players in the role in both seasons.
 
 ### How a goalkeeper earns points
 
 | Weight | Measure | Link with winning | Repeatability |
 |---|---|---|---|
-| 100% | xGBuildup | 0.25 | 0.17 |
+| 100% | xGBuildup | 0.24 | 0.17 |
 
 ### Every candidate statistic
 
 | Statistic | Players | Link with winning (2024/25 / 2025/26) | Repeatability | Used | Why not |
 |---|---|---|---|---|---|
-| Non-penalty goals | 230 | – | – |  | Does not repeat from one season to the next |
-| Non-penalty xG | 218 | – | – |  | Does not repeat from one season to the next |
-| Shots on target | 231 | – | – |  | Does not repeat from one season to the next |
+| Non-penalty goals | 232 | – | – |  | Does not repeat from one season to the next |
+| Non-penalty xG | 220 | – | – |  | Does not repeat from one season to the next |
+| Shots on target | 233 | – | – |  | Does not repeat from one season to the next |
 | Shots on target % | 14 | – | – |  | Known for too few players in this role |
-| Big chances missed (counts against) | 228 | – | – |  | Does not repeat from one season to the next |
-| Offsides (counts against) | 228 | – | – |  | Does not repeat from one season to the next |
-| Penalties won | 228 | – | – |  | Does not repeat from one season to the next |
-| Fouls won | 228 | -0.14 / -0.05 | 0.45 |  | No significant link with winning in each season |
-| Assists | 231 | – | – |  | Does not repeat from one season to the next |
-| Expected assists (xA) | 230 | – | – |  | Does not repeat from one season to the next |
-| Key passes | 228 | – | – |  | Does not repeat from one season to the next |
-| Big chances created | 228 | 0.16 / -0.15 | 0.12 |  | No significant link with winning in each season |
-| Accurate crosses | 228 | – | – |  | Does not repeat from one season to the next |
-| Cross accuracy % | 0 | – | – |  | Known for too few players in this role |
-| xGBuildup | 230 | 0.21 / 0.29 | 0.17 | yes |  |
-| Accurate passes | 228 | -0.12 / -0.18 | 0.52 |  | No significant link with winning in each season |
-| Pass accuracy % | 228 | 0.09 / -0.05 | 0.58 |  | No significant link with winning in each season |
-| Inaccurate passes (counts against) | 228 | 0.26 / 0.11 | 0.51 |  | No significant link with winning in each season |
-| Accurate passes in own half | 228 | -0.13 / -0.21 | 0.57 |  | No significant link with winning in each season |
-| Accurate passes in the opposition half | 228 | -0.03 / 0.06 | 0.50 |  | No significant link with winning in each season |
-| Accurate final-third passes | 228 | -0.03 / 0.10 | 0.67 |  | No significant link with winning in each season |
-| Accurate long balls | 228 | -0.08 / 0.02 | 0.51 |  | No significant link with winning in each season |
-| Long-ball accuracy % | 228 | 0.13 / 0.15 | 0.62 |  | No significant link with winning in each season |
-| Accurate chipped passes | 228 | -0.21 / -0.11 | 0.47 |  | No significant link with winning in each season |
-| Touches | 228 | -0.25 / -0.27 | 0.51 |  | No significant link with winning in each season |
-| Successful dribbles | 228 | -0.05 / -0.01 | 0.33 |  | No significant link with winning in each season |
+| Goals per non-penalty shot | 14 | – | – |  | Known for too few players in this role |
+| Big chances missed (counts against) | 230 | – | – |  | Does not repeat from one season to the next |
+| Offsides (counts against) | 230 | – | – |  | Does not repeat from one season to the next |
+| Penalties won | 230 | – | – |  | Does not repeat from one season to the next |
+| Fouls won | 230 | -0.14 / -0.05 | 0.43 |  | No significant link with winning in each season |
+| Assists | 233 | – | – |  | Does not repeat from one season to the next |
+| Expected assists (xA) | 232 | – | – |  | Does not repeat from one season to the next |
+| Key passes | 230 | 0.02 / 0.01 | 0.08 |  | No significant link with winning in each season |
+| Big chances created | 230 | 0.16 / -0.14 | 0.12 |  | No significant link with winning in each season |
+| Accurate crosses | 230 | – | – |  | Does not repeat from one season to the next |
+| Cross accuracy % | 0 | – | – |  | Not in the 2024/25 data |
+| xGBuildup | 232 | 0.21 / 0.29 | 0.17 | yes |  |
+| Inaccurate passes (counts against) | 230 | 0.26 / 0.11 | 0.51 |  | No significant link with winning in each season |
+| Accurate passes in own half | 230 | -0.13 / -0.21 | 0.57 |  | No significant link with winning in each season |
+| Pass accuracy in own half % | 230 | 0.33 / 0.05 | 0.46 |  | No significant link with winning in each season |
+| Accurate passes in the opposition half | 230 | -0.03 / 0.07 | 0.50 |  | No significant link with winning in each season |
+| Pass accuracy in the opposition half % | 230 | 0.10 / 0.15 | 0.53 |  | No significant link with winning in each season |
+| Accurate final-third passes | 230 | -0.04 / 0.11 | 0.67 |  | No significant link with winning in each season |
+| Accurate long balls | 230 | -0.09 / 0.02 | 0.51 |  | No significant link with winning in each season |
+| Long-ball accuracy % | 230 | 0.13 / 0.16 | 0.62 |  | No significant link with winning in each season |
+| Accurate chipped passes | 230 | -0.21 / -0.11 | 0.47 |  | No significant link with winning in each season |
+| Chipped pass accuracy % | 230 | 0.09 / 0.14 | 0.34 |  | No significant link with winning in each season |
+| Touches | 230 | -0.25 / -0.27 | 0.51 |  | No significant link with winning in each season |
+| Successful dribbles | 230 | -0.04 / -0.01 | 0.34 |  | No significant link with winning in each season |
 | Dribble success % | 80 | – | – |  | Known for too few players in this role |
-| Dispossessed (counts against) | 228 | – | – |  | Does not repeat from one season to the next |
-| Possession lost (counts against) | 228 | 0.26 / 0.11 | 0.52 |  | No significant link with winning in each season |
-| Tackles won | 228 | – | – |  | Does not repeat from one season to the next |
+| Dispossessed (counts against) | 230 | – | – |  | Does not repeat from one season to the next |
+| Tackles won | 230 | – | – |  | Does not repeat from one season to the next |
 | Tackle success % | 106 | – | – |  | Known for too few players in this role |
-| Interceptions | 228 | 0.00 / 0.03 | 0.11 |  | No significant link with winning in each season |
-| Blocks | 111 | – | – |  | Known for too few players in this role |
-| Clearances | 228 | 0.09 / -0.19 | 0.26 |  | No significant link with winning in each season |
-| Ball recoveries | 228 | -0.01 / -0.09 | 0.63 |  | No significant link with winning in each season |
-| Possession won in the attacking third | 228 | – | – |  | Does not repeat from one season to the next |
-| Ground duels won | 228 | -0.11 / 0.02 | 0.41 |  | No significant link with winning in each season |
-| Ground duels won % | 225 | -0.07 / 0.01 | 0.16 |  | No significant link with winning in each season |
-| Aerial duels won | 228 | 0.00 / -0.34 | 0.27 |  | No significant link with winning in each season |
-| Aerial duels won % | 227 | – | – |  | Does not repeat from one season to the next |
-| Duels lost (counts against) | 228 | 0.07 / 0.04 | 0.14 |  | No significant link with winning in each season |
-| Dribbled past (counts against) | 228 | 0.06 / -0.01 | 0.12 |  | No significant link with winning in each season |
-| Fouls committed (counts against) | 228 | 0.00 / -0.04 | 0.11 |  | No significant link with winning in each season |
-| Yellow cards (counts against) | 228 | -0.02 / -0.07 | 0.54 |  | No significant link with winning in each season |
-| Red cards (counts against) | 228 | – | – |  | Does not repeat from one season to the next |
-| Penalties conceded (counts against) | 228 | – | – |  | Does not repeat from one season to the next |
-| Errors leading to a shot (counts against) | 228 | 0.07 / 0.15 | 0.10 |  | No significant link with winning in each season |
-| Errors leading to a goal (counts against) | 228 | 0.09 / 0.03 | 0.13 |  | No significant link with winning in each season |
-| Own goals (counts against) | 228 | 0.00 / 0.21 | 0.07 |  | No significant link with winning in each season |
-| Distance covered | 109 | – | – |  | Known for too few players in this role |
-| Sprints | 109 | – | – |  | Known for too few players in this role |
-| Goals prevented | 228 | 0.32 / 0.13 | 0.13 |  | No significant link with winning in each season |
-| High claims | 228 | 0.00 / -0.17 | 0.64 |  | No significant link with winning in each season |
-| Punches | 228 | 0.02 / -0.22 | 0.24 |  | No significant link with winning in each season |
-| Crosses not claimed (counts against) | 228 | -0.01 / -0.02 | 0.05 |  | No significant link with winning in each season |
-| Successful runs out | 228 | 0.19 / 0.12 | 0.48 |  | No significant link with winning in each season |
-| Runs out success % | 227 | 0.00 / 0.10 | 0.08 |  | No significant link with winning in each season |
-| Penalty save % | 223 | -0.05 / 0.08 | 0.10 |  | No significant link with winning in each season |
+| Interceptions | 230 | 0.00 / 0.02 | 0.10 |  | No significant link with winning in each season |
+| Blocks | 113 | – | – |  | Not in the 2024/25 data |
+| Clearances | 230 | 0.09 / -0.19 | 0.26 |  | No significant link with winning in each season |
+| Ball recoveries | 230 | 0.00 / -0.09 | 0.63 |  | No significant link with winning in each season |
+| Possession won in the attacking third | 230 | – | – |  | Does not repeat from one season to the next |
+| Ground duels won | 230 | -0.11 / 0.03 | 0.41 |  | No significant link with winning in each season |
+| Ground duels won % | 227 | -0.07 / 0.01 | 0.17 |  | No significant link with winning in each season |
+| Aerial duels won | 230 | 0.00 / -0.33 | 0.28 |  | No significant link with winning in each season |
+| Aerial duels lost (counts against) | 230 | – | – |  | Does not repeat from one season to the next |
+| Aerial duels won % | 229 | – | – |  | Does not repeat from one season to the next |
+| Dribbled past (counts against) | 230 | 0.06 / -0.01 | 0.13 |  | No significant link with winning in each season |
+| Fouls committed (counts against) | 230 | 0.00 / -0.04 | 0.11 |  | No significant link with winning in each season |
+| Yellow cards (counts against) | 230 | -0.02 / -0.07 | 0.52 |  | No significant link with winning in each season |
+| Red cards (counts against) | 230 | – | – |  | Does not repeat from one season to the next |
+| Penalties conceded (counts against) | 230 | – | – |  | Does not repeat from one season to the next |
+| Errors leading to a shot (counts against) | 230 | 0.07 / 0.14 | 0.10 |  | No significant link with winning in each season |
+| Errors leading to a goal (counts against) | 230 | 0.09 / 0.03 | 0.13 |  | No significant link with winning in each season |
+| Own goals (counts against) | 230 | 0.00 / 0.21 | 0.07 |  | No significant link with winning in each season |
+| Distance covered | 111 | – | – |  | Not in the 2024/25 data |
+| Sprints | 111 | – | – |  | Not in the 2024/25 data |
+| Goals prevented | 230 | 0.31 / 0.12 | 0.13 |  | No significant link with winning in each season |
+| High claims | 230 | 0.00 / -0.16 | 0.63 |  | No significant link with winning in each season |
+| Punches | 230 | 0.02 / -0.21 | 0.24 |  | No significant link with winning in each season |
+| Crosses not claimed (counts against) | 230 | -0.01 / -0.03 | 0.04 |  | No significant link with winning in each season |
+| Successful runs out | 230 | 0.19 / 0.12 | 0.48 |  | No significant link with winning in each season |
+| Runs out success % | 229 | 0.00 / 0.10 | 0.09 |  | No significant link with winning in each season |
 
 How the used statistics are prepared (k: pulled toward the average as if the player had k more
 matches or attempts at the average; possession: change per unit of possession share, on the statistic's
@@ -813,7 +807,7 @@ no record of the player):
 
 | Statistic | k | Possession slope | Proxy scale |
 |---|---|---|---|
-| xGBuildup | 34.1 | 0.556 | 0.0063 |
+| xGBuildup | 30.7 | 0.590 | 0.0063 |
 
 ## Statistics in the data that are not candidates
 
@@ -828,8 +822,16 @@ no record of the player):
 | Shots, shots off target, shots inside / outside the box, shots from set pieces | A volume of attempts: its successes and its success rate are candidates instead |
 | Passes, long balls, chipped passes, crosses, dribble attempts, own-half / opposition-half passes attempted | A volume of attempts: its successes and its success rate are candidates instead |
 | Tackles | A volume of attempts: its successes and its success rate are candidates instead (tackles won) |
-| Total duels won | Part or sum of another statistic, which is a candidate: counted once (ground and aerial duels won) |
-| Penalties taken, penalties on target, hit the post, missed | Rare, and a set chance, not open play |
+| Total duels won, total duels won % | Part or sum of another statistic, which is a candidate: counted once (ground and aerial duels won, and their success rates) |
+| Duels lost | Part or sum of another statistic, which is a candidate: counted once (aerial duels lost; ground duels lost are in the ground-duel success rate) |
+| Accurate passes, pass accuracy % | Part or sum of another statistic, which is a candidate: counted once (accurate passes in own half and in the opposition half, and their accuracy) |
+| Possession lost | Part or sum of another statistic, which is a candidate: counted once (dispossessed, inaccurate passes, and failed dribbles in the dribble success rate) |
+| Goal conversion % (SofaScore) | Includes penalties: goals per non-penalty shot is the candidate |
+| Non-penalty goals minus xG | The difference of two candidates (non-penalty goals, npxG) |
+| Hit the woodwork, own shots blocked | Outcomes of his own shots without a direction (neither a goal nor a miss by his doing); shots on target % and goals per shot cover his shooting |
+| Direct red cards | Part or sum of another statistic, which is a candidate: counted once (red cards) |
+| Understat's shots, key passes and non-penalty goals | A second provider of the same counts (FBref and SofaScore) |
+| Penalties taken, on target, hit the post, missed; penalty saves % | Rare, and a set chance, not open play |
 | Goals conceded and clean sheets of outfield players | A team outcome while he is on the pitch, not his own doing (in the contribution: team defence) |
 | Goals conceded, clean sheets (goalkeepers) | A team outcome while he is on the pitch, not his own doing (in the contribution: team defence); goals prevented measures the goalkeeper |
 | Saves, saves inside / outside the box, caught, parried | Depend on how many shots his defence allows: goals prevented measures the goalkeeper |

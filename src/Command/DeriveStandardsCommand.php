@@ -79,10 +79,7 @@ final class DeriveStandardsCommand extends Command
         }
         $id = (string) $input->getOption('id');
         $file = "{$this->projectDir}/config/standards/{$id}.json";
-        $previous = is_file($file) ? (string) file_get_contents($file) : null;
-        StandardsFile::write($file, $id, $codes, $standards, $validation);
-        if ($previous !== null && $previous !== file_get_contents($file) && !$input->getOption('force')) {
-            file_put_contents($file, $previous);
+        if (!StandardsFile::write($file, StandardsFile::encode($id, $codes, $standards, $validation), (bool) $input->getOption('force'))) {
             $io->error("{$id} exists with different numbers. A model built on it would change: derive under a new --id (and a new model version), or pass --force while no released model uses it.");
 
             return Command::FAILURE;

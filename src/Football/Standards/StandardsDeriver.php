@@ -19,7 +19,9 @@ namespace App\Football\Standards;
  * 2. Link with winning: its correlation with the team's goal difference per match (also
  *    adjusted for possession), with failures counted negatively. A statistic is used only when
  *    the link is positive and significant (one-sided 5%) in each season on its own: a link
- *    that does not replicate is likely chance.
+ *    that does not replicate is likely chance. Teammates share their team's results, so the
+ *    test uses the effective number of players (design effect of the statistic's clustering
+ *    within teams), not the raw count.
  * 3. Repeatability: its correlation between the two seasons for the same players in the same
  *    role. What repeats measures the player; what does not is mostly luck.
  * 4. Statistics that measure the same thing (correlation 0.8 or more, average linkage) are
@@ -30,7 +32,7 @@ namespace App\Football\Standards;
  * players; their ratings are tested on the next season (team results, repeatability) against
  * simpler alternatives.
  *
- * @phpstan-type StatisticResult array{label: string, kind: string, direction: int, players: int, used: bool, reason: ?string, prior: ?float, slope: ?float, possession_mean: ?float, relevance: array<string, float>, reliability: ?float, proxy_scale: ?float}
+ * @phpstan-type StatisticResult array{label: string, kind: string, direction: int, players: int, used: bool, reason: ?string, prior: ?float, slope: ?float, possession_mean: ?float, relevance: array<string, float>, reliability: ?float, proxy_scale: ?float, effective_players: array<string, float>}
  * @phpstan-type Measure array{key: string, label: string, members: list<string>, weight: float, relevance: float, reliability: float}
  * @phpstan-type RoleStandard array{players: int, seasons: array<string, int>, pairs: int, measures: list<Measure>, statistics: array<string, StatisticResult>}
  */
@@ -43,6 +45,8 @@ final class StandardsDeriver
     public const Z_ONE_SIDED = 1.645;
     /** Statistics correlated at least this strongly ("very strong") form one measure. */
     public const SAME_THING = 0.8;
+    /** Players in the role in both seasons needed to measure repeatability (and the prior). */
+    public const MIN_PAIRS = 20;
     /** Validation: a team is rated when its rated players played this share of its minutes. */
     public const VALIDATION_COVERAGE = 0.2;
 
@@ -207,7 +211,7 @@ final class StandardsDeriver
         $result = [
             'label' => $statistic->label, 'kind' => $statistic->kind, 'direction' => $statistic->direction, 'players' => 0,
             'used' => false, 'reason' => null, 'prior' => null, 'slope' => null, 'possession_mean' => null, 'relevance' => [], 'reliability' => null,
-            'proxy_scale' => null,
+            'proxy_scale' => null, 'effective_players' => [],
         ];
 
         $proxyScale = self::proxyScale($statistic, $players);
@@ -220,6 +224,13 @@ final class StandardsDeriver
             }
         }
         $result['players'] = count($measured);
+        foreach ($codes as $code) {
+            $inSeason = count(array_filter($players, static fn (StandardsPlayer $p) => $p->season === $code));
+            $known = count(array_filter($measured, static fn (array $m) => $m['player']->season === $code));
+            if ($inSeason > 0 && $known === 0) {
+                return [['reason' => 'Not in the 20' . substr($code, 0, 2) . '/' . substr($code, 2, 2) . ' data'] + $result, []];
+            }
+        }
         if ($players === [] || count($measured) < self::MIN_COVERAGE * count($players)) {
             return [['reason' => 'Known for too few players in this role'] + $result, []];
         }
@@ -251,7 +262,10 @@ final class StandardsDeriver
             }
             $r = Stats::correlation(array_map(static fn (int $id) => $values[$id], $ids), array_map(static fn (int $id) => $gdResidual[$id], $ids)) ?? 0.0;
             $result['relevance'][$code] = $r;
-            if (in_array($code, $relevanceSeasons, true) && $r < self::Z_ONE_SIDED / sqrt(count($ids))) {
+            // Teammates share their team's results: the test counts teams' worth of evidence, not players'.
+            $effective = self::effectiveSample(array_map(static fn (int $id) => $values[$id], $ids), array_map(static fn (int $id) => (string) $measured[$id]['player']->candidate->league . '|' . $measured[$id]['player']->candidate->team, $ids));
+            $result['effective_players'][$code] = $effective;
+            if (in_array($code, $relevanceSeasons, true) && $r < self::Z_ONE_SIDED / sqrt($effective)) {
                 $significant = false;
             }
         }
@@ -429,9 +443,11 @@ final class StandardsDeriver
                 $samples[] = $measured[$second]['sample'];
             }
         }
-        $rho = count($a) >= 20 ? Stats::correlation($a, $b) : null;
+        $rho = count($a) >= self::MIN_PAIRS ? Stats::correlation($a, $b) : null;
+        // The harmonic mean is the typical sample of unequal samples for averaging noise (1 / n).
+        $typical = count($samples) / array_sum(array_map(static fn (float $n) => 1 / max($n, 1e-9), $samples));
 
-        return $rho !== null && $rho > 0 ? Stats::mean($samples) * (1 - $rho) / $rho : null;
+        return $rho !== null && $rho > 0 ? $typical * (1 - $rho) / $rho : null;
     }
 
     /**
@@ -459,6 +475,22 @@ final class StandardsDeriver
         return $proxy > 0 ? $primary / $proxy : null;
     }
 
+    /**
+     * Players' worth of independent evidence about a link with team results: n over the design
+     * effect 1 + (m̄ − 1) × ICC, with m̄ players per team and ICC how much the statistic is shared
+     * by teammates (a team-level outcome counts once per team, not once per player).
+     *
+     * @param list<float>  $values
+     * @param list<string> $teams
+     */
+    private static function effectiveSample(array $values, array $teams): float
+    {
+        $n = count($values);
+        $perTeam = $n / max(1, count(array_unique($teams)));
+
+        return $n / (1 + ($perTeam - 1) * Stats::intraclassCorrelation($values, $teams));
+    }
+
     private static function transform(Statistic $statistic, float $value): float
     {
         return $statistic->kind === Statistic::PER90 ? sqrt(max(0.0, $value)) : $value;
@@ -479,7 +511,7 @@ final class StandardsDeriver
             }
         }
 
-        return count($a) >= 20 ? Stats::correlation($a, $b) : null;
+        return count($a) >= self::MIN_PAIRS ? Stats::correlation($a, $b) : null;
     }
 
     /**

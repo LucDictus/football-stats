@@ -6,8 +6,11 @@ import { api } from '../api/client'
 import { PositionBadge } from './PositionBadge'
 import styles from './SearchBox.module.css'
 
-/** Player search with a results list: arrow keys to move, Enter to open, Escape to close. */
-export function SearchBox() {
+/**
+ * Player search with a results list: arrow keys to move, Enter to open, Escape to close.
+ * Opens the player's page, or with onSelect hands the chosen player to the caller (a picker).
+ */
+export function SearchBox({ onSelect, placeholder = 'Search a player' }: { onSelect?: (id: number) => void; placeholder?: string } = {}) {
   const [query, setQuery] = useState('')
   const [debounced, setDebounced] = useState('')
   const [open, setOpen] = useState(false)
@@ -43,7 +46,8 @@ export function SearchBox() {
   const go = (id: number) => {
     setOpen(false)
     setQuery('')
-    navigate(`/players/${id}`)
+    if (onSelect) onSelect(id)
+    else navigate(`/players/${id}`)
   }
 
   return (
@@ -53,8 +57,8 @@ export function SearchBox() {
       </svg>
       <input
         type="search"
-        placeholder="Search a player"
-        aria-label="Search a player"
+        placeholder={placeholder}
+        aria-label={placeholder}
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={expanded}

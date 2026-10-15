@@ -67,4 +67,54 @@ class PlayerScoreRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['run' => $run, 'player' => $player]);
     }
+
+    /**
+     * Every scored player of a group (null: all groups) on one part of the score: its points and, for metrics and
+     * the contribution, the value behind them. Sorted by points, best first.
+     *
+     * @param string      $part      final | positional | contribution | component | metric
+     * @param string|null $component component key (component, metric)
+     * @param string|null $metric    metric key (metric)
+     *
+     * @return list<array{id: int, name: string, team: ?string, position: ?string, rank: ?int, points: float, value: ?float, adjusted: ?float}>
+     */
+    public function distribution(ScoreRun $run, ?string $group, string $part, ?string $component = null, ?string $metric = null): array
+    {
+        [$points, $value, $adjusted] = match ($part) {
+            'final' => ['s.score', 'NULL', 'NULL'],
+            'positional' => ['s.positional', 'NULL', 'NULL'],
+            'contribution' => ["(s.impact->>'score')::float", "(s.impact->>'above')::float", 'NULL'],
+            'component' => ["(s.components->:component->>'score')::float", 'NULL', 'NULL'],
+            'metric' => [
+                "(s.components->:component->'metrics'->:metric->>'percentile')::float",
+                "(s.components->:component->'metrics'->:metric->>'value')::float",
+                "(s.components->:component->'metrics'->:metric->>'adjusted')::float",
+            ],
+            default => throw new \InvalidArgumentException("Unknown part {$part}"),
+        };
+        $params = ['run' => $run->getId()] + ($group !== null ? ['group' => $group] : [])
+            + ($component !== null && in_array($part, ['component', 'metric'], true) ? ['component' => $component] : [])
+            + ($metric !== null && $part === 'metric' ? ['metric' => $metric] : []);
+
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
+            "SELECT * FROM (
+                SELECT p.id, p.name, s.team, s.position_group, s.rank, {$points} AS points, {$value} AS value, {$adjusted} AS adjusted
+                FROM player_score s JOIN player p ON p.id = s.player_id
+                WHERE s.run_id = :run" . ($group !== null ? ' AND s.position_group = :group' : '') . '
+             ) d WHERE points IS NOT NULL
+             ORDER BY points DESC, id',
+            $params,
+        );
+
+        return array_map(static fn (array $r) => [
+            'id' => (int) $r['id'],
+            'name' => (string) $r['name'],
+            'team' => $r['team'] !== null ? (string) $r['team'] : null,
+            'position' => $r['position_group'] !== null ? (string) $r['position_group'] : null,
+            'rank' => $r['rank'] !== null ? (int) $r['rank'] : null,
+            'points' => (float) $r['points'],
+            'value' => $r['value'] !== null ? (float) $r['value'] : null,
+            'adjusted' => $r['adjusted'] !== null ? (float) $r['adjusted'] : null,
+        ], $rows);
+    }
 }

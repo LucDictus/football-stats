@@ -197,3 +197,28 @@ export interface PlayerProfile {
   stats: { league: ScopeStats | null; CL: ScopeStats | null }
   score: ScoreBreakdown | null
 }
+
+export type DistributionPart = 'final' | 'positional' | 'contribution' | 'component' | 'metric'
+
+export interface DistributionPoint {
+  id: number
+  name: string
+  team: string | null
+  position: PositionGroup | null
+  rank: number | null
+  /** 50 = the group's average, 10 points = one standard deviation (final and contribution can pass 100). */
+  points: number
+  /** Metrics: the measured value (per 90 or a rate); contribution: goals above replacement. */
+  value: number | null
+  /** Metrics: after the small-sample pull. */
+  adjusted: number | null
+}
+
+export interface DistributionResponse {
+  run_id: number
+  model_id: string
+  position: PositionGroup | null
+  part: DistributionPart
+  about: { label: string; unit?: string; weight?: number; component?: string; component_label?: string; metric?: ModelMetric }
+  players: DistributionPoint[]
+}

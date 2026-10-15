@@ -19,6 +19,7 @@ use App\Football\Scoring\MetricValue;
 use App\Football\Scoring\ScoreCalculator;
 use App\Football\Scoring\ScoringCandidate;
 use App\Football\Scoring\ScoringModel;
+use App\Football\Standards\StandardsFile;
 use App\Football\Standards\StatisticCatalog;
 use App\Football\Standards\Stats;
 use PHPUnit\Framework\TestCase;
@@ -47,6 +48,36 @@ final class StandardsEngineTest extends TestCase
         $metric = new Metric('b', 'B', ['xg_buildup'], MetricMode::Per90, 1.0, proxy: $statistic->proxy, proxyScale: 0.01);
         self::assertEqualsWithDelta(0.45, MetricValue::of($metric, $stats), 1e-12);
         self::assertSame(20.0, MetricValue::sample($metric, $stats), 'the proxy\'s own matches');
+    }
+
+    public function testTheXgProxyTakesPenaltiesOut(): void
+    {
+        // SofaScore xG 9.0 including 3 penalties (1800 minutes = 20 matches): (9 − 3 × 0.76) / 20 per 90, scaled.
+        $stats = $this->stats(['xg_sofascore' => 9.0, 'penalties_taken' => 3.0]);
+
+        self::assertEqualsWithDelta((9.0 - 3 * 0.76) / 20 * 1.1, StatisticCatalog::get('np_xg')->measure($stats, 1.1)[0] ?? null, 1e-12);
+    }
+
+    public function testTeammatesCountAsSharedEvidence(): void
+    {
+        // Values identical within each team: all the spread is between teams (ICC 1), so 4 players
+        // in 2 teams are worth 2 independent observations; values unrelated to the team: ICC 0.
+        self::assertEqualsWithDelta(1.0, Stats::intraclassCorrelation([1.0, 1.0, 3.0, 3.0], ['a', 'a', 'b', 'b']), 1e-12);
+        self::assertSame(0.0, Stats::intraclassCorrelation([1.0, 3.0, 1.0, 3.0], ['a', 'a', 'b', 'b']));
+    }
+
+    public function testFrozenStandardsAreNotSilentlyChanged(): void
+    {
+        $file = sys_get_temp_dir() . '/standards-' . bin2hex(random_bytes(4)) . '.json';
+        try {
+            self::assertTrue(StandardsFile::write($file, "{\"a\": 1}\n"));
+            self::assertTrue(StandardsFile::write($file, "{\"a\": 1}\n"), 'the same numbers: fine');
+            self::assertFalse(StandardsFile::write($file, "{\"a\": 2}\n"));
+            self::assertSame("{\"a\": 1}\n", file_get_contents($file), 'nothing written');
+            self::assertTrue(StandardsFile::write($file, "{\"a\": 2}\n", force: true));
+        } finally {
+            @unlink($file);
+        }
     }
 
     public function testThePossessionPartTheStandardsFittedIsRemoved(): void

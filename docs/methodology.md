@@ -49,7 +49,7 @@ goes through the same steps:
 | 2. Small samples | Pulled toward the role average, the more the fewer matches (or attempts) the number rests on. How strongly comes from the data: a statistic that repeats less between seasons is pulled more | 3 goals in 2 matches is not a 135-goal season |
 | 3. Square-root scale (counts) | The standard variance-stabilising transform for counts | A few extreme values must not dominate |
 | 4. Possession | The part that the team's possession explains is removed, from the statistic and from the team's results | A team with the ball passes more, one without defends more: style, not quality |
-| 5. Link with winning | Correlation with the team's goal difference per match. **Used only if positive and significant in each season on its own** | A link that does not replicate is likely chance |
+| 5. Link with winning | Correlation with the team's goal difference per match. **Used only if positive and significant in each season on its own**, counting teammates as partly the same evidence (they share their team's results) | A link that does not replicate is likely chance |
 | 6. Repeatability | Correlation for the same players between the two seasons | What repeats measures the player; what does not is mostly luck |
 | 7. Counted once | Statistics that correlate 0.8 or more become one measure (their average) | Key passes and big chances created measure nearly the same thing |
 | 8. Weight | Link with winning × repeatability, scaled to 100% per role | A measure counts as much as it goes with winning *and* is the player's own doing |
@@ -60,62 +60,74 @@ statistic, the numbers behind each decision and the reason a statistic is not us
 
 | Role | Measures (weight) |
 |---|---|
-| Strikers | passes in the opposition half · final third 18%, key passes 15%, non-penalty xG 14%, shots on target 12%, xA · big chances created 11%, non-penalty goals 11%, possession won in the attacking third 8%, xGBuildup 8%, assists 2% |
-| Wingers | non-penalty xG 21%, accurate final-third passes 15%, shots on target 13%, non-penalty goals 12%, xA · big chances created 12%, xGBuildup 11%, key passes 9%, assists 4%, penalties won 3% |
-| Attacking midfielders | xA · big chances created 24%, non-penalty xG 23%, shots on target 17%, non-penalty goals 15%, possession won in the attacking third 13%, assists 9% |
+| Strikers | passes in the opposition half · final third 18%, key passes 15%, non-penalty xG 14%, shots on target 13%, xA · big chances created 11%, non-penalty goals 11%, possession won in the attacking third 9%, xGBuildup 8%, assists 2% |
+| Wingers | non-penalty xG 23%, accurate final-third passes 16%, shots on target 14%, xA · big chances created 12%, xGBuildup 11%, key passes 9%, non-penalty goals · goals per non-penalty shot 7%, assists 4%, penalties won 3% |
+| Attacking midfielders | xA · big chances created 26%, non-penalty xG 25%, shots on target 18%, possession won in the attacking third 13%, assists 10%, non-penalty goals · goals per non-penalty shot 9% |
 | Central midfielders | passes in the opposition half · final third 65%, xGBuildup 35% |
-| Defensive midfielders | passes in the opposition half · final third 31%, xA · key passes · big chances created 19%, assists 15%, shots on target 13%, possession won in the attacking third 9%, xGBuildup 6%, fewer errors leading to a shot 4%, shots on target % 2%, non-penalty goals 2% |
-| Full-backs | passes in the opposition half · final third 29%, non-penalty xG 17%, aerial duels won % 14%, xA · big chances created 13%, possession won in the attacking third 10%, assists 9%, xGBuildup 8% |
-| Centre-backs | xGBuildup 26%, passes in the opposition half · final third 24%, aerial duels won 17%, non-penalty xG 10%, shots on target 7%, big chances created 6%, non-penalty goals 5%, assists 4% |
+| Defensive midfielders | passes in the opposition half · final third 27%, key passes 16%, xA · big chances created 14%, assists 13%, shots on target 11%, possession won in the attacking third 8%, xGBuildup 6%, fewer errors leading to a shot 3%, non-penalty goals 1% |
+| Full-backs | passes in the opposition half · final third 28%, non-penalty xG 16%, xA 16%, aerial duels won % 14%, possession won in the attacking third 10%, assists 9%, xGBuildup 8% |
+| Centre-backs | xGBuildup 36%, passes in the opposition half · final third 34%, non-penalty xG 15%, non-penalty goals 8%, big chances created 8% |
 | Goalkeepers | xGBuildup 100% |
 
 (Exact weights per role: [standards.md](standards.md), section *How a … earns points*.)
 
 **What the data showed:**
 
-- **Defensive action counts do not go with winning.** Tackles, interceptions, clearances, blocks
-  and recoveries have no replicated link with team results in any role, with possession taken
-  into account; clearances mostly lean negative. They measure how much defending a team has to do, not
-  how well. Of the duels, only aerial duels (centre-backs: duels won; full-backs: win rate)
-  qualify. How well a team defends counts in the contribution half (its goals conceded against
-  the league).
+- **Defensive action counts do not go with winning.** Tackles, interceptions, clearances and
+  recoveries have no replicated link with team results in any role, with possession taken into
+  account; clearances mostly lean negative. They measure how much defending a team has to do, not
+  how well. (Blocks, distance covered and sprints could not be tested: they are not in the 2024/25
+  data.) Of the duels only aerial-duel success qualifies, for full-backs; for centre-backs aerial
+  duels won goes with winning in each season but not strongly enough once teammates are counted
+  as shared evidence. How well a team defends counts in the contribution half (its goals conceded
+  against the league).
 - **Passing into the opposition half and the final third goes with winning in every outfield
   role except attacking midfielders** (for them it does not replicate in 2025/26), and so does
   involvement in build-up (xGBuildup). For central midfielders these are all that qualifies.
 - **Strikers are measured on link-up as much as on finishing.** Strikers who combine (key passes,
   passes into the final third) play in winning teams as much as strikers who shoot and score.
   A pure finisher is therefore an average striker in the positional half: Haaland's positional
-  score is 50.1, and his contribution (100.7, the goals he added) carries him to #15.
+  score is 49.9, and his contribution (100.7, the goals he added) carries him to #16.
 - **Goalkeepers: only build-up qualifies.** Goals prevented has a positive link with winning in
-  both seasons (0.32 and 0.13) but not significant in the second (112 goalkeepers); it repeats
+  both seasons (0.31 and 0.12) but not significant in the second (114 goalkeepers); it repeats
   only 0.13 between seasons, so over one season it is mostly luck. A goalkeeper's shot stopping
   counts once: in the contribution, as goals prevented, shrunk for luck.
 - **Finishing outcomes repeat less than the chances behind them**: npxG repeats more than
   non-penalty goals in every attacking role, so it weighs more.
 
 **Validation** (standards derived from 2024/25 alone, tested on 2025/26; [standards.md](standards.md)):
-the standards rate the same players most consistently between seasons (repeatability 0.59, against
-0.48 to 0.53 for equal weights, all candidates equally, or link with winning only). For predicting
-next season's team results they are level with the alternatives (r 0.34 to 0.38 over 82 teams; such
-differences are within chance).
 
-### Worked example: Harry Kane (striker, run #21)
+| Method | Next season's team results r | Beyond last season's results | Same player rated alike r |
+|---|---|---|---|
+| The standards (link with winning × repeatability) | 0.37 | 0.00 | 0.59 |
+| Every candidate statistic, weighted equally | 0.39 | 0.12 | 0.52 |
+| The same measures, weighted equally | 0.34 | −0.04 | 0.50 |
+| The same measures, weighted by link with winning only | 0.34 | −0.08 | 0.49 |
+
+Read honestly: for next season's team results the methods are level (82 teams; differences below
+0.2 are within chance), and only "every statistic equally" adds anything beyond last season's
+results (0.12, also within chance). The standards rate the same player most consistently, but
+that comparison favours them by construction: their weights include repeatability measured on the
+same players. The standards were chosen for the principle (count what goes with winning and is
+the player's own doing), not because they won the validation.
+
+### Worked example: Harry Kane (striker, run #22)
 
 | Measure | Weight | His value per 90 | After small-sample pull | His score (50 = average striker) |
 |---|---|---|---|---|
-| Passes in the opposition half · final third | 18% | 15.0 · 10.2 | 14.5 · 9.6 | 55.2 |
-| Key passes | 15% | 1.51 | 1.36 | 56.6 |
-| Non-penalty xG | 14% | 0.80 | 0.66 | 64.4 |
-| Shots on target | 12% | 2.54 | 2.07 | 79.3 |
-| xA · big chances created | 11% | 0.28 · 0.68 | 0.22 · 0.43 | 74.4 |
-| Non-penalty goals | 11% | 0.98 | 0.71 | 77.6 |
-| Possession won in the attacking third | 8% | 0.57 | 0.55 | 49.2 |
-| xGBuildup | 8% | 0.40 | 0.29 | 73.2 |
-| Assists | 2% | 0.19 | 0.13 | 53.5 |
+| Passes in the opposition half · final third | 18% | 15.0 · 10.2 | 14.6 · 9.7 | 55.2 |
+| Key passes | 15% | 1.51 | 1.38 | 56.4 |
+| Non-penalty xG | 15% | 0.80 | 0.67 | 64.0 |
+| Shots on target | 13% | 2.54 | 2.11 | 78.8 |
+| xA · big chances created | 11% | 0.28 · 0.68 | 0.22 · 0.45 | 73.8 |
+| Non-penalty goals | 11% | 0.98 | 0.73 | 76.9 |
+| Possession won in the attacking third | 9% | 0.57 | 0.55 | 49.2 |
+| xGBuildup | 8% | 0.40 | 0.30 | 72.6 |
+| Assists | 2% | 0.19 | 0.13 | 53.4 |
 
-His measure scores, weighted, average 65.2; compared with all strikers' averages that is 76.9 on
+His measure scores, weighted, average 64.8; compared with all strikers' averages that is 76.3 on
 the positional scale (each role's averages are standardised again, so every role spreads the
-same). His contribution score is 110.9. Final: 50% × 76.9 + 50% × 110.9 = **93.9**, #3. (Bayern
+same). His contribution score is 110.9. Final: 50% × 76.3 + 50% × 110.9 = **93.6**, #3. (Bayern
 have the most possession in the Bundesliga, so his passing and xG are adjusted down a little
 before scoring.)
 
@@ -124,11 +136,19 @@ before scoring.)
 The positional standards contain no hand-picked statistics or weights. These choices remain, each
 the same for every role and documented:
 
-- Statistical conventions: 900+ league minutes to be ranked, significance at 5%, "the same thing"
-  at correlation 0.8, a square-root scale for counts, 80% coverage for a statistic to be tested.
-- Which statistics are candidates: by their definition (successes for, failures against; volumes
-  of attempts, sums of other statistics and team outcomes left out; [standards.md](standards.md)
-  lists every exclusion with its reason).
+- Statistical conventions: 900+ league minutes, significance at 5% (one-sided, per season), "the
+  same thing" at correlation 0.8, a square-root scale for counts, 80% coverage for a statistic to
+  be tested, at least 20 players in a role in both seasons to measure repeatability, at least 60%
+  of a player's measures known to rank him.
+- Which statistics are candidates, and their direction: by definition. Successes count for and
+  failures against; for a few volumes (touches, distance, sprints, fouls won, punches) more is
+  assumed better. A wrong direction can only keep a statistic out (its link with winning would be
+  negative), never count it the wrong way. Volumes of attempts, sums and parts of other statistics
+  and team outcomes are left out; [standards.md](standards.md) lists every exclusion with its reason.
+- Estimates where the data has gaps: possession from passing; for the players Understat has no
+  record of, its statistics from SofaScore (scaled per role on the players both cover; for
+  goalkeepers' xGBuildup this proxy, accurate passes, is only a fair estimate, r 0.4); a player who
+  moved clubs counts with his main club.
 - The 50/50 blend of positional excellence and contribution.
 - The contribution model's parameters (mvp-v1, mvp-v2): the 50/30/20 split of a chance between
   shooter, passer and build-up, the shrinkage of finishing and goalkeeping, the 20th-percentile
@@ -148,12 +168,12 @@ simply giving each group its most common role; its misses are between roles that
 to infer from get the group's most common role, labelled *default*. The player page says where a
 role came from.
 
-### Result (run #21)
+### Result (run #22)
 
 Top 10: Olise (W), Dimarco (FB), Kane (ST), Undav (AM), Yamal (W), Lautaro Martínez (ST),
 Mbappé (ST), Luis Díaz (W), Guéhi (CB), Schlotterbeck (CB). Best per role: winger Olise #1,
 full-back Dimarco #2, striker Kane #3, attacking midfielder Undav #4, centre-back Guéhi #9,
-defensive midfielder Rice #12, central midfielder Aleix García #34, goalkeeper Joan García #35.
+defensive midfielder Rice #11, central midfielder Aleix García #34, goalkeeper Joan García #35.
 
 | Role | Ranked | In the top 100 | Share of the role |
 |---|---|---|---|
@@ -162,22 +182,22 @@ defensive midfielder Rice #12, central midfielder Aleix García #34, goalkeeper 
 | Attacking midfielders | 148 | 13 | 8.8% |
 | Central midfielders | 168 | 8 | 4.8% |
 | Defensive midfielders | 150 | 9 | 6.0% |
-| Full-backs | 250 | 11 | 4.4% |
-| Centre-backs | 322 | 27 | 8.4% |
+| Full-backs | 250 | 12 | 4.8% |
+| Centre-backs | 322 | 26 | 8.1% |
 | Goalkeepers | 114 | 2 | 1.8% |
 
 The top 100 holds 30 attackers (strikers, wingers), 30 midfielders and 38 defenders. Compared with
-mvp-v2 (run #14): players whose quality the old hand-picked components missed rise (Ginter #229 →
-#52, Hakimi #185 → #41, Saka #156 → #38); attacking and central midfielders whose numbers were
-mainly volume fall (Fornals #27 → #294, Enzo Fernández #16 → #212, Baumgartner #26 → #205).
+mvp-v2 (run #14): players whose quality the old hand-picked components missed rise (Scalvini #195
+→ #45, Hakimi #185 → #50, Akanji #175 → #53); attacking and central midfielders whose numbers were
+mainly volume fall (Fornals #27 → #287, Enzo Fernández #16 → #205, Baumgartner #26 → #200).
 
 ### Known limitations of mvp-v3
 
 - **Winning is the yardstick, and good players play for good teams.** Possession is taken into
   account, team strength itself is not (it cannot be separated from the players' quality with
   season totals). Statistics that go with winning partly reflect the team around the player.
-- **No measure of defensive quality exists in this data** beyond aerial duels: defensive action
-  counts do not go with winning, and goals conceded with a player on and off the pitch does not
+- **No measure of defensive quality exists in this data** beyond full-backs' aerial-duel
+  success: defensive action counts do not go with winning, and goals conceded with a player on and off the pitch does not
   repeat between seasons (0.0 to 0.2). Defending counts through the team's results in the
   contribution half.
 - **Goalkeepers are rated on build-up in the positional half**, and their shot stopping in the

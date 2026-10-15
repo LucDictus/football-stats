@@ -158,4 +158,42 @@ final class Stats
             return $g;
         }, $groups);
     }
+
+    /**
+     * Intraclass correlation (one-way ANOVA estimator, clipped to 0–1): how much of the spread of
+     * a value lies between groups rather than within them.
+     *
+     * @param list<float>  $values
+     * @param list<string> $groups the group of each value
+     */
+    public static function intraclassCorrelation(array $values, array $groups): float
+    {
+        $byGroup = [];
+        foreach ($values as $i => $v) {
+            $byGroup[$groups[$i]][] = $v;
+        }
+        $n = count($values);
+        $k = count($byGroup);
+        if ($k < 2 || $n <= $k) {
+            return 0.0;
+        }
+        $mean = self::mean($values);
+        $between = 0.0;
+        $within = 0.0;
+        $sumSquares = 0.0;
+        foreach ($byGroup as $members) {
+            $m = self::mean($members);
+            $between += count($members) * ($m - $mean) ** 2;
+            foreach ($members as $v) {
+                $within += ($v - $m) ** 2;
+            }
+            $sumSquares += count($members) ** 2;
+        }
+        $msBetween = $between / ($k - 1);
+        $msWithin = $within / ($n - $k);
+        $size = ($n - $sumSquares / $n) / ($k - 1);
+        $denominator = $msBetween + ($size - 1) * $msWithin;
+
+        return $denominator > 0 ? max(0.0, min(1.0, ($msBetween - $msWithin) / $denominator)) : 0.0;
+    }
 }

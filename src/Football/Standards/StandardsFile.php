@@ -20,7 +20,7 @@ final class StandardsFile
      * @param array<string, RoleStandard>         $roles
      * @param array<string, array<string, mixed>> $validation
      */
-    public static function write(string $file, string $id, array $seasons, array $roles, array $validation): void
+    public static function encode(string $id, array $seasons, array $roles, array $validation): string
     {
         $data = [
             'id' => $id,
@@ -30,14 +30,30 @@ final class StandardsFile
                 'min_coverage' => StandardsDeriver::MIN_COVERAGE,
                 'z_one_sided' => StandardsDeriver::Z_ONE_SIDED,
                 'same_thing' => StandardsDeriver::SAME_THING,
+                'min_pairs' => StandardsDeriver::MIN_PAIRS,
             ],
             'roles' => self::round($roles),
             'validation' => self::round($validation),
         ];
+
+        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n";
+    }
+
+    /**
+     * Writes the standards unless the file exists with different numbers and $force is false:
+     * a model built on them would silently change. Returns false when refused (nothing written).
+     */
+    public static function write(string $file, string $json, bool $force = false): bool
+    {
+        if (is_file($file) && file_get_contents($file) !== $json && !$force) {
+            return false;
+        }
         if (!is_dir(dirname($file))) {
             mkdir(dirname($file), 0o775, true);
         }
-        file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n");
+        file_put_contents($file, $json);
+
+        return true;
     }
 
     /** @return Standards */

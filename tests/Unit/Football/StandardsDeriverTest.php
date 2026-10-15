@@ -73,7 +73,7 @@ final class StandardsDeriverTest extends TestCase
         self::assertFalse($statistics['tackles_won']['used'], 'what possession explains is removed first');
         // Tackles won = 1 + 8 (p − 0.5): on the square-root scale the slope near p = 0.5 is 8 / (2 × √1) = 4.
         self::assertEqualsWithDelta(4.0, $statistics['tackles_won']['slope'], 0.3);
-        self::assertSame('Known for too few players in this role', $statistics['np_goals']['reason']);
+        self::assertSame('Not in the 2024/25 data', $statistics['np_goals']['reason']);
     }
 
     public function testThePriorFollowsFromRepeatability(): void
