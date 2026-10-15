@@ -12,6 +12,8 @@ export interface Highlight {
 
 const WIDTH = 720
 const MARGIN = { left: 16, right: 16, top: 34, bottom: 34 }
+/** Half the height of the dot area at most, in viewBox units. */
+const MAX_SPREAD = 120
 
 /**
  * Every player of a group as a dot on the points scale (50 = the group's average, 10 points = one
@@ -129,7 +131,7 @@ function layout(players: DistributionPoint[]) {
   const x = (v: number) => MARGIN.left + ((v - lo) / (hi - lo)) * (WIDTH - MARGIN.left - MARGIN.right)
   const ticks = Array.from({ length: (hi - lo) / 10 + 1 }, (_, i) => lo + i * 10)
 
-  const r = players.length > 400 ? 2.6 : players.length > 200 ? 3.2 : 4
+  const r = players.length > 1000 ? 2.2 : players.length > 400 ? 2.6 : players.length > 200 ? 3.2 : 4
   const gap = r * 2 + 0.6
   const placed: { cx: number; cy: number }[] = []
   const dots: Dot[] = []
@@ -145,9 +147,13 @@ function layout(players: DistributionPoint[]) {
     placed.push({ cx, cy: offset })
     dots.push({ player, cx, cy: offset, r })
   }
-  const spread = Math.max(gap * 3, ...dots.map((d) => Math.abs(d.cy)))
+  // Dense groups (all 1,500 players) would make a tall column: squeeze the rows to at most
+  // MAX_SPREAD either side of the middle line (dots may then touch).
+  const widest = Math.max(gap * 3, ...dots.map((d) => Math.abs(d.cy)))
+  const spread = Math.min(widest, MAX_SPREAD)
+  const squeeze = spread / widest
   const height = MARGIN.top + MARGIN.bottom + spread * 2
   const middle = MARGIN.top + spread
 
-  return { x, ticks, dots: dots.map((d) => ({ ...d, cy: middle + d.cy })), height }
+  return { x, ticks, dots: dots.map((d) => ({ ...d, cy: middle + d.cy * squeeze })), height }
 }

@@ -10,6 +10,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <RankingPage /> },
       { path: 'players/:id', lazy: async () => ({ Component: (await import('./pages/PlayerPage')).PlayerPage }) },
+      { path: 'compare', lazy: async () => ({ Component: (await import('./pages/ComparePage')).ComparePage }) },
       { path: 'methodology', lazy: async () => ({ Component: (await import('./pages/MethodologyPage')).MethodologyPage }) },
       { path: '*', element: <NotFoundPage /> },
     ],

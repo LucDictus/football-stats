@@ -1,0 +1,408 @@
+.page {
+  max-width: 1080px;
+}
+
+.lead,
+.sectionLead {
+  max-width: 720px;
+  color: var(--text-2);
+}
+
+.section {
+  margin-top: 40px;
+}
+
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 8px;
+}
+
+.chips {
+  display: contents;
+  list-style: none;
+}
+
+.chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid;
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.chips button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.search {
+  flex: 1 1 260px;
+  max-width: 360px;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.suggestions button {
+  padding: 5px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.suggestions button:hover {
+  background: var(--surface-3);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border-top: 3px solid;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.cardScore {
+  margin-top: 6px;
+  font-size: 34px;
+  font-weight: 700;
+}
+
+/* How each score is built */
+.build {
+  display: grid;
+  gap: 14px;
+}
+
+.buildRow {
+  display: grid;
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr) 56px;
+  grid-template-areas: 'name bar total' '. sum sum';
+  align-items: center;
+  column-gap: 12px;
+}
+
+.buildName {
+  grid-area: name;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buildBar {
+  grid-area: bar;
+  display: flex;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.buildPositional,
+.buildContribution {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.buildPositional {
+  color: #0b0d10;
+}
+
+.buildContribution {
+  border: 2px solid;
+  border-left: 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface-3) 70%, transparent);
+}
+
+.buildTotal {
+  grid-area: total;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.buildSum {
+  grid-area: sum;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.legendPositional,
+.legendContribution {
+  display: inline-block;
+  width: 18px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.legendPositional {
+  background: var(--text-2);
+}
+
+.legendContribution {
+  margin-left: 10px;
+  border: 2px solid var(--text-2);
+}
+
+/* Contribution in goals */
+.goals {
+  padding: 8px 18px;
+}
+
+.goalRow {
+  display: grid;
+  grid-template-columns: minmax(0, 190px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.goalRow:first-child {
+  border-top: 0;
+}
+
+.goalTotal .goalLabel {
+  font-weight: 700;
+}
+
+.goalLabel {
+  font-size: 14px;
+}
+
+.goalBars {
+  display: grid;
+  gap: 4px;
+}
+
+.goalBar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 8px;
+}
+
+.goalTrack {
+  position: relative;
+  height: 8px;
+}
+
+.goalZero {
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--line-strong);
+}
+
+.goalFill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+}
+
+.goalValue {
+  font-size: 13px;
+  text-align: right;
+}
+
+/* Positional */
+.positionalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.positionalGrid > :global(.card) {
+  padding: 18px;
+}
+
+.tableCard {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 7px 6px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  font-weight: 400;
+}
+
+.table th {
+  border-top: 0;
+  font-weight: 700;
+}
+
+.table :global(.num) {
+  text-align: right;
+}
+
+.best {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sumRow td {
+  border-top: 1px solid var(--line-strong);
+}
+
+.ownRoles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 12px;
+}
+
+.ownRoles > :global(.card) {
+  padding: 16px 18px;
+}
+
+.ownRoles h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.ownScore {
+  margin: 4px 0 8px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.ownList {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.ownList li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px 40px;
+  gap: 6px;
+}
+
+.ownList li > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ownList :global(.num) {
+  text-align: right;
+}
+
+/* Spread */
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.options button {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.options button[aria-pressed='true'] {
+  border-color: var(--line-strong);
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.spreadCard {
+  padding: 8px 20px 14px;
+}
+
+@media (max-width: 640px) {
+  .buildRow {
+    grid-template-columns: minmax(0, 1fr) 48px;
+    grid-template-areas: 'name total' 'bar bar' 'sum sum';
+    row-gap: 6px;
+  }
+
+  .goalRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

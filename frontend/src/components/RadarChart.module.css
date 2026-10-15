@@ -1,0 +1,40 @@
+.svg {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.ring {
+  fill: none;
+  stroke: var(--line);
+}
+
+.average {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.axis {
+  stroke: var(--line);
+}
+
+.label {
+  fill: var(--text-2);
+  font-size: 11px;
+}
+
+.ringLabel {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
+.shape {
+  fill-opacity: 0.16;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}

@@ -89,6 +89,7 @@ export function Layout() {
             <NavLink to="/" end>
               Ranking
             </NavLink>
+            <NavLink to="/compare">Compare</NavLink>
             <NavLink to="/methodology">Methodology</NavLink>
           </nav>
           <SearchBox />

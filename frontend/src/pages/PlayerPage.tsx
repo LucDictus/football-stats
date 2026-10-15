@@ -75,6 +75,9 @@ function Header({ profile }: { profile: PlayerProfile }) {
           {season.positions && <> · plays {season.positions.replace(',', ', ')}</>}
           {season.role && season.role_source && <> · role {ROLE_SOURCES[season.role_source]}</>}
         </p>
+        <Link className={styles.compareLink} to={`/compare?ids=${player.id}`}>
+          Compare with other players →
+        </Link>
         {season.stints.length > 1 && (
           <ul className={styles.stints} aria-label="Clubs this season">
             {season.stints.map((stint) => (
