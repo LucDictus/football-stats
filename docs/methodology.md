@@ -13,7 +13,81 @@ a new version. Every `ScoreRun` stores the full definition, its SHA-256 hash and
 batches its statistics came from, so any published ranking can be explained and reproduced.
 `app:score` does not store a run that would be identical to the latest one.
 
-## mvp-v2 (roadmap phase 5, released, the current model)
+## mvp-v3 (roadmap phase 5, release candidate, the current model)
+
+**As mvp-v2, but every player is compared with his own role (striker, winger, attacking,
+central or defensive midfielder, full-back, centre-back, goalkeeper) instead of a broad
+position group, on components that fit the role, and against a replacement-level player of
+that role.**
+
+### Why
+
+"Midfielder" (the source's position group) covered wingers, playmakers and holding
+midfielders: one comparison group, one set of components, one replacement level. Wingers and
+attacking midfielders stood out against holding midfielders, and holding midfielders were
+measured on chance creation they are not asked to provide.
+
+### Roles
+
+Roles come from the EA SPORTS FC positions in the Top-5 dataset (details in
+[data-model.md](data-model.md#roles)). 1,415 of the 1,522 ranked players have one; the other
+107 (about 1 in 14) are inferred from their statistics: the role whose typical profile is
+nearest. That inference is right for 68% of labelled players with 900+ minutes (872 of
+1,286, each left out of the profiles in turn). Its misses are between roles that overlap:
+attacking midfielder ↔ winger, central ↔ defensive midfielder; a k-nearest-neighbours
+classifier did no better (65–68%). The player page says when a role was inferred.
+
+| Role | Components (weight) |
+|---|---|
+| Strikers | attacking output 35%, attacking quality 30%, link-up 10%, pressing 5%, availability 20% |
+| Wingers | chance creation 25%, attacking output 20%, ball carrying 15%, attacking quality 10%, pressing 10%, availability 20% |
+| Attacking midfielders | chance creation 30%, attacking output 20%, build-up 15%, ball carrying 10%, pressing 5%, availability 20% |
+| Central midfielders | build-up 30%, defending 20%, chance creation 15%, attacking output 15%, availability 20% |
+| Defensive midfielders | defending 30%, build-up 30%, duel success 10%, chance creation 10%, availability 20% |
+| Full-backs | defensive actions 20%, wide creation (key passes, accurate crosses, xA) 20%, duel success 15%, build-up 15%, ball carrying 10%, availability 20% |
+| Centre-backs | defensive actions 25%, duel success 25%, build-up 20%, attacking threat 10%, availability 20% |
+| Goalkeepers | as mvp-v2: shot stopping 50%, distribution 15%, reliability 10%, availability 25% |
+
+New statistics (SofaScore, league only): successful dribbles (ball carrying), accurate crosses
+(wide creation), possession won in the attacking third (pressing, possession-adjusted like
+the other defensive counts; `app:score` prints the fit per role). The weights are judgement
+calls, like those of every earlier model.
+
+### Result (run #16)
+
+| | mvp-v2 (run #14) | mvp-v3 (run #16) |
+|---|---|---|
+| Top 10 | 5 FW, 5 MF | 4 strikers, 4 wingers, 1 attacking midfielder, 1 full-back |
+| Top 100 attackers (ST + W) / midfielders (AM + CM + DM) | – | 34 / 28 |
+| Best per role | | W Olise #1, ST Kane #2, FB Dimarco #5, AM Bruno Fernandes #8, DM Kimmich #12, CB Orban #14, CM Baumgartner #19, GK Nübel #33 |
+
+Top 100 per role (share of the role's ranked players): strikers 19 (10.2%), wingers 15 (7.8%),
+central midfielders 13 (7.6%), attacking midfielders 9 (6.3%), centre-backs 20 (6.1%),
+goalkeepers 6 (5.3%), full-backs 12 (4.9%), defensive midfielders 6 (4.2%).
+
+- **Holding midfielders rise**, measured on defending and build-up and no longer against
+  playmakers: Tchouaméni #205 → #61, Elliot Anderson #162 → #59.
+- **Attacking midfielders fall**: their replacement level is now that of attacking
+  midfielders (0.126 goals per 90), not of all midfielders (0.068), and their positional peers
+  are the other playmakers: Wirtz #81 → #185, Bellingham #73 → #156, Enzo Fernández #16 → #102.
+- **Replacement level per 90 by role**: strikers 0.159, attacking midfielders 0.126, wingers
+  0.119, central midfielders 0.063, defensive midfielders and full-backs 0.040, centre-backs
+  −0.004, goalkeepers −0.008. A goal above replacement is still a goal in every role.
+- Overlap report: [overlap-mvp-v3.md](overlap-mvp-v3.md).
+
+### Known limitations of mvp-v3
+
+- **Roles come from a video game's position data.** EA SPORTS FC positions are curated and
+  updated for the season, but they are a label, not a measurement of where a player played;
+  a player who changed role mid-season keeps one role.
+- **Inferred roles are right two times in three**; about 1 in 14 ranked players has one.
+  Vinícius Júnior, for example, has no EA FC position and is inferred as an attacking
+  midfielder.
+- **Smaller comparison groups** (143 to 327 ranked players per role instead of 113 to 683 per
+  group) make each role's average and replacement level a little less stable.
+- The limitations of mvp-v2 below still apply.
+
+## mvp-v2 (roadmap phase 5, released)
 
 **Same blend as mvp-v1 (50% positional + 50% contribution in goals), with defending measured
 against opportunity and errors counted in goals, for every outfield player.**

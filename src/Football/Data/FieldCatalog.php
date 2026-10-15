@@ -78,6 +78,8 @@ final class FieldCatalog
             new Field('final_third_passes', 'Accurate final-third passes', 'Creation and passing', $ss, 'ss_accurateFinalThirdPasses', 'accurateFinalThirdPasses'),
             new Field('accurate_passes', 'Accurate passes', 'Creation and passing', $ss, 'ss_accuratePasses', 'accuratePasses'),
             new Field('pass_accuracy', 'Pass accuracy %', 'Creation and passing', $ss, 'ss_accuratePassesPercentage', 'accuratePassesPercentage', per90: false),
+            new Field('accurate_crosses', 'Accurate crosses', 'Creation and passing', $ss, 'ss_accurateCrosses', null),
+            new Field('successful_dribbles', 'Successful dribbles', 'Creation and passing', $ss, 'ss_successfulDribbles', null),
             // Defending
             new Field('tackles', 'Tackles', 'Defending', $ss, 'ss_tackles', 'tackles'),
             new Field('tackles_won', 'Tackles won', 'Defending', $ss, 'ss_tacklesWon', 'tacklesWon'),
@@ -85,6 +87,7 @@ final class FieldCatalog
             new Field('blocks', 'Blocks', 'Defending', $ss, 'ss_outfielderBlocks', 'outfielderBlocks', note: 'Blocks made, not the player\'s own blocked shots'),
             new Field('clearances', 'Clearances', 'Defending', $ss, 'ss_clearances', 'clearances'),
             new Field('ball_recoveries', 'Ball recoveries', 'Defending', $ss, 'ss_ballRecovery', 'ballRecovery'),
+            new Field('possession_won_att_third', 'Possession won in the attacking third', 'Defending', $ss, 'ss_possessionWonAttThird', null),
             new Field('aerial_duels_won', 'Aerial duels won', 'Defending', $ss, 'ss_aerialDuelsWon', 'aerialDuelsWon'),
             new Field('aerial_duels_lost', 'Aerial duels lost', 'Defending', $ss, 'ss_aerialLost', 'aerialLost'),
             new Field('errors_leading_to_goal', 'Errors leading to goal', 'Defending', $ss, 'ss_errorLeadToGoal', 'errorLeadToGoal'),

@@ -19,7 +19,7 @@ final readonly class ScoringModel
 {
     /**
      * @param list<Component>                          $components     shared components (models without roles)
-     * @param list<string>                             $positionGroups who is ranked (PlayerSeason position groups)
+     * @param list<string>                             $positionGroups who is ranked (PlayerSeason position groups, or roles with $byRole)
      * @param float                                    $minConfidence  share of the model that must be measurable to be ranked
      * @param array<string, non-empty-list<Component>> $roles          position group => its components
      */
@@ -43,6 +43,12 @@ final readonly class ScoringModel
         public ?ImpactModel $impact = null,
         /** Weight of the contribution in the final score; the positional score gets the rest. */
         public float $impactWeight = 0.0,
+        /**
+         * Group players by their finer role (RoleCatalog: winger, defensive midfielder, ...)
+         * instead of the source's position group (GK, DF, MF, FW). The role is then the group
+         * everywhere: comparison, replacement level, possession fit.
+         */
+        public bool $byRole = false,
     ) {
         if (($impact === null) !== ($impactWeight === 0.0) || $impactWeight < 0 || $impactWeight > 1) {
             throw new \InvalidArgumentException("Model {$key}-v{$version}: an impact model needs a weight between 0 and 1, and a weight needs an impact model");
@@ -94,7 +100,8 @@ final readonly class ScoringModel
             + ($this->normalization !== Normalization::Percentile ? ['normalization' => $this->normalization->value] : [])
             + ($this->referenceRankedOnly ? ['reference' => 'ranked players'] : [])
             + ($this->zCap !== null ? ['z_cap' => $this->zCap] : [])
-            + ($this->impact !== null ? ['impact' => $this->impact->toArray() + ['weight' => $this->impactWeight]] : []);
+            + ($this->impact !== null ? ['impact' => $this->impact->toArray() + ['weight' => $this->impactWeight]] : [])
+            + ($this->byRole ? ['grouping' => 'role'] : []);
     }
 
     /**

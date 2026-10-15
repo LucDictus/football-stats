@@ -7,6 +7,7 @@ namespace App\Tests\Unit\DataQuality;
 use App\DataQuality\Top5StintMerger;
 use App\Football\Data\Origin;
 use App\Football\Data\OriginStatus;
+use App\Football\Data\RoleCatalog;
 use PHPUnit\Framework\TestCase;
 
 final class Top5StintMergerTest extends TestCase
@@ -151,6 +152,18 @@ final class Top5StintMergerTest extends TestCase
         return $players[0];
     }
 
+    public function testTheRoleComesFromTheEaFcClubPositionThenTheBestPosition(): void
+    {
+        $role = fn (array $columns) => $this->mergeOne([$this->row($columns)])->role;
+
+        self::assertSame(['W', RoleCatalog::SOURCE_CLUB_POSITION], $role(['fifa_club_position' => 'RW', 'fifa_best_position' => 'CAM']));
+        self::assertSame(['AM', RoleCatalog::SOURCE_BEST_POSITION], $role(['fifa_club_position' => 'SUB', 'fifa_best_position' => 'CAM']));
+        self::assertSame(['FB', RoleCatalog::SOURCE_CLUB_POSITION], $role(['fifa_club_position' => 'LM', 'fifa_best_position' => 'LB']), 'a wing-back in a back three');
+        self::assertSame(['W', RoleCatalog::SOURCE_CLUB_POSITION], $role(['fifa_club_position' => 'LM', 'fifa_best_position' => 'LW']));
+        self::assertNull($role(['fifa_club_position' => '', 'fifa_best_position' => '']));
+        self::assertNull($role([]), 'older dataset versions have no EA SPORTS FC columns');
+    }
+
     /**
      * A stint row with every catalog column present. mergeOne() overrides the provider minutes.
      *
@@ -171,7 +184,8 @@ final class Top5StintMergerTest extends TestCase
         foreach (['ss_penaltyGoals', 'ss_keyPasses', 'ss_bigChancesCreated', 'ss_accurateFinalThirdPasses', 'ss_accuratePasses',
             'ss_accuratePassesPercentage', 'ss_tackles', 'ss_tacklesWon', 'ss_interceptions', 'ss_outfielderBlocks', 'ss_clearances',
             'ss_ballRecovery', 'ss_aerialDuelsWon', 'ss_aerialLost', 'ss_errorLeadToGoal', 'ss_saves', 'ss_goalsConceded',
-            'ss_goalsPrevented', 'ss_cleanSheet', 'ss_expectedGoals', 'ss_expectedAssists', 'ss_penaltiesTaken'] as $column) {
+            'ss_goalsPrevented', 'ss_cleanSheet', 'ss_expectedGoals', 'ss_expectedAssists', 'ss_penaltiesTaken',
+            'ss_accurateCrosses', 'ss_successfulDribbles', 'ss_possessionWonAttThird'] as $column) {
             $row[$column] = $column === 'ss_tackles' ? '40' : '1';
         }
 

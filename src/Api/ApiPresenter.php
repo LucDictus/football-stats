@@ -148,6 +148,9 @@ final class ApiPresenter
             'label' => $season->getSeason()->getLabel(),
             'positions' => $season->getPositions(),
             'position_group' => $season->getPositionGroup(),
+            // Finer role (RoleCatalog) and where it came from: EA SPORTS FC, or inferred from statistics.
+            'role' => $season->getRole(),
+            'role_source' => $season->getRoleSource(),
             'team' => $season->getMainTeam()?->getName(),
             'stints' => $season->getStints()->map(static fn ($stint) => [
                 'team' => $stint->getTeam()->getName(),

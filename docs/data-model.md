@@ -8,6 +8,8 @@ ImportBatch ──< SourceRecord              raw layer: every import, unchanged
 Player ──< PlayerIdentifier               stable identity; source ids point to it
   │
   └──< PlayerSeason ──< PlayerSeasonStint ──> Team, Competition
+            │   positionGroup  GK | DF | MF | FW       from the source (FBref)
+            │   role, roleSource  ST | W | AM | CM | DM | FB | CB | GK, from EA SPORTS FC or inferred
             │
             └──< PlayerCompetitionStats   one per scope: league | CL
                      values        {field: number}         known values only (missing ≠ 0)
@@ -21,6 +23,17 @@ Competition, Season
 ScoreRun ──< PlayerScore ──> Player        app:score: model definition + hash, source batches;
                                            rank, score, confidence and full breakdown per player
 ```
+
+## Roles
+
+`positionGroup` is the source's broad label. `role` is finer (`RoleCatalog`): the player's
+EA SPORTS FC club line-up position (the Top-5 dataset carries it), otherwise his EA FC best
+position; a wide midfielder in the line-up whose best position is full-back is a wing-back in a
+back three, so a full-back. Goalkeepers are goalkeepers whatever the game says. Players without
+an EA FC position get the role whose typical statistical profile is nearest (`RoleInference`),
+among the roles compatible with their position group; `app:build-season` prints how often that
+inference gets a labelled player right. `roleSource` says which (`ea_fc_club`, `ea_fc_best`,
+`inferred`, `position`).
 
 ## Identity
 

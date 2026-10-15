@@ -11,7 +11,8 @@ use App\Football\Scoring\Impact\ImpactModel;
  * Applies a scoring model to a set of candidates. Pure and deterministic: the same model
  * and the same statistics always give the same ranking.
  *
- * 1. Eligibility: position group and minimum minutes from the model.
+ * 1. Eligibility: position group (or finer role, when the model groups by role) and minimum
+ *    minutes from the model.
  * 2. Comparison groups: all eligible players, or each position group on its own when the
  *    model has roles ("90" then means exceptional for that role).
  * 3. Per group: metric values (defensive counts adjusted for team possession where the metric
@@ -48,6 +49,9 @@ final class ScoreCalculator
      */
     public function score(ScoringModel $model, array $candidates): array
     {
+        if ($model->byRole) {
+            $candidates = array_map(static fn (ScoringCandidate $c) => $c->byRole(), $candidates);
+        }
         $eligible = array_values(array_filter(
             $candidates,
             static fn (ScoringCandidate $c) => in_array($c->positionGroup, $model->positionGroups, true)
@@ -159,6 +163,9 @@ final class ScoreCalculator
      */
     public static function possessionAdjustment(ScoringModel $model, array $candidates): ?PossessionAdjustment
     {
+        if ($model->byRole) {
+            $candidates = array_map(static fn (ScoringCandidate $c) => $c->byRole(), $candidates);
+        }
         $fieldsByRole = [];
         foreach ($model->positionGroups as $group) {
             foreach ($model->componentsFor($model->comparesWithinRole() ? $group : null) as $component) {

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Api\ApiPresenter;
-use App\Entity\PlayerSeason;
 use App\Football\Scoring\ModelCatalog;
 use App\Football\Scoring\ScoringModel;
 use App\Repository\PlayerScoreRepository;
@@ -47,9 +46,11 @@ final class RankingController extends AbstractController
     {
         // Parameters first: a malformed request is a 400 whatever the data.
         $modelId = $this->context->modelId($request);
+        // A position group (GK, DF, MF, FW), or a role for models that group by role.
+        $groups = ModelCatalog::get($modelId)->positionGroups;
         $position = $this->context->string($request, 'position');
-        if ($position !== null && !in_array($position, PlayerSeason::POSITION_GROUPS, true)) {
-            throw new BadRequestHttpException('position must be one of ' . implode(', ', PlayerSeason::POSITION_GROUPS));
+        if ($position !== null && !in_array($position, $groups, true)) {
+            throw new BadRequestHttpException("position must be one of {$modelId}'s groups: " . implode(', ', $groups));
         }
         $limit = max(1, min(self::MAX_LIMIT, $this->context->int($request, 'limit', 100)));
         $offset = max(0, $this->context->int($request, 'offset', 0));

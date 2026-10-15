@@ -41,7 +41,7 @@ final class ApiTest extends WebTestCase
     {
         $data = $this->getJson('/api/models');
 
-        self::assertSame('mvp-v2', $data['default']);
+        self::assertSame('mvp-v3', $data['default']);
         $byId = array_column($data['models'], null, 'id');
         self::assertSame('Attacking output', $byId['baseline-v1']['components'][0]['label']);
         self::assertSame('Shot stopping', $byId['positional-v1']['roles']['GK'][0]['label']);
@@ -67,6 +67,20 @@ final class ApiTest extends WebTestCase
         self::assertResponseStatusCodeSame(400);
         $this->client->request('GET', '/api/rankings?model=nope');
         self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testModelsThatGroupByRoleFilterByRole(): void
+    {
+        // No EA SPORTS FC positions in the fixtures, and nothing to infer from: the group's most common role.
+        $pedri = $this->getJson('/api/players/' . $this->playerId('Pedri'));
+        self::assertSame(['MF', 'CM', 'inferred'], [$pedri['season']['position_group'], $pedri['season']['role'], $pedri['season']['role_source']]);
+        self::assertSame('CM', $pedri['score']['role']);
+
+        self::assertSame(['Pedri'], array_map(static fn ($r) => $r['player']['name'], $this->getJson('/api/rankings?model=mvp-v3&position=CM')['rows']));
+        $this->client->request('GET', '/api/rankings?model=mvp-v2&position=CM');
+        self::assertResponseStatusCodeSame(400, 'mvp-v2 groups by position group, not by role');
+        $this->client->request('GET', '/api/rankings?model=mvp-v3&position=MF');
+        self::assertResponseStatusCodeSame(400);
     }
 
     public function testPlayerProfileHasStatsWithProvenanceAndScoreBreakdown(): void

@@ -102,6 +102,7 @@ final readonly class ScoreRunner
             $s->getPlayerSeason()->getMainTeam()?->getName(),
             $s,
             $s->getPlayerSeason()->getMainTeam()?->getDomesticLeague()?->getCode(),
+            $s->getPlayerSeason()->getRole(),
         ), $stats);
     }
 

@@ -9,19 +9,18 @@ import { ErrorState } from '../components/ErrorState'
 import { PositionBadge } from '../components/PositionBadge'
 import { PositionFilter } from '../components/PositionFilter'
 import { componentColor } from '../lib/colors'
-import { formatNumber, formatScore, formatSigned } from '../lib/format'
+import { POSITION_ORDER, formatNumber, formatScore, formatSigned } from '../lib/format'
 import { POSITION_PLURAL, componentsFor, isRoleModel } from '../lib/model'
 import styles from './RankingPage.module.css'
 
 const PAGE_SIZE = 50
-const POSITIONS: PositionGroup[] = ['FW', 'MF', 'DF', 'GK']
 
 export function RankingPage() {
   const [params, setParams] = useSearchParams()
   const models = useQuery({ queryKey: ['models'], queryFn: api.models })
   const modelId = params.get('model') ?? models.data?.default
   const raw = params.get('position')
-  const position = POSITIONS.includes(raw as PositionGroup) ? (raw as PositionGroup) : null
+  const position = POSITION_ORDER.includes(raw as PositionGroup) ? (raw as PositionGroup) : null
 
   const update = (changes: Record<string, string | null>) => {
     const next = new URLSearchParams(params)
@@ -74,7 +73,7 @@ export function RankingPage() {
       <div className={styles.toolbar}>
         <PositionFilter
           value={position}
-          available={model?.position_groups ?? POSITIONS}
+          available={model?.position_groups ?? []}
           onChange={(value) => update({ position: value })}
         />
         {models.data && models.data.models.length > 1 && (

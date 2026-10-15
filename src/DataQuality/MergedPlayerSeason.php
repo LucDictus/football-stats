@@ -19,6 +19,7 @@ final readonly class MergedPlayerSeason
      * @param array<string, OriginCheck>                                                                $checks       Origin value => check
      * @param list<array{team: string, league: string, appearances: ?int, starts: ?int, minutes: ?int}> $stintDetails most minutes first
      * @param array<string, Origin>                                                                     $valueOrigins field key => provider that supplied the value (known values only)
+     * @param array{0: string, 1: string}|null                                                          $role         role and its source (RoleCatalog), from the main stint's row
      */
     public function __construct(
         public string $key,
@@ -35,6 +36,7 @@ final readonly class MergedPlayerSeason
         public array $checks,
         public array $stintDetails = [],
         public array $valueOrigins = [],
+        public ?array $role = null,
     ) {
     }
 

@@ -1,6 +1,7 @@
 // Shapes of the Symfony JSON API (src/Api/ApiPresenter.php).
 
-export type PositionGroup = 'GK' | 'DF' | 'MF' | 'FW'
+/** What a model compares players by: the source's position group, or a finer role (mvp-v3 on). */
+export type PositionGroup = 'GK' | 'DF' | 'MF' | 'FW' | 'ST' | 'W' | 'AM' | 'CM' | 'DM' | 'FB' | 'CB'
 export type TrustStatus = 'ok' | 'partial' | 'suspect' | 'missing'
 export type Provider = 'FBref' | 'Understat' | 'SofaScore' | 'derived'
 
@@ -43,6 +44,8 @@ export interface ScoringModel {
   reference?: string
   z_cap?: number
   /** Blended models: contribution in goals and its weight in the final score. */
+  /** 'role': players are grouped by finer role (striker, winger, ...) instead of position group. */
+  grouping?: 'role'
   impact?: {
     shooter_share: number
     passer_share: number
@@ -173,6 +176,9 @@ export interface PlayerProfile {
     label: string
     positions: string | null
     position_group: PositionGroup | null
+    /** Finer role, from EA SPORTS FC positions or inferred from statistics. */
+    role: PositionGroup | null
+    role_source: 'ea_fc_club' | 'ea_fc_best' | 'inferred' | 'position' | null
     team: string | null
     stints: {
       team: string

@@ -44,6 +44,12 @@ class PlayerSeason
         /** The club the player played most league minutes for (or their CL club). */
         #[ORM\ManyToOne]
         private ?Team $mainTeam = null,
+        /** Finer role (RoleCatalog): ST, W, AM, CM, DM, FB, CB or GK. Null when unknown. */
+        #[ORM\Column(length: 2, nullable: true)]
+        private ?string $role = null,
+        /** Where the role came from: RoleCatalog::SOURCE_* constants. */
+        #[ORM\Column(length: 12, nullable: true)]
+        private ?string $roleSource = null,
     ) {
         $this->stints = new ArrayCollection();
         $this->stats = new ArrayCollection();
@@ -72,6 +78,22 @@ class PlayerSeason
     public function getPositionGroup(): ?string
     {
         return $this->positionGroup;
+    }
+
+    public function getRole(): ?string
+    {
+        return $this->role;
+    }
+
+    public function getRoleSource(): ?string
+    {
+        return $this->roleSource;
+    }
+
+    public function setRole(string $role, string $source): void
+    {
+        $this->role = $role;
+        $this->roleSource = $source;
     }
 
     public function isGoalkeeper(): bool

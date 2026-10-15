@@ -27,4 +27,11 @@ export const POSITION_PLURAL: Record<PositionGroup, string> = {
   MF: 'midfielders',
   DF: 'defenders',
   GK: 'goalkeepers',
+  ST: 'strikers',
+  W: 'wingers',
+  AM: 'attacking midfielders',
+  CM: 'central midfielders',
+  DM: 'defensive midfielders',
+  FB: 'full-backs',
+  CB: 'centre-backs',
 }

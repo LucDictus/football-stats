@@ -46,6 +46,9 @@ final class OverlapAnalysis
         'impact.finishing' => 'attack',
         'creation' => 'creation',
         'link_up' => 'creation',
+        'wide_creation' => 'creation',
+        'carrying' => 'carrying',
+        'pressing' => 'defending',
         'impact.creation' => 'creation',
         'build_up' => 'build_up',
         'impact.build_up' => 'build_up',
@@ -64,7 +67,10 @@ final class OverlapAnalysis
     /** Positional components that repeat a contribution part, per role: the "drop" counterfactuals. */
     public const DUPLICATES = [
         'FW' => 'attacking_quality', // xG + xA per 90 ↔ shooting and creation in goals
+        'ST' => 'attacking_quality',
         'MF' => 'creation',          // xA, key passes, big chances ↔ creation in goals
+        'AM' => 'creation',
+        'W' => 'creation',
         'GK' => 'shot_stopping',     // goals prevented per 90 ↔ goalkeeping in goals
     ];
 
@@ -129,7 +135,7 @@ final class OverlapAnalysis
             $all += $dropped;
             $variants[] = self::variant("drop_{$role}", "{$role}: without {$component}", $byRole, static fn (PlayerScoreResult $r) => $dropped[spl_object_id($r)] ?? (float) $r->score);
         }
-        $variants[] = self::variant('drop_all', 'All three left out', $byRole, static fn (PlayerScoreResult $r) => $all[spl_object_id($r)] ?? (float) $r->score);
+        $variants[] = self::variant('drop_all', 'All duplicated components left out', $byRole, static fn (PlayerScoreResult $r) => $all[spl_object_id($r)] ?? (float) $r->score);
 
         return $variants;
     }

@@ -34,7 +34,7 @@ export function MethodologyPage() {
         <ol className={styles.principles}>
           <li>
             <strong>Compared with the right peers.</strong> A defender is measured on defending, build-up and duels, and compared
-            only with other defenders. A score of 90 means exceptional for that role.
+            only with other defenders{model?.grouping === 'role' && '; a winger only with other wingers, a holding midfielder only with other holding midfielders'}. A score of 90 means exceptional for that role.
           </li>
           <li>
             <strong>One ranking for every position.</strong> Each player’s combined score is expressed as how far it stands
@@ -93,10 +93,19 @@ export function MethodologyPage() {
       <section className={styles.section}>
         <h2>Known limitations of this version</h2>
         <ul className={styles.limits}>
-          <li>
-            Position labels are broad: “midfielder” covers wingers and holding midfielders alike, so attacking midfielders stand
-            out most against that mixed group. Finer roles are next.
-          </li>
+          {model?.grouping === 'role' ? (
+            <li>
+              Roles come from the positions in EA SPORTS FC (the club line-up position, otherwise the best position). For the
+              players without one (about 1 in 14 ranked players) the role is inferred from their statistics: the role whose
+              typical profile is nearest. That is right about two times in three for players whose role is known; the player
+              page says when a role was inferred.
+            </li>
+          ) : (
+            <li>
+              Position labels are broad: “midfielder” covers wingers and holding midfielders alike, so attacking midfielders
+              stand out most against that mixed group.
+            </li>
+          )}
           {model && adjustsForPossession(model) ? (
             <li>
               Possession is not in the data, so it is estimated from each team’s passing; defensive counts are adjusted with it.

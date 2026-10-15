@@ -1,11 +1,37 @@
 import type { PositionGroup } from '../api/types'
 
+/** In display order: attack to defence. */
 export const POSITION_LABELS: Record<PositionGroup, string> = {
-  GK: 'Goalkeeper',
-  DF: 'Defender',
-  MF: 'Midfielder',
   FW: 'Forward',
+  MF: 'Midfielder',
+  DF: 'Defender',
+  ST: 'Striker',
+  W: 'Winger',
+  AM: 'Attacking midfielder',
+  CM: 'Central midfielder',
+  DM: 'Defensive midfielder',
+  FB: 'Full-back',
+  CB: 'Centre-back',
+  GK: 'Goalkeeper',
 }
+
+/** Compact plural labels for the position filter. */
+export const POSITION_FILTER_LABELS: Record<PositionGroup, string> = {
+  FW: 'Forwards',
+  MF: 'Midfielders',
+  DF: 'Defenders',
+  ST: 'Strikers',
+  W: 'Wingers',
+  AM: 'Attacking mids',
+  CM: 'Central mids',
+  DM: 'Holding mids',
+  FB: 'Full-backs',
+  CB: 'Centre-backs',
+  GK: 'Goalkeepers',
+}
+
+/** Every group a model can compare by, in display order. */
+export const POSITION_ORDER = Object.keys(POSITION_LABELS) as PositionGroup[]
 
 export function formatScore(score: number | null): string {
   return score === null ? '–' : score.toFixed(1)

@@ -10,6 +10,7 @@ use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
 use App\Football\Data\OriginCheck;
 use App\Football\Data\OriginStatus;
+use App\Football\Data\RoleCatalog;
 
 /**
  * Turns Top-5 dataset stint rows (one per player per club) into one season per player.
@@ -152,6 +153,8 @@ final class Top5StintMerger
                 'minutes' => self::int($s['playing_time_min']),
             ], $stints),
             array_intersect_key($origins, array_filter($values, static fn ($v) => $v !== null)),
+            // Optional columns: older dataset versions have no EA SPORTS FC data.
+            RoleCatalog::fromEaFc(($main['fifa_club_position'] ?? '') ?: null, ($main['fifa_best_position'] ?? '') ?: null),
         );
     }
 

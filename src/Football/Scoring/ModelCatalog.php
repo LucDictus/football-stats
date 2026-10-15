@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace App\Football\Scoring;
 
 use App\Entity\StatsScope;
+use App\Football\Data\RoleCatalog;
 use App\Football\Scoring\Impact\ImpactModel;
 
 /** All released scoring models. Add a new version; never edit a released one. */
 final class ModelCatalog
 {
-    public const DEFAULT = 'mvp-v2';
+    public const DEFAULT = 'mvp-v3';
 
     /** @return array<string, ScoringModel> model id => model */
     public static function all(): array
     {
         // Released (hashes pinned in ScoreCalculatorTest): baseline-v1, positional-v1, positional-v2, mvp-v1, mvp-v2.
-        $models = [self::baselineV1(), self::positionalV1(), self::positionalV2(), self::mvpV1(), self::mvpV2()];
+        // Release candidate: mvp-v3.
+        $models = [self::baselineV1(), self::positionalV1(), self::positionalV2(), self::mvpV1(), self::mvpV2(), self::mvpV3()];
 
         return array_combine(array_map(static fn (ScoringModel $m) => $m->id(), $models), $models);
     }
@@ -24,6 +26,133 @@ final class ModelCatalog
     public static function get(string $id): ScoringModel
     {
         return self::all()[$id] ?? throw new \InvalidArgumentException(sprintf('Unknown model %s. Known: %s', $id, implode(', ', array_keys(self::all()))));
+    }
+
+    /**
+     * Roadmap phase 5, finer roles: mvp-v2 compared "midfielders" as one group, wingers and
+     * holding midfielders alike, and so with one set of components. Here every player is
+     * compared with his own role (RoleCatalog: from EA SPORTS FC positions, or inferred from
+     * his statistics), measured on what that role is about, and replaced by a replacement-level
+     * player of that role. Contribution and everything else as in mvp-v2.
+     */
+    private static function mvpV3(): ScoringModel
+    {
+        $v2 = self::mvpV2();
+
+        return new ScoringModel(
+            key: 'mvp',
+            version: '3',
+            label: 'MVP v3',
+            description: 'Half positional excellence (how far a player stands above others in his role: striker, winger, attacking, central or defensive midfielder, full-back, centre-back, goalkeeper), half contribution: the goals he added above a replacement-level player in his role.',
+            scope: $v2->scope,
+            minMinutes: $v2->minMinutes,
+            positionGroups: array_keys(RoleCatalog::ROLES),
+            minConfidence: $v2->minConfidence,
+            components: [],
+            roles: self::fineRoles(),
+            normalization: $v2->normalization,
+            referenceRankedOnly: $v2->referenceRankedOnly,
+            impact: $v2->impact,
+            impactWeight: $v2->impactWeight,
+            byRole: true,
+        );
+    }
+
+    /**
+     * Components per finer role. Defensive counts (and goalkeepers' passing) are adjusted for
+     * team possession, as in mvp-v2; errors are in the contribution.
+     *
+     * @return array<string, non-empty-list<Component>>
+     */
+    private static function fineRoles(): array
+    {
+        $adjusted = static fn (string $key, string $label, string $field, float $weight) => new Metric(
+            $key, $label, [$field], MetricMode::Per90, $weight, shrinkage: 10.0, sqrt: true, possessionAdjusted: true,
+        );
+        $possession = ' Adjusted for team possession: how much each depends on it is measured from the data.';
+        $availability = static fn (float $weight = 0.2) => new Component('availability', 'Availability', 'League minutes played: the volume of his season. Every other metric is a rate per 90.', $weight, [
+            new Metric('minutes', 'League minutes', ['minutes'], MetricMode::Total, 1.0),
+        ]);
+        $output = static fn (float $weight) => new Component('attacking_output', 'Attacking output', 'Non-penalty goals plus assists per 90.', $weight, [
+            self::shrunkPer90('np_ga_p90', 'Non-penalty goals + assists per 90', ['np_goals', 'assists'], 1.0),
+        ]);
+        $quality = static fn (float $weight) => new Component('attacking_quality', 'Attacking quality', 'Non-penalty xG plus xA per 90: the chances he got and created, independent of finishing luck.', $weight, [
+            self::shrunkPer90('npxg_xa_p90', 'Non-penalty xG + xA per 90', ['np_xg', 'xa'], 1.0),
+        ]);
+        $creation = static fn (float $weight) => new Component('creation', 'Chance creation', 'Passes that lead to shots, big chances and their expected-assist value.', $weight, [
+            self::shrunkPer90('key_passes_p90', 'Key passes per 90', ['key_passes'], 0.4),
+            self::shrunkPer90('big_chances_p90', 'Big chances created per 90', ['big_chances_created'], 0.3),
+            self::shrunkPer90('xa_p90', 'xA per 90', ['xa'], 0.3),
+        ]);
+        $buildUp = static fn (float $weight) => new Component('build_up', 'Build-up', 'Moving the ball forward and keeping it: xGBuildup, final-third passes and accurate passes.', $weight, [
+            self::shrunkPer90('xg_buildup_p90', 'xGBuildup per 90', ['xg_buildup'], 0.4),
+            self::shrunkPer90('final_third_passes_p90', 'Accurate final-third passes per 90', ['final_third_passes'], 0.3),
+            self::shrunkPer90('accurate_passes_p90', 'Accurate passes per 90', ['accurate_passes'], 0.3),
+        ]);
+        $carrying = static fn (float $weight) => new Component('carrying', 'Ball carrying', 'Successful dribbles per 90: beating a man with the ball.', $weight, [
+            self::shrunkPer90('dribbles_p90', 'Successful dribbles per 90', ['successful_dribbles'], 1.0),
+        ]);
+        $pressing = static fn (float $weight) => new Component('pressing', 'Pressing', 'Winning the ball high up: possession won in the attacking third and tackles won per 90.' . $possession, $weight, [
+            $adjusted('possession_won_att_third_p90', 'Possession won in the attacking third per 90', 'possession_won_att_third', 0.5),
+            $adjusted('tackles_won_p90', 'Tackles won per 90', 'tackles_won', 0.5),
+        ]);
+        $midfieldDefending = static fn (float $weight) => new Component('defending', 'Defending', 'Winning the ball back: tackles won, interceptions and recoveries.' . $possession, $weight, [
+            $adjusted('tackles_won_p90', 'Tackles won per 90', 'tackles_won', 0.4),
+            $adjusted('interceptions_p90', 'Interceptions per 90', 'interceptions', 0.3),
+            $adjusted('recoveries_p90', 'Ball recoveries per 90', 'ball_recoveries', 0.3),
+        ]);
+        $defending = static fn (float $weight) => new Component('defending', 'Defensive actions', 'Tackles won, interceptions, aerial duels won, blocks, recoveries and clearances per 90.' . $possession, $weight, [
+            $adjusted('tackles_won_p90', 'Tackles won per 90', 'tackles_won', 0.2),
+            $adjusted('interceptions_p90', 'Interceptions per 90', 'interceptions', 0.2),
+            $adjusted('aerials_won_p90', 'Aerial duels won per 90', 'aerial_duels_won', 0.2),
+            $adjusted('blocks_p90', 'Blocks per 90', 'blocks', 0.15),
+            $adjusted('recoveries_p90', 'Ball recoveries per 90', 'ball_recoveries', 0.15),
+            $adjusted('clearances_p90', 'Clearances per 90', 'clearances', 0.1),
+        ]);
+        $duels = static fn (float $weight) => new Component('duels', 'Duel success', 'How often his aerial duels and tackles succeed: quality, not volume. Few duels are pulled toward the average.', $weight, [
+            self::shrunkRate('aerial_win_pct', 'Aerial duels won %', 'aerial_win_pct', ['aerial_duels_won', 'aerial_duels_lost'], 0.6),
+            self::shrunkRate('tackle_success_pct', 'Tackles won %', 'tackle_success_pct', ['tackles'], 0.4),
+        ]);
+
+        return [
+            'ST' => [
+                $output(0.35),
+                $quality(0.3),
+                new Component('link_up', 'Link-up play', 'Big chances created and involvement in build-up (xGBuildup excludes his own shots and key passes).', 0.1, [
+                    self::shrunkPer90('big_chances_p90', 'Big chances created per 90', ['big_chances_created'], 0.5),
+                    self::shrunkPer90('xg_buildup_p90', 'xGBuildup per 90', ['xg_buildup'], 0.5),
+                ]),
+                $pressing(0.05),
+                $availability(),
+            ],
+            'W' => [$creation(0.25), $output(0.2), $carrying(0.15), $quality(0.1), $pressing(0.1), $availability()],
+            'AM' => [$creation(0.3), $output(0.2), $buildUp(0.15), $carrying(0.1), $pressing(0.05), $availability()],
+            'CM' => [$buildUp(0.3), $midfieldDefending(0.2), $creation(0.15), $output(0.15), $availability()],
+            'DM' => [$midfieldDefending(0.3), $buildUp(0.3), $duels(0.1), $creation(0.1), $availability()],
+            'FB' => [
+                $defending(0.2),
+                $duels(0.15),
+                new Component('wide_creation', 'Wide creation', 'Chances from the flank: key passes, accurate crosses and xA per 90.', 0.2, [
+                    self::shrunkPer90('key_passes_p90', 'Key passes per 90', ['key_passes'], 0.4),
+                    self::shrunkPer90('crosses_p90', 'Accurate crosses per 90', ['accurate_crosses'], 0.3),
+                    self::shrunkPer90('xa_p90', 'xA per 90', ['xa'], 0.3),
+                ]),
+                $buildUp(0.15),
+                $carrying(0.1),
+                $availability(),
+            ],
+            'CB' => [
+                $defending(0.25),
+                $duels(0.25),
+                $buildUp(0.2),
+                new Component('attacking', 'Attacking threat', 'Goals and assists, and the expected value of his chances, per 90.', 0.1, [
+                    self::shrunkPer90('np_ga_p90', 'Non-penalty goals + assists per 90', ['np_goals', 'assists'], 0.5),
+                    self::shrunkPer90('npxg_xa_p90', 'Non-penalty xG + xA per 90', ['np_xg', 'xa'], 0.5),
+                ]),
+                $availability(),
+            ],
+            'GK' => self::positionalRoles(v3: true)['GK'],
+        ];
     }
 
     /**

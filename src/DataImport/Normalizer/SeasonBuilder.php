@@ -30,6 +30,7 @@ use App\Football\Data\FieldCatalog;
 use App\Football\Data\Origin;
 use App\Football\Data\OriginCheck;
 use App\Football\Data\OriginStatus;
+use App\Football\Data\RoleCatalog;
 use App\Repository\ImportBatchRepository;
 use App\Repository\SourceRecordRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -107,6 +108,7 @@ final class SeasonBuilder
             foreach ($league as $merged) {
                 $seasons[$merged->key] = $this->buildLeagueSeason($merged, $season, $top5Batch);
             }
+            $roles = self::inferRoles(array_values($seasons));
             $clOnly = 0;
             foreach ($cl as $externalId => $record) {
                 $clOnly += (int) $this->buildClSeason((string) $externalId, $record, $season, $clBatch, $matches, $seasons);
@@ -121,6 +123,8 @@ final class SeasonBuilder
                 'cl_partial' => count($this->partialCl),
                 'cl_linked' => count($matches->links),
                 'cl_only' => $clOnly,
+                'roles_inferred' => $roles['inferred'],
+                'role_inference_accuracy' => $roles['accuracy'],
                 'rejected' => $this->rejected,
             ] + $this->identities->stats();
         });
@@ -155,12 +159,15 @@ final class SeasonBuilder
         }
 
         $group = $merged->position !== null ? substr($merged->position, 0, 2) : null;
+        [$role, $roleSource] = self::role($merged);
         $playerSeason = new PlayerSeason(
             $player,
             $season,
             $merged->position,
             in_array($group, PlayerSeason::POSITION_GROUPS, true) ? $group : null,
             $teams[0] ?? null,
+            $role,
+            $roleSource,
         );
         $this->built[spl_object_id($player)] = $playerSeason;
         foreach ($merged->stintDetails as $i => $stint) {
@@ -187,6 +194,54 @@ final class SeasonBuilder
         $this->em->persist($playerSeason);
 
         return $playerSeason;
+    }
+
+    /**
+     * Roles for the players EA SPORTS FC has no position for, from their statistics; and how
+     * often that inference is right for labelled players with 900+ minutes, left out in turn.
+     *
+     * @param list<PlayerSeason> $seasons
+     *
+     * @return array{inferred: int, accuracy: array{evaluated: int, correct: int}}
+     */
+    private static function inferRoles(array $seasons): array
+    {
+        $labelled = [];
+        foreach ($seasons as $s) {
+            $stats = $s->getStats(StatsScope::League);
+            if ($stats !== null && $s->getRole() !== null && $s->getRole() !== 'GK') {
+                $labelled[] = ['role' => $s->getRole(), 'group' => $s->getPositionGroup(), 'stats' => $stats];
+            }
+        }
+        $inference = new RoleInference($labelled);
+
+        $inferred = 0;
+        foreach ($seasons as $s) {
+            if ($s->getRole() === null) {
+                $role = $inference->infer($s->getPositionGroup(), $s->getStats(StatsScope::League));
+                if ($role !== null) {
+                    $s->setRole($role, RoleCatalog::SOURCE_INFERRED);
+                    ++$inferred;
+                }
+            }
+        }
+
+        return ['inferred' => $inferred, 'accuracy' => $inference->accuracy($labelled, 900.0)];
+    }
+
+    /**
+     * The role from EA SPORTS FC; a goalkeeper is a goalkeeper whatever the game says (and an
+     * outfield player is never one). Null: to be inferred from statistics (RoleInference).
+     *
+     * @return array{0: ?string, 1: ?string} role, source
+     */
+    private static function role(MergedPlayerSeason $merged): array
+    {
+        if ($merged->goalkeeper) {
+            return ['GK', $merged->role !== null && $merged->role[0] === 'GK' ? $merged->role[1] : RoleCatalog::SOURCE_POSITION];
+        }
+
+        return $merged->role !== null && $merged->role[0] !== 'GK' ? $merged->role : [null, null];
     }
 
     /**
@@ -221,7 +276,7 @@ final class SeasonBuilder
 
         $clOnly = $playerSeason === null;
         if ($playerSeason === null) {
-            $playerSeason = new PlayerSeason($player, $season, null, $goalkeeper ? 'GK' : null, $team);
+            $playerSeason = new PlayerSeason($player, $season, null, $goalkeeper ? 'GK' : null, $team, $goalkeeper ? 'GK' : null, $goalkeeper ? RoleCatalog::SOURCE_POSITION : null);
             $this->built[spl_object_id($player)] = $playerSeason;
             $this->em->persist($playerSeason);
         }

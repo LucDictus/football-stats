@@ -50,19 +50,28 @@ export function PlayerPage() {
   )
 }
 
+const ROLE_SOURCES: Record<NonNullable<PlayerProfile['season']['role_source']>, string> = {
+  ea_fc_club: 'from his EA SPORTS FC club position',
+  ea_fc_best: 'from his EA SPORTS FC best position',
+  inferred: 'inferred from his statistics (no EA SPORTS FC position)',
+  position: 'from his listed position',
+}
+
 function Header({ profile }: { profile: PlayerProfile }) {
   const { player, season, score } = profile
   return (
     <header className={styles.header}>
       <div>
         <p className="eyebrow">
-          {season.position_group ? POSITION_LABELS[season.position_group] : 'Player'} · Season {season.label}
+          {season.role ? POSITION_LABELS[season.role] : season.position_group ? POSITION_LABELS[season.position_group] : 'Player'} · Season{' '}
+          {season.label}
         </p>
         <h1>{player.name}</h1>
         <p className={styles.sub}>
           {season.team}
           {player.birth_year && <> · born {player.birth_year}</>}
           {season.positions && <> · plays {season.positions.replace(',', ', ')}</>}
+          {season.role && season.role_source && <> · role {ROLE_SOURCES[season.role_source]}</>}
         </p>
         {season.stints.length > 1 && (
           <ul className={styles.stints} aria-label="Clubs this season">

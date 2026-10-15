@@ -15,6 +15,10 @@
 .position[data-position='MF'] { color: var(--pos-mf); background: color-mix(in srgb, var(--pos-mf) 14%, transparent); }
 .position[data-position='DF'] { color: var(--pos-df); background: color-mix(in srgb, var(--pos-df) 16%, transparent); }
 .position[data-position='GK'] { color: var(--pos-gk); background: color-mix(in srgb, var(--pos-gk) 16%, transparent); }
+/* Roles take the colour of the line they play in. */
+.position:is([data-position='ST'], [data-position='W']) { color: var(--pos-fw); background: color-mix(in srgb, var(--pos-fw) 14%, transparent); }
+.position:is([data-position='AM'], [data-position='CM'], [data-position='DM']) { color: var(--pos-mf); background: color-mix(in srgb, var(--pos-mf) 14%, transparent); }
+.position:is([data-position='FB'], [data-position='CB']) { color: var(--pos-df); background: color-mix(in srgb, var(--pos-df) 16%, transparent); }
 
 .trust {
   display: inline-block;

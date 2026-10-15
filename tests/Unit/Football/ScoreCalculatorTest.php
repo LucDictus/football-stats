@@ -225,6 +225,29 @@ final class ScoreCalculatorTest extends TestCase
         self::assertEqualsWithDelta(($adjusted[0] * $matches + $average * 10) / ($matches + 10), $byName['Team 1']['adjusted'] ?? null, 1e-9);
     }
 
+    public function testModelsCanGroupPlayersByTheirFinerRole(): void
+    {
+        // Both midfielders by position group, but a winger and a holding midfielder by role.
+        $component = static fn (string $field) => [new Component('c', 'C', '', 1.0, [new Metric($field, $field, [$field], MetricMode::Total, 1.0)])];
+        $model = new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['W', 'DM'], 0.0, [], [
+            'W' => $component('goals'),
+            'DM' => $component('tackles_won'),
+        ], byRole: true);
+
+        $results = (new ScoreCalculator())->score($model, [
+            $this->candidate(1, 'Winger', goals: 10.0, group: 'MF', extra: ['tackles_won' => 5.0], role: 'W'),
+            $this->candidate(2, 'Holding', goals: 1.0, group: 'MF', extra: ['tackles_won' => 80.0], role: 'DM'),
+            $this->candidate(3, 'No role', goals: 30.0, group: 'MF', extra: ['tackles_won' => 80.0]),
+        ]);
+
+        $byName = array_column(array_map(static fn ($r) => [$r->candidate->name, $r], $results), 1, 0);
+        self::assertSame(['Winger', 'Holding'], array_keys($byName), 'a player without a role is not eligible');
+        self::assertSame('W', $byName['Winger']->candidate->positionGroup);
+        self::assertSame(['c'], array_keys($byName['Holding']->components));
+        self::assertSame(['tackles_won'], array_keys($byName['Holding']->components['c']['metrics']));
+        self::assertSame('role', $model->toArray()['grouping']);
+    }
+
     public function testTheReferenceGroupCanBeTheRankedPlayersOnly(): void
     {
         $model = static fn (bool $rankedOnly) => new ScoringModel('test', '1', 'Test', '', StatsScope::League, 900, ['FW'], 0.6, [
@@ -367,7 +390,7 @@ final class ScoreCalculatorTest extends TestCase
     }
 
     /** @param array<string, float> $extra */
-    private function candidate(int $id, string $name, ?float $goals, string $group = 'FW', float $minutes = 2000.0, array $extra = [], string $sofascore = 'ok', ?string $understat = null, string $team = 'Club', ?string $league = null): ScoringCandidate
+    private function candidate(int $id, string $name, ?float $goals, string $group = 'FW', float $minutes = 2000.0, array $extra = [], string $sofascore = 'ok', ?string $understat = null, string $team = 'Club', ?string $league = null, ?string $role = null): ScoringCandidate
     {
         $values = ['minutes' => $minutes] + ($goals !== null ? ['goals' => $goals] : []) + $extra;
         $season = new PlayerSeason(new Player($name), new Season('2025/26', new \DateTimeImmutable(), new \DateTimeImmutable()));
@@ -384,6 +407,6 @@ final class ScoreCalculatorTest extends TestCase
             ] + ($understat !== null ? ['Understat' => ['status' => $understat, 'minutes' => $minutes, 'reason' => null]] : []),
         );
 
-        return new ScoringCandidate($id, $name, $group, $team, $stats, $league);
+        return new ScoringCandidate($id, $name, $group, $team, $stats, $league, $role);
     }
 }

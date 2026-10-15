@@ -17,6 +17,14 @@ final readonly class ScoringCandidate
         public PlayerCompetitionStats $stats,
         /** Domestic league code of the main team (league averages in the impact model). */
         public ?string $league = null,
+        /** Finer role (RoleCatalog), for models that compare players by role. */
+        public ?string $role = null,
     ) {
+    }
+
+    /** The same player, compared within his finer role instead of his position group. */
+    public function byRole(): self
+    {
+        return new self($this->playerId, $this->name, $this->role, $this->team, $this->stats, $this->league, $this->role);
     }
 }
