@@ -69,7 +69,7 @@ class PlayerScoreRepository extends ServiceEntityRepository
     }
 
     /**
-     * Every scored player of a group (null: all groups) on one part of the score: its points and, for metrics and
+     * Every ranked player of a group (null: all groups) on one part of the score: its points and, for metrics and
      * the contribution, the value behind them. Sorted by points, best first.
      *
      * @param string      $part      final | positional | contribution | component | metric
@@ -82,7 +82,8 @@ class PlayerScoreRepository extends ServiceEntityRepository
     {
         [$points, $value, $adjusted] = match ($part) {
             'final' => ['s.score', 'NULL', 'NULL'],
-            'positional' => ['s.positional', 'NULL', 'NULL'],
+            // Models without a contribution: the positional score is the score.
+            'positional' => ['COALESCE(s.positional, s.score)', 'NULL', 'NULL'],
             'contribution' => ["(s.impact->>'score')::float", "(s.impact->>'above')::float", 'NULL'],
             'component' => ["(s.components->:component->>'score')::float", 'NULL', 'NULL'],
             'metric' => [
@@ -100,7 +101,7 @@ class PlayerScoreRepository extends ServiceEntityRepository
             "SELECT * FROM (
                 SELECT p.id, p.name, s.team, s.position_group, s.rank, {$points} AS points, {$value} AS value, {$adjusted} AS adjusted
                 FROM player_score s JOIN player p ON p.id = s.player_id
-                WHERE s.run_id = :run" . ($group !== null ? ' AND s.position_group = :group' : '') . '
+                WHERE s.run_id = :run AND s.rank IS NOT NULL" . ($group !== null ? ' AND s.position_group = :group' : '') . '
              ) d WHERE points IS NOT NULL
              ORDER BY points DESC, id',
             $params,

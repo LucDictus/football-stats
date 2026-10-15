@@ -1,0 +1,66 @@
+.figure {
+  margin: 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.band {
+  fill: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.average {
+  stroke: var(--line-strong);
+  stroke-dasharray: 3 4;
+}
+
+.averageLabel {
+  fill: var(--muted);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.tick {
+  stroke: var(--muted);
+}
+
+.tickLabel {
+  fill: var(--muted);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.dot {
+  fill: color-mix(in srgb, var(--text) 26%, transparent);
+  transition: fill 0.15s;
+  cursor: pointer;
+}
+
+.dot:hover {
+  fill: var(--text);
+}
+
+.highlight {
+  stroke: var(--bg);
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+.name {
+  font-size: 12px;
+  font-weight: 700;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+}
+
+.caption {
+  min-height: 1.5em;
+  margin-top: 6px;
+  font-size: 13px;
+}

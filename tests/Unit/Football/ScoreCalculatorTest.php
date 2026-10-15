@@ -346,6 +346,7 @@ final class ScoreCalculatorTest extends TestCase
         self::assertSame('2da8697cbf0f4bb933f51fb8eba2f5c9dd5ce9c0a971e655f6c7a04012eb5a3f', ModelCatalog::get('positional-v2')->hash());
         self::assertSame('dc550a3f0239848e236e42cc9754c4caa314f16f0f8dc1cdcd26c79853d097c2', ModelCatalog::get('mvp-v1')->hash());
         self::assertSame('11afe427bf2b8af60d94244374c716f936beb01f23c3abd0c041e403b9ac227c', ModelCatalog::get('mvp-v2')->hash());
+        self::assertSame('3fdbec8e05f6d5a7a9ed1382350948bf9941bdb8bdffa600aa882f731702a25c', ModelCatalog::get('mvp-v3')->hash());
     }
 
     public function testEveryReleasedModelHasValidWeights(): void

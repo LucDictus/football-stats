@@ -19,8 +19,8 @@ final class ModelCatalog
     /** @return array<string, ScoringModel> model id => model */
     public static function all(): array
     {
-        // Released (hashes pinned in ScoreCalculatorTest): baseline-v1, positional-v1, positional-v2, mvp-v1, mvp-v2.
-        // Release candidate: mvp-v3.
+        // Released (hashes pinned in ScoreCalculatorTest): baseline-v1, positional-v1, positional-v2, mvp-v1, mvp-v2, mvp-v3.
+        // mvp-v3 reads config/standards/standards-v1.json: that file is frozen with it.
         $models = [self::baselineV1(), self::positionalV1(), self::positionalV2(), self::mvpV1(), self::mvpV2(), self::mvpV3()];
 
         return array_combine(array_map(static fn (ScoringModel $m) => $m->id(), $models), $models);

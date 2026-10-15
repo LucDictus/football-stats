@@ -8109,7 +8109,7 @@
                     }
                 },
                 "blocks": {
-                    "reason": "Known for too few players in this role",
+                    "reason": "Mostly missing from the 2024/25 data",
                     "label": "Blocks",
                     "kind": "per90",
                     "direction": 1,
@@ -8623,7 +8623,7 @@
                     "effective_players": []
                 },
                 "shot_accuracy": {
-                    "reason": "Known for too few players in this role",
+                    "reason": "Mostly missing from the 2024/25 data",
                     "label": "Shots on target %",
                     "kind": "rate",
                     "direction": 1,
@@ -8638,7 +8638,7 @@
                     "effective_players": []
                 },
                 "shot_conversion": {
-                    "reason": "Known for too few players in this role",
+                    "reason": "Mostly missing from the 2024/25 data",
                     "label": "Goals per non-penalty shot",
                     "kind": "rate",
                     "direction": 1,
@@ -9094,7 +9094,7 @@
                     }
                 },
                 "dribble_success": {
-                    "reason": "Known for too few players in this role",
+                    "reason": "Mostly missing from the 2024/25 data",
                     "label": "Dribble success %",
                     "kind": "rate",
                     "direction": 1,
@@ -9139,7 +9139,7 @@
                     "effective_players": []
                 },
                 "tackle_success": {
-                    "reason": "Known for too few players in this role",
+                    "reason": "Mostly missing from the 2024/25 data",
                     "label": "Tackle success %",
                     "kind": "rate",
                     "direction": 1,

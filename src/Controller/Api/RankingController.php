@@ -69,8 +69,11 @@ final class RankingController extends AbstractController
     }
 
     /**
-     * How a part of the score is spread over a group: every scored player's points (50 = the
-     * group's average, 10 points = one standard deviation) and, for metrics, his value.
+     * How a part of the score is spread over a group: every ranked player's points and, for
+     * metrics and the contribution, the value behind them. Positional, component and metric
+     * points: 50 = the group's average, 10 = one standard deviation (standard models); the
+     * contribution likewise over all ranked players; the final score of blended models is their
+     * weighted sum (about.scale = blend).
      * ?model=&run=&position=W&part=metric&component=np_xg&metric=np_xg
      * part: final | positional | contribution (position optional: all groups) | component | metric.
      */
@@ -90,7 +93,8 @@ final class RankingController extends AbstractController
 
         $components = $position === null ? [] : array_column(array_map(static fn ($c) => ['k' => $c->key, 'c' => $c], $model->componentsFor($model->comparesWithinRole() ? $position : null)), 'c', 'k');
         $about = match ($part) {
-            'final', 'positional' => ['label' => $part === 'final' ? 'Final score' : 'Positional excellence'],
+            'final' => ['label' => 'Final score', 'scale' => $model->impact !== null ? 'blend' : 'score'],
+            'positional' => ['label' => 'Positional excellence', 'scale' => 'standard'],
             'contribution' => $model->impact !== null ? ['label' => 'Contribution', 'unit' => 'goals above replacement'] : throw new BadRequestHttpException("{$modelId} has no contribution"),
             'component', 'metric' => self::componentInfo($components, $componentKey, $part === 'metric' ? $metricKey : null),
             default => throw new BadRequestHttpException('part must be final, positional, contribution, component or metric'),

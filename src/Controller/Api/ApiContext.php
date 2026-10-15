@@ -51,7 +51,10 @@ final readonly class ApiContext
         if ($runId === null) {
             return $this->runs->latest($modelId, $this->season());
         }
-        $run = ctype_digit($runId) ? $this->runs->find((int) $runId) : null;
+        if (!ctype_digit($runId)) {
+            throw new BadRequestHttpException('run must be a run id (a number)');
+        }
+        $run = $this->runs->find((int) $runId);
         if ($run === null || $run->getModelId() !== $modelId || $run->getSeason()->getId() !== $this->season()->getId()) {
             throw new NotFoundHttpException("No run {$runId} of {$modelId}");
         }

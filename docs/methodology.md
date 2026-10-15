@@ -13,7 +13,7 @@ a new version. Every `ScoreRun` stores the full definition, its SHA-256 hash and
 batches its statistics came from, so any published ranking can be explained and reproduced.
 `app:score` does not store a run that would be identical to the latest one.
 
-## mvp-v3 (roadmap phase 5, release candidate, the current model)
+## mvp-v3 (roadmap phase 5, released, the current model)
 
 **A player's score = 50% positional excellence + 50% contribution in goals. Positional excellence
 compares him with the other players in his role, on the statistics that the data shows matter for
@@ -117,7 +117,7 @@ the player's own doing), not because they won the validation.
 |---|---|---|---|---|
 | Passes in the opposition half · final third | 18% | 15.0 · 10.2 | 14.6 · 9.7 | 55.2 |
 | Key passes | 15% | 1.51 | 1.38 | 56.4 |
-| Non-penalty xG | 15% | 0.80 | 0.67 | 64.0 |
+| Non-penalty xG | 14% | 0.80 | 0.67 | 64.0 |
 | Shots on target | 13% | 2.54 | 2.11 | 78.8 |
 | xA · big chances created | 11% | 0.28 · 0.68 | 0.22 · 0.45 | 73.8 |
 | Non-penalty goals | 11% | 0.98 | 0.73 | 76.9 |

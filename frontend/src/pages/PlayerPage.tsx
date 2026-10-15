@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { api, ApiError } from '../api/client'
 import type { PlayerProfile, ScopeStats, ScoreBreakdown } from '../api/types'
 import { AnimatedNumber } from '../components/AnimatedNumber'
 import { Bar } from '../components/Bar'
+import { DistributionPanel } from '../components/DistributionPanel'
 import { ErrorState } from '../components/ErrorState'
 import { ImpactChart } from '../components/ImpactChart'
 import { TrustBadge } from '../components/TrustBadge'
@@ -44,7 +45,7 @@ export function PlayerPage() {
         ← Ranking
       </Link>
       <Header profile={data} />
-      {data.score ? <Breakdown score={data.score} /> : <NotRanked profile={data} />}
+      {data.score ? <Breakdown score={data.score} playerId={data.player.id} /> : <NotRanked profile={data} />}
       <Stats profile={data} />
     </main>
   )
@@ -116,12 +117,12 @@ function Header({ profile }: { profile: PlayerProfile }) {
   )
 }
 
-function Breakdown({ score }: { score: ScoreBreakdown }) {
+function Breakdown({ score, playerId }: { score: ScoreBreakdown; playerId: number }) {
   const { components, normalization, role, impact } = score
   const peers = role ? POSITION_PLURAL[role] : 'eligible players'
   return (
     <>
-      {impact && <Blend score={score} />}
+      {impact && <Blend score={score} playerId={playerId} />}
       {impact && (
         <section className={styles.section} aria-labelledby="contribution">
           <h2 id="contribution">Contribution in goals</h2>
@@ -134,18 +135,19 @@ function Breakdown({ score }: { score: ScoreBreakdown }) {
           </div>
         </section>
       )}
-      <Positional score={score} components={components} normalization={normalization} role={role} peers={peers} />
+      <Positional score={score} components={components} normalization={normalization} role={role} peers={peers} playerId={playerId} />
     </>
   )
 }
 
 /** Blended models: how the final score is put together. */
-function Blend({ score }: { score: ScoreBreakdown }) {
+function Blend({ score, playerId }: { score: ScoreBreakdown; playerId: number }) {
+  const [spread, setSpread] = useState<'positional' | 'contribution' | 'final' | null>(null)
   const impact = score.impact
   if (!impact) return null
   const parts = [
-    { label: 'Positional excellence', value: score.positional, weight: 1 - impact.weight, hint: 'How far he stands above others in his position' },
-    { label: 'Contribution', value: impact.score, weight: impact.weight, hint: 'Goals added above a replacement-level player, compared across all positions' },
+    { key: 'positional' as const, label: 'Positional excellence', value: score.positional, weight: 1 - impact.weight, hint: 'How far he stands above others in his position' },
+    { key: 'contribution' as const, label: 'Contribution', value: impact.score, weight: impact.weight, hint: 'Goals added above a replacement-level player, compared across all positions' },
   ]
   return (
     <section className={styles.section} aria-labelledby="blend">
@@ -159,25 +161,69 @@ function Blend({ score }: { score: ScoreBreakdown }) {
             <span className={styles.blendHint}>{part.hint}</span>
             <span className={`num ${styles.blendValue}`}>{formatScore(part.value)}</span>
             <Bar value={part.value} color={componentColor(i)} height={6} delay={0.1 + i * 0.1} />
+            <button
+              type="button"
+              className={styles.spreadButton}
+              aria-pressed={spread === part.key}
+              onClick={() => setSpread(spread === part.key ? null : part.key)}
+            >
+              {part.key === 'positional' && score.role ? `Compare with all ${POSITION_PLURAL[score.role]}` : 'Compare with all players'}
+            </button>
           </div>
         ))}
       </div>
       <p className={styles.blendSum}>
         {Math.round((1 - impact.weight) * 100)}% × {formatScore(score.positional)} + {Math.round(impact.weight * 100)}% ×{' '}
         {formatScore(impact.score)} = <strong className="num">{formatScore(score.score)}</strong>
-        {score.score !== null && score.score > 100 && ' (exceptional seasons can go above 100)'}
+        {score.score !== null && score.score > 100 && ' (exceptional seasons can go above 100)'}{' '}
+        <button type="button" className={styles.spreadLink} aria-pressed={spread === 'final'} onClick={() => setSpread(spread === 'final' ? null : 'final')}>
+          compare the final score with all players
+        </button>
       </p>
+      <AnimatePresence>
+        {spread && (
+          <motion.div
+            key={spread}
+            className={`card ${styles.spreadPanel}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className={styles.spreadHead}>
+              <h3>{spread === 'final' ? 'Final score' : spread === 'positional' ? 'Positional excellence' : 'Contribution'}: where he stands</h3>
+              <button type="button" className={styles.spreadClose} onClick={() => setSpread(null)} aria-label="Close">
+                ×
+              </button>
+            </div>
+            <DistributionPanel
+              model={score.model_id}
+              run={score.run_id}
+              position={spread === 'positional' ? score.role : null}
+              part={spread}
+              highlights={[{ id: playerId, color: 'var(--accent)' }]}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }
 
-function Positional({ score, components, normalization, role, peers }: {
+function Positional({ score, components, normalization, role, peers, playerId }: {
+  playerId: number
   score: ScoreBreakdown
   components: ScoreBreakdown['components']
   normalization: ScoreBreakdown['normalization']
   role: ScoreBreakdown['role']
   peers: string
 }) {
+  // The part of the score whose spread over all players in his role is shown below the cards.
+  const [spread, setSpread] = useState<{ component: string; metric?: string; label: string } | null>(null)
+  const show = (next: { component: string; metric?: string; label: string }) => {
+    setSpread((current) => (current?.component === next.component && current.metric === next.metric ? null : next))
+    window.setTimeout(() => document.getElementById('spread')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60)
+  }
   return (
     <section className={styles.section} aria-labelledby="breakdown">
       <h2 id="breakdown">{score.impact ? 'Positional excellence' : 'Why this score'}</h2>
@@ -218,6 +264,16 @@ function Positional({ score, components, normalization, role, peers }: {
               <Bar value={component.score} color={componentColor(ci)} height={8} delay={0.2 + ci * 0.08} />
             </div>
             <p className={styles.description}>{component.description}</p>
+            {role && (
+              <button
+                type="button"
+                className={styles.spreadButton}
+                aria-pressed={spread?.component === component.key && !spread.metric}
+                onClick={() => show({ component: component.key, label: component.label })}
+              >
+                Compare with all {peers}
+              </button>
+            )}
             <ul className={styles.metrics}>
               {component.metrics.map((metric, mi) => (
                 <li key={metric.key}>
@@ -243,6 +299,16 @@ function Positional({ score, components, normalization, role, peers }: {
                       : normalization === 'standard'
                         ? `${formatScore(metric.normalised)} for ${peers}${metric.lower_is_better ? ' (fewer is better)' : ''}`
                         : `${ordinal(Math.round(metric.normalised))} percentile`}
+                    {role && metric.normalised !== null && component.metrics.length > 1 && (
+                      <button
+                        type="button"
+                        className={styles.spreadLink}
+                        aria-pressed={spread?.metric === metric.key && spread.component === component.key}
+                        onClick={() => show({ component: component.key, metric: metric.key, label: metric.label })}
+                      >
+                        spread
+                      </button>
+                    )}
                   </span>
                 </li>
               ))}
@@ -250,6 +316,37 @@ function Positional({ score, components, normalization, role, peers }: {
           </motion.article>
         ))}
       </div>
+      <AnimatePresence>
+        {spread && role && (
+          <motion.div
+            id="spread"
+            key={`${spread.component}-${spread.metric ?? ''}`}
+            className={`card ${styles.spreadPanel}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className={styles.spreadHead}>
+              <h3>
+                {spread.label}: where he stands among {peers}
+              </h3>
+              <button type="button" className={styles.spreadClose} onClick={() => setSpread(null)} aria-label="Close">
+                ×
+              </button>
+            </div>
+            <DistributionPanel
+              model={score.model_id}
+              run={score.run_id}
+              position={role}
+              part={spread.metric ? 'metric' : 'component'}
+              component={spread.component}
+              metric={spread.metric}
+              highlights={[{ id: playerId, color: 'var(--accent)' }]}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

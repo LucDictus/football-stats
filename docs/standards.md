@@ -687,7 +687,7 @@ no record of the player):
 | Tackles won | 650 | 0.01 / -0.05 | 0.51 |  | No significant link with winning in each season |
 | Tackle success % | 657 | 0.03 / 0.04 | 0.00 |  | No significant link with winning in each season |
 | Interceptions | 650 | -0.05 / 0.02 | 0.32 |  | No significant link with winning in each season |
-| Blocks | 323 | – | – |  | Known for too few players in this role |
+| Blocks | 323 | – | – |  | Mostly missing from the 2024/25 data |
 | Clearances | 650 | 0.05 / -0.05 | 0.65 |  | No significant link with winning in each season |
 | Ball recoveries | 650 | 0.15 / -0.03 | 0.60 |  | No significant link with winning in each season |
 | Possession won in the attacking third | 650 | 0.13 / 0.07 | 0.27 |  | No significant link with winning in each season |
@@ -744,8 +744,8 @@ no record of the player):
 | Non-penalty goals | 232 | – | – |  | Does not repeat from one season to the next |
 | Non-penalty xG | 220 | – | – |  | Does not repeat from one season to the next |
 | Shots on target | 233 | – | – |  | Does not repeat from one season to the next |
-| Shots on target % | 14 | – | – |  | Known for too few players in this role |
-| Goals per non-penalty shot | 14 | – | – |  | Known for too few players in this role |
+| Shots on target % | 14 | – | – |  | Mostly missing from the 2024/25 data |
+| Goals per non-penalty shot | 14 | – | – |  | Mostly missing from the 2024/25 data |
 | Big chances missed (counts against) | 230 | – | – |  | Does not repeat from one season to the next |
 | Offsides (counts against) | 230 | – | – |  | Does not repeat from one season to the next |
 | Penalties won | 230 | – | – |  | Does not repeat from one season to the next |
@@ -769,10 +769,10 @@ no record of the player):
 | Chipped pass accuracy % | 230 | 0.09 / 0.14 | 0.34 |  | No significant link with winning in each season |
 | Touches | 230 | -0.25 / -0.27 | 0.51 |  | No significant link with winning in each season |
 | Successful dribbles | 230 | -0.04 / -0.01 | 0.34 |  | No significant link with winning in each season |
-| Dribble success % | 80 | – | – |  | Known for too few players in this role |
+| Dribble success % | 80 | – | – |  | Mostly missing from the 2024/25 data |
 | Dispossessed (counts against) | 230 | – | – |  | Does not repeat from one season to the next |
 | Tackles won | 230 | – | – |  | Does not repeat from one season to the next |
-| Tackle success % | 106 | – | – |  | Known for too few players in this role |
+| Tackle success % | 106 | – | – |  | Mostly missing from the 2024/25 data |
 | Interceptions | 230 | 0.00 / 0.02 | 0.10 |  | No significant link with winning in each season |
 | Blocks | 113 | – | – |  | Not in the 2024/25 data |
 | Clearances | 230 | 0.09 / -0.19 | 0.26 |  | No significant link with winning in each season |
@@ -838,7 +838,10 @@ no record of the player):
 | Save % | Depends on how hard the shots his defence allows are; goals prevented corrects for that |
 | Penalties faced, goal kicks | No direction: how often, not how well |
 | Runs out | A volume of attempts: its successes and its success rate are candidates instead (successful runs out) |
-| SofaScore rating | Another provider's rating: the standards are built from the statistics themselves |
+| SofaScore rating, EA SPORTS FC attributes | Other providers' ratings: the standards are built from the statistics themselves (EA FC is used only for positions) |
+| Scoring frequency, set-piece conversion | Rates of goals over time or set pieces: non-penalty goals per 90 and goals per non-penalty shot are the candidates |
+| Second yellow cards | Part or sum of another statistic, which is a candidate: counted once (red cards) |
+| FBref yellow and red cards | A second provider of the same counts (SofaScore) |
 | Top speed | A single peak, not a count or a rate |
 | Pass to assist, total attempt assist | Part or sum of another statistic, which is a candidate: counted once (key passes, assists) |
 | Appearances, starts, team of the week | Playing time is in the contribution (season totals and replacement level) |

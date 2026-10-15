@@ -227,8 +227,8 @@ final class StandardsDeriver
         foreach ($codes as $code) {
             $inSeason = count(array_filter($players, static fn (StandardsPlayer $p) => $p->season === $code));
             $known = count(array_filter($measured, static fn (array $m) => $m['player']->season === $code));
-            if ($inSeason > 0 && $known === 0) {
-                return [['reason' => 'Not in the 20' . substr($code, 0, 2) . '/' . substr($code, 2, 2) . ' data'] + $result, []];
+            if ($inSeason > 0 && $known < self::MIN_COVERAGE * $inSeason) {
+                return [['reason' => ($known === 0 ? 'Not in' : 'Mostly missing from') . ' the 20' . substr($code, 0, 2) . '/' . substr($code, 2, 2) . ' data'] + $result, []];
             }
         }
         if ($players === [] || count($measured) < self::MIN_COVERAGE * count($players)) {

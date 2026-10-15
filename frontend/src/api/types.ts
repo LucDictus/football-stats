@@ -206,7 +206,10 @@ export interface DistributionPoint {
   team: string | null
   position: PositionGroup | null
   rank: number | null
-  /** 50 = the group's average, 10 points = one standard deviation (final and contribution can pass 100). */
+  /**
+   * Positional, measures and contribution: 50 = the group's average, 10 points = one standard
+   * deviation; the final score of blended models is their weighted sum (about.scale 'blend').
+   */
   points: number
   /** Metrics: the measured value (per 90 or a rate); contribution: goals above replacement. */
   value: number | null
@@ -219,6 +222,6 @@ export interface DistributionResponse {
   model_id: string
   position: PositionGroup | null
   part: DistributionPart
-  about: { label: string; unit?: string; weight?: number; component?: string; component_label?: string; metric?: ModelMetric }
+  about: { label: string; unit?: string; weight?: number; component?: string; component_label?: string; metric?: ModelMetric; scale?: 'blend' | 'score' | 'standard' }
   players: DistributionPoint[]
 }

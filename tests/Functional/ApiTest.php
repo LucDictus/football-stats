@@ -128,6 +128,41 @@ final class ApiTest extends WebTestCase
         self::assertTrue($tackles['possession_adjusted'] ?? false);
     }
 
+    public function testDistributionShowsHowAPartOfTheScoreIsSpread(): void
+    {
+        $final = $this->getJson('/api/distribution?part=final');
+        self::assertSame('blend', $final['about']['scale']);
+        self::assertSame(['Kylian Mbappé', 'Pedri', 'Thibaut Courtois'], self::sortedNames($final['players']), 'every ranked player, all roles');
+
+        $components = $this->getJson('/api/players/' . $this->playerId('Pedri'))['score']['components'];
+        $component = $components[0]['key'];
+        $metric = $components[0]['metrics'][0]['key'];
+        $spread = $this->getJson("/api/distribution?position=CM&part=metric&component={$component}&metric={$metric}");
+        self::assertSame(['Pedri'], array_column($spread['players'], 'name'));
+        self::assertEqualsWithDelta($components[0]['metrics'][0]['normalised'], $spread['players'][0]['points'], 0.05);
+
+        // Models without a contribution: the positional score is the score.
+        self::assertNotSame([], $this->getJson('/api/distribution?model=baseline-v1&part=positional&position=FW')['players']);
+
+        foreach (['/api/distribution?part=metric', '/api/distribution?position=CM&part=component&component=nope', '/api/distribution?part=final&run=abc', '/api/distribution?part=nope'] as $url) {
+            $this->client->request('GET', $url);
+            self::assertResponseStatusCodeSame(400, $url);
+        }
+    }
+
+    /**
+     * @param list<array{name: string}> $players
+     *
+     * @return list<string>
+     */
+    private static function sortedNames(array $players): array
+    {
+        $names = array_column($players, 'name');
+        sort($names);
+
+        return $names;
+    }
+
     public function testGoalkeeperIsNotScoredByTheBaselineModel(): void
     {
         self::assertNull($this->getJson('/api/players/' . $this->playerId('Thibaut Courtois') . '?model=baseline-v1')['score']);
