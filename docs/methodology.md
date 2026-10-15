@@ -79,9 +79,9 @@ statistic, the numbers behind each decision and the reason a statistic is not us
   how well. Of the duels, only aerial duels (centre-backs: duels won; full-backs: win rate)
   qualify. How well a team defends counts in the contribution half (its goals conceded against
   the league).
-- **Progressive passing goes with winning in every outfield role**: passes into the opposition
-  half and the final third, and involvement in build-up (xGBuildup). For central midfielders it
-  is all that qualifies.
+- **Passing into the opposition half and the final third goes with winning in every outfield
+  role except attacking midfielders** (for them it does not replicate in 2025/26), and so does
+  involvement in build-up (xGBuildup). For central midfielders these are all that qualifies.
 - **Strikers are measured on link-up as much as on finishing.** Strikers who combine (key passes,
   passes into the final third) play in winning teams as much as strikers who shoot and score.
   A pure finisher is therefore an average striker in the positional half: Haaland's positional
@@ -99,7 +99,7 @@ the standards rate the same players most consistently between seasons (repeatabi
 next season's team results they are level with the alternatives (r 0.34 to 0.38 over 82 teams; such
 differences are within chance).
 
-### Worked example: Harry Kane (striker, run #19)
+### Worked example: Harry Kane (striker, run #21)
 
 | Measure | Weight | His value per 90 | After small-sample pull | His score (50 = average striker) |
 |---|---|---|---|---|
@@ -148,7 +148,7 @@ simply giving each group its most common role; its misses are between roles that
 to infer from get the group's most common role, labelled *default*. The player page says where a
 role came from.
 
-### Result (run #19)
+### Result (run #21)
 
 Top 10: Olise (W), Dimarco (FB), Kane (ST), Undav (AM), Yamal (W), Lautaro Martínez (ST),
 Mbappé (ST), Luis Díaz (W), Guéhi (CB), Schlotterbeck (CB). Best per role: winger Olise #1,

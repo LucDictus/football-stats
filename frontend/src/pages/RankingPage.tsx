@@ -42,7 +42,8 @@ export function RankingPage() {
     initialPageParam: { offset: 0, run: undefined as number | undefined },
     getNextPageParam: (last) =>
       last.offset + last.rows.length < last.total ? { offset: last.offset + last.rows.length, run: last.run.id } : undefined,
-    enabled: modelId !== undefined && modelGroups !== undefined,
+    // Wait for the model list (to drop a position the model does not rank); an unknown model goes to the API, which says so.
+    enabled: modelId !== undefined && models.data !== undefined,
   })
 
   const first = query.data?.pages[0]

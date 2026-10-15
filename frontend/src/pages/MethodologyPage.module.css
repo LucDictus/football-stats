@@ -52,7 +52,10 @@
 .weights div {
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  /* Width in proportion to the weight (flex: weight 1 0, set inline); labels shorten. */
+  min-width: 0;
+  text-overflow: ellipsis;
+  padding: 0 6px;
   font-size: 13px;
   font-weight: 700;
   color: #0b0d10;

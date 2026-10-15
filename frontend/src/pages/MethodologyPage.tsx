@@ -33,8 +33,11 @@ export function MethodologyPage() {
         <h2>Principles</h2>
         <ol className={styles.principles}>
           <li>
-            <strong>Compared with the right peers.</strong> A defender is measured on defending, build-up and duels, and compared
-            only with other defenders{model?.grouping === 'role' && '; a winger only with other wingers, a holding midfielder only with other holding midfielders'}. A score of 90 means exceptional for that role.
+            <strong>Compared with the right peers.</strong>{' '}
+            {model?.grouping === 'role'
+              ? 'A player is compared only with players in his role: a winger with wingers, a holding midfielder with holding midfielders.'
+              : 'A defender is measured on defending, build-up and duels, and compared only with other defenders.'}{' '}
+            A score of 90 means exceptional for that role.
           </li>
           <li>
             <strong>One ranking for every position.</strong> Each player’s combined score is expressed as how far it stands
@@ -108,7 +111,8 @@ export function MethodologyPage() {
           )}
           {model && adjustsForPossession(model) ? (
             <li>
-              Possession is not in the data, so it is estimated from each team’s passing; defensive counts are adjusted with it.
+              Possession is not in the data, so it is estimated from each team’s passing;{' '}
+              {model.standards ? 'every statistic is adjusted with it.' : 'defensive counts are adjusted with it.'}
             </li>
           ) : (
             <li>
@@ -175,9 +179,10 @@ function ModelSection({ model }: { model: ScoringModel }) {
             Its weight is its link with winning times its repeatability. Statistics that measure the same thing count once.
           </p>
           <p className="muted">
-            What the data found: progressive passing goes with winning in every outfield role; chance creation and expected goals
-            for attackers; counts of tackles, interceptions and clearances do not (they show how much a team has to defend, not
-            how well), so defending counts through the team’s goals conceded in the contribution. Standards {model.standards}.
+            What the data found: passing into the opposition half and the final third goes with winning in every outfield role
+            except attacking midfielders; chance creation and expected goals for attackers; counts of tackles, interceptions and clearances do not (they show how much a team has to defend, not
+            how well), so defending counts through the team’s goals conceded in the contribution. Derived standards:{' '}
+            {model.standards}.
           </p>
         </div>
       )}
@@ -211,7 +216,7 @@ function ModelSection({ model }: { model: ScoringModel }) {
                       · {MODE_LABELS[m.mode]}
                       {m.lower_is_better ? ', fewer is better' : ''}
                       {m.shrinkage
-                        ? `, small samples pulled toward average (${Number(m.shrinkage.toFixed(1))} ${m.mode === 'per90' || m.mode === 'total' ? 'matches' : 'attempts'})`
+                        ? `, small samples pulled toward average (as if ${Number(m.shrinkage.toFixed(1))} more ${m.mode === 'per90' || m.mode === 'total' ? 'matches' : 'attempts'} at the average)`
                         : ''}
                       {m.transform === 'sqrt' ? ', square-root scale' : ''}
                       {m.possession ? ', adjusted for team possession' : ''} ·{' '}
@@ -274,7 +279,7 @@ function Weights({ components }: { components: ModelComponent[] }) {
       {components.map((c, i) => (
         <motion.div
           key={c.key}
-          style={{ background: componentColor(i), flexGrow: c.weight }}
+          style={{ background: componentColor(i), flex: `${c.weight} 1 0` }}
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}

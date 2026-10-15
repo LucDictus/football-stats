@@ -85,7 +85,7 @@ final class ModelCatalog
 
                     return new Metric(
                         $key,
-                        $statistic->label . ($rate ? '' : ' per 90'),
+                        $statistic->label,
                         $statistic->fields,
                         $rate ? MetricMode::Ratio : MetricMode::Per90,
                         1 / count($measure['members']),
