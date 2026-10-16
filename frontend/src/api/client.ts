@@ -1,4 +1,4 @@
-import type { DistributionPart, DistributionResponse, PlayerProfile, RankingResponse, ScoringModel, SearchResult } from './types'
+import type { DistributionPart, DistributionResponse, PlayerProfile, RankingResponse, ScoringModel, SearchResult, StatsResponse } from './types'
 
 export class ApiError extends Error {
   readonly status: number
@@ -30,4 +30,5 @@ export const api = {
   search: (q: string) => get<{ players: SearchResult[] }>('/players', { q }),
   distribution: (params: { model?: string; run?: number; position?: string; part: DistributionPart; component?: string; metric?: string }) =>
     get<DistributionResponse>('/distribution', params),
+  stats: (params: { model?: string; x: string; y: string; per?: '90' | 'total'; min_minutes?: number }) => get<StatsResponse>('/stats', params),
 }

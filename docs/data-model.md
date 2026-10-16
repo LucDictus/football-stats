@@ -32,8 +32,8 @@ position; a wide midfielder in the line-up whose best position is full-back is a
 back three, so a full-back. Goalkeepers are goalkeepers whatever the game says. Players without
 an EA FC position get the role whose typical statistical profile is nearest (`RoleInference`),
 among the roles compatible with their position group; `app:build-season` prints how often that
-inference gets a labelled player right. `roleSource` says which (`ea_fc_club`, `ea_fc_best`,
-`inferred`, `position`).
+inference gets a labelled player right. Players with too few statistics to infer from get the group's most common role.
+`roleSource` says which (`ea_fc_club`, `ea_fc_best`, `inferred`, `default`, `position`).
 
 ## Identity
 

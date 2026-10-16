@@ -1,0 +1,89 @@
+.figure {
+  margin: 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.grid {
+  stroke: var(--line);
+}
+
+.tickX,
+.tickY {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.tickX {
+  text-anchor: middle;
+}
+
+.tickY {
+  text-anchor: end;
+  dominant-baseline: middle;
+}
+
+.axisLabel {
+  fill: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.average {
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.quadrant {
+  fill: var(--muted);
+  font-size: 11px;
+  text-anchor: end;
+}
+
+.dot {
+  fill-opacity: 0.55;
+  cursor: pointer;
+  transition: fill-opacity 0.15s;
+}
+
+.dot:hover {
+  fill-opacity: 1;
+}
+
+.highlight {
+  stroke: var(--bg);
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+.name,
+.extreme {
+  font-size: 12px;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  pointer-events: none;
+}
+
+.name {
+  font-weight: 700;
+}
+
+.extreme {
+  fill: var(--text-2);
+  font-size: 11px;
+}
+
+.caption {
+  min-height: 1.5em;
+  margin-top: 6px;
+  font-size: 13px;
+}

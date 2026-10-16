@@ -9,6 +9,7 @@ import { ErrorState } from '../components/ErrorState'
 import { PositionBadge } from '../components/PositionBadge'
 import { RadarChart } from '../components/RadarChart'
 import { SearchBox } from '../components/SearchBox'
+import { StatExplorer } from '../components/StatExplorer'
 import { formatScore, formatSigned, POSITION_LABELS } from '../lib/format'
 import { POSITION_PLURAL } from '../lib/model'
 import styles from './ComparePage.module.css'
@@ -56,7 +57,8 @@ export function ComparePage() {
       <h1>Compare players</h1>
       <p className={styles.lead}>
         Put up to four players side by side: how each final score is built, what each added in goals, how they compare on the
-        measures of their role, and where they stand among everyone else.
+        measures of their role, and where they stand among everyone else. Below, the stat explorer puts any two statistics
+        against each other for the roles or lines you choose.
       </p>
 
       <div className={styles.picker}>
@@ -84,6 +86,11 @@ export function ComparePage() {
       {ids.length < 2 && <Suggestions model={model} ids={ids} onAdd={(id) => setIds([...ids, id])} />}
       {error && <ErrorState error={error} />}
       {ids.length >= 1 && loaded && players.length === ids.length && <Comparison players={players} model={model} />}
+      <StatExplorer
+        model={model}
+        highlights={ids.map((id, i) => ({ id, color: PLAYER_COLORS[i] ?? 'var(--accent)' }))}
+        onPick={(id) => !ids.includes(id) && ids.length < MAX_PLAYERS && setIds([...ids, id])}
+      />
     </main>
   )
 }

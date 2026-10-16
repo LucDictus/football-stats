@@ -3,10 +3,10 @@
 > **Status (Phase 1 complete, 14 Oct 2026):** decisions in section 4 are made (top-5 + CL,
 > Symfony 7.4, PostgreSQL, SofaScore for CL). Issues 3.1–3.6 are handled by the import
 > layer and `app:data:audit`; the measured results are in [data-coverage.md](data-coverage.md).
-> Issue 3.7 (stable identity) is Phase 2. The plain-PHP code described below now lives in `legacy/`.
+> Issue 3.7 (stable identity) was solved in Phase 2 (`PlayerIdentifier`, `IdentityRegistry`). The plain-PHP code described below now lives in `legacy/`.
 
 Baseline audit before starting the Ballon d'Or / MVP roadmap. Everything below was
-checked against the actual database (`var/data.sqlite`) and source CSV, not just the code.
+checked against the actual database (`var/data.sqlite`, now `legacy/var/data.sqlite`) and source CSV, not just the code.
 
 ## 1. What exists
 

@@ -225,3 +225,43 @@ export interface DistributionResponse {
   about: { label: string; unit?: string; weight?: number; component?: string; component_label?: string; metric?: ModelMetric; scale?: 'blend' | 'score' | 'standard' }
   players: DistributionPoint[]
 }
+
+/** A statistic the stat explorer can put on an axis (a field of the data, or a part of the score). */
+export interface StatAxis {
+  key: string
+  label: string
+  category: string
+  per90: boolean
+  goalkeeper: boolean
+  note: string | null
+}
+
+export type StatLine = 'FW' | 'MF' | 'DF' | 'GK'
+
+export interface StatPoint {
+  id: number
+  name: string
+  team: string | null
+  role: PositionGroup | null
+  line: StatLine | null
+  position: PositionGroup | null
+  minutes: number
+  rank: number | null
+  x: number
+  y: number
+}
+
+export interface StatsResponse {
+  model_id: string
+  run_id: number | null
+  x: string
+  y: string
+  per: '90' | 'total'
+  min_minutes: number
+  axes: StatAxis[]
+  roles: Record<string, string>
+  lines: Record<StatLine, { label: string; roles: PositionGroup[] }>
+  /** Per role ('' = no role): players left out because a value on an axis is unknown (never counted as zero). */
+  unknown: Record<string, number>
+  players: StatPoint[]
+}

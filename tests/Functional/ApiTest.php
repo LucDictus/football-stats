@@ -163,6 +163,34 @@ final class ApiTest extends WebTestCase
         return $names;
     }
 
+    public function testStatsPutTwoStatisticsAgainstEachOther(): void
+    {
+        $stats = $this->getJson('/api/stats?x=goals&y=score');
+        self::assertContains('np_xg', array_column($stats['axes'], 'key'));
+        self::assertSame(['FW', 'MF', 'DF', 'GK'], array_keys($stats['lines']));
+        $byName = array_column($stats['players'], null, 'name');
+        // Goals per 90 on FBref's 2,000 minutes: 25 / 2000 × 90.
+        self::assertEqualsWithDelta(25 / 2000 * 90, $byName['Kylian Mbappé']['x'], 1e-9);
+        self::assertSame($stats['run_id'], $this->getJson('/api/rankings')['run']['id']);
+        self::assertSame('FW', $byName['Kylian Mbappé']['line']);
+
+        // Season totals, and a statistic that is not per 90.
+        self::assertEqualsWithDelta(25.0, array_column($this->getJson('/api/stats?x=goals&y=minutes&per=total')['players'], null, 'name')['Kylian Mbappé']['x'], 1e-9);
+
+        // Unknown is left out and counted per role, never zero: only the goalkeeper has saves.
+        $saves = $this->getJson('/api/stats?x=saves&y=goals');
+        self::assertSame(['Thibaut Courtois'], array_column($saves['players'], 'name'));
+        self::assertSame(2, array_sum($saves['unknown']));
+
+        // Below the minimum minutes nobody is shown.
+        self::assertSame([], $this->getJson('/api/stats?min_minutes=2500')['players']);
+
+        foreach (['/api/stats?x=nope', '/api/stats?y=nope', '/api/stats?per=60', '/api/stats?min_minutes=-1', '/api/stats?min_minutes=abc'] as $url) {
+            $this->client->request('GET', $url);
+            self::assertResponseStatusCodeSame(400, $url);
+        }
+    }
+
     public function testGoalkeeperIsNotScoredByTheBaselineModel(): void
     {
         self::assertNull($this->getJson('/api/players/' . $this->playerId('Thibaut Courtois') . '?model=baseline-v1')['score']);

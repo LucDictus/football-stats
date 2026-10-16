@@ -10,9 +10,11 @@ The rule that drives every design decision is: **every score must be explainable
 That means we must always be able to say where a number came from, whether it can be
 trusted, and what was missing. Most of the code so far exists to make that possible.
 
-The roadmap has 10 phases (see the README). Done: 1 (data audit), 2 (domain model),
-3 (baseline score, JSON API, React frontend), 4 (positional models: every position on one
-ranking), 5 in progress (contribution in goals; mvp-v3, by role, is the default).
+The roadmap has 10 phases. Done: 1 (data audit), 2 (domain model), 3 (baseline score, JSON
+API, React frontend), 4 (positional models: every position on one ranking), 5 (contribution in
+goals and data-derived standards per role; mvp-v3 is released and the default). Next: 6
+(Champions League in the score). To install and run everything, see
+[installation.md](installation.md); for where the data comes from, [data-pipeline.md](data-pipeline.md).
 
 ## 2. The mental model: three layers
 
@@ -22,7 +24,7 @@ ranking), 5 in progress (contribution in goals; mvp-v3, by role, is the default)
  Top-5 CSV  ─┐                                       Player ── PlayerIdentifier
  SofaScore  ─┼─ app:import:* ─▶ ImportBatch ─┐       PlayerSeason ── Stint
  FotMob     ─┘                  SourceRecord │       PlayerCompetitionStats    ─▶ inspector, audit,
-                               (unchanged)   │       Team, Competition, Season     (later) scores, API
+                               (unchanged)   │       Team, Competition, Season     scores, API, app
                                              │
                                              └─ app:build-season ─▶ (merge, check, link)
                                              └─ app:data:audit   ─▶ docs/data-coverage.md
@@ -46,7 +48,8 @@ found several), you fix the code and rebuild; you never need to re-download anyt
 ```
 src/
   Command/            console commands: thin, they call services and print results
-  Controller/         HTTP. Today only the data inspector (dev tool)
+  Controller/         HTTP: the JSON API (Api/, request parsing in ApiContext) and the data inspector (dev tool)
+  EventSubscriber/    API errors as JSON (ApiExceptionSubscriber)
   DataImport/
     Top5/             reads the Top-5 dataset CSV
     Sofascore/        fetches CL stats (via curl, see gotchas) into snapshot files
@@ -60,7 +63,7 @@ src/
   Football/
     Assessment/       what is being assessed: season, competitions (AssessmentScope)
     Data/             the vocabulary: Field, FieldCatalog, Origin, OriginStatus, RoleCatalog
-    Scoring/          models (ModelCatalog), the pure ScoreCalculator, ScoreRunner
+    Scoring/          models (ModelCatalog), the pure ScoreCalculator, ScoreRunner; Impact/: contribution in goals
     Analysis/         checks on a model's results (OverlapAnalysis → docs/overlap-<model>.md)
     Standards/        data-derived positional standards (StandardsDeriver → config/standards/, docs/standards.md)
   Inspector/          read-only SQL for the inspector pages
@@ -68,9 +71,10 @@ src/
 config/
   services.yaml       assessment scope values + dataset path
   identity/players.yaml   manual identity links
+  standards/<id>.json     frozen positional standards (written by app:standards:derive)
 docs/                 audit, coverage report (generated), data model, this file
 frontend/             React + TypeScript app (see frontend/README.md)
-legacy/               the original plain-PHP app; reference only, will be deleted
+legacy/               the original plain-PHP app; reference only, nothing in src/ uses it
 tests/                Unit/ (pure logic), Integration/ (real DB), Functional/ (HTTP)
 ```
 
@@ -93,7 +97,8 @@ Three rules follow from these and are enforced in code:
 ## 5. Follow one player through the code
 
 The best way to understand the pipeline: follow **Piero Hincapié** (Leverkusen → Arsenal
-in January). Open `/inspector/players/22` in the browser next to the code.
+in January). Open the inspector (`/inspector/players`, search for him) next to the code. Player ids depend
+on build order, so they differ between databases.
 
 1. **Import.** `ImportTop5Command` → `Top5CsvReader::read()` returns his two CSV rows
    (one per club), keyed `player|born|team|league`. `RawImporter::import()` stores them
@@ -149,6 +154,7 @@ php bin/console app:score                     # ranking run with the default mod
 php bin/console app:score -m baseline-v1      # or any released model
 php bin/console app:analyse:overlap           # docs/overlap-<model>.md: what drives the score per position
 php -S 127.0.0.1:8010 -t public               # API + inspector at http://127.0.0.1:8010
+npm --prefix frontend ci                      # once: frontend dependencies
 npm --prefix frontend run dev                 # the app at http://127.0.0.1:5173
 php bin/phpunit                               # all tests (needs the test DB, see README)
 composer qa                                   # everything below must pass before a commit
@@ -157,16 +163,19 @@ composer fix                                  # apply code style
 
 `composer qa` runs code style (PHP-CS-Fixer, Symfony rules), static analysis (PHPStan
 level 8 with the Symfony, Doctrine and PHPUnit extensions), the container/Twig/YAML
-linters, the Doctrine schema check and the full test suite. Keep it green.
+linters, the Doctrine schema check, the full test suite and the frontend checks (TypeScript,
+oxlint, Vitest). Keep it green.
 
 ## 7. Tests
 
-- `tests/Unit`: pure logic, no database: the merger, consistency checks, matcher and
-  catalog. Fast; write these first. Cases are named after the real players that taught us
+- `tests/Unit`: pure logic, no database: the merger, consistency checks, matcher,
+  catalogs, roles, the score calculator, contribution, possession and the standards deriver. Fast; write these first. Cases are named after the real players that taught us
   the rule (Hincapié, Wesley, Vitinha).
-- `tests/Integration/SeasonBuilderTest.php`: the real pipeline on the `app_test`
-  database: no duplicates on rebuild, stable ids, per-90 on provider minutes.
-- `tests/Functional`: the inspector pages render.
+- `tests/Integration`: the real pipeline on the `app_test` database. `SeasonBuilderTest`:
+  no duplicates on rebuild, stable ids, per-90 on provider minutes. `ScoreRunnerTest`: score
+  runs are stored, reproducible and not duplicated.
+- `tests/Functional`: HTTP. `ApiTest`: every API endpoint, its parameters and errors;
+  `InspectorTest`: the inspector pages render.
 - `tests/Support/SourceFixtures.php`: builds realistic raw records; use it instead of
   hand-writing CSV rows.
 
@@ -239,9 +248,11 @@ every new model version.
 
 ## 12. Your first hour
 
-1. Start the inspector and open Hincapié, a Vitinha, and Osimhen (CL only).
+1. Install and fill the database ([installation.md](installation.md)), start the inspector and
+   open Hincapié, a Vitinha, and Osimhen (CL only).
 2. Read `FieldCatalog`, then `Top5StintMerger`, then `OriginConsistency`, with their unit tests.
 3. Read `SeasonBuilder::build()` top to bottom.
-4. Exercise: add SofaScore's `successfulDribbles` as a field (league column
-   `ss_successfulDribbles`, CL field `successfulDribbles`). Re-import the CL, rebuild,
-   run the tests, and find the new row in the inspector and the coverage report.
+4. Exercise: the field `successful_dribbles` exists for the league only. Give it its
+   Champions League column (`successfulDribbles`) in `FieldCatalog` and add it to
+   `SofascoreClient::FIELDS`. Re-import the CL, rebuild, run the tests, and find the new CL
+   value in the inspector and the coverage report.

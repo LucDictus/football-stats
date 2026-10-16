@@ -2,7 +2,10 @@
 
 > Legacy reference implementation. Run commands from this `legacy/` directory
 > (e.g. `php bin/import.php`, `docker compose up -d` for the viewer on :9988).
-> Its SQLite database lives in `legacy/var/`; `var/sources` is shared with the Symfony app.
+> Its SQLite database lives in `legacy/var/` (not in git). To share the Top-5 dataset with the
+> Symfony app, link it: `mkdir -p var && ln -s ../../var/sources var/sources`.
+> **Not needed to run the app**: nothing in the Symfony app uses this code; it needs its own
+> `.env` with a football-data.org API key.
 
 Plain PHP (8.1+) project on the free football-data.org v4 API. Two parts:
 

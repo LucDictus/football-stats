@@ -27,6 +27,14 @@ final class RoleCatalog
         'GK' => ['label' => 'Goalkeeper', 'plural' => 'goalkeepers', 'groups' => ['GK']],
     ];
 
+    /** The lines of a team, front to back, with the roles they hold. */
+    public const LINES = [
+        'FW' => ['label' => 'Forwards', 'roles' => ['ST', 'W']],
+        'MF' => ['label' => 'Midfield', 'roles' => ['AM', 'CM', 'DM']],
+        'DF' => ['label' => 'Defence', 'roles' => ['FB', 'CB']],
+        'GK' => ['label' => 'Goalkeepers', 'roles' => ['GK']],
+    ];
+
     /** EA SPORTS FC position => role. */
     private const EA_FC = [
         'ST' => 'ST', 'CF' => 'ST', 'LS' => 'ST', 'RS' => 'ST', 'LF' => 'ST', 'RF' => 'ST',
@@ -90,5 +98,17 @@ final class RoleCatalog
     public static function rolesFor(string $group): array
     {
         return array_keys(array_filter(self::ROLES, static fn (array $r) => in_array($group, $r['groups'], true)));
+    }
+
+    /** The line a role plays in (FW, MF, DF, GK). */
+    public static function line(string $role): ?string
+    {
+        foreach (self::LINES as $line => $info) {
+            if (in_array($role, $info['roles'], true)) {
+                return $line;
+            }
+        }
+
+        return null;
     }
 }
