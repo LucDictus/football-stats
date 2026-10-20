@@ -1,131 +1,173 @@
-# Football MVP calculator
+# Football MVP Index
 
-A transparent Ballon d'Or / MVP ranking for season 2025/26: the top-5 European leagues
-(Premier League, La Liga, Serie A, Bundesliga, Ligue 1) plus the Champions League.
-Every score should be explainable from data, rules and evidence. (The Champions League data is
-imported, linked and audited; it enters the score in roadmap phase 6.)
+**Who was the best footballer of the 2025/26 season, and can a ranking explain *why*?**
 
-## Documentation
+A data-driven Ballon d'Or for the five big European leagues. Every player gets a score that can be
+traced step by step to the statistics behind it, and no statistic or weight is picked by hand: the
+data decides what counts.
 
-| Read this | To learn |
+[![For developers: technical documentation](https://img.shields.io/badge/For_developers-technical_documentation_→-1f2937?style=for-the-badge)](DEVELOPERS.md)
+
+![The ranking in the app](docs/images/app-ranking.png)
+
+## In short
+
+- **2,691 players**, 5 leagues, 4 data providers, 2 seasons; **1,531 ranked** (the rest played too
+  little to judge).
+- **The data decides the weights.** For each of 8 roles (striker, winger, … goalkeeper), 58 candidate
+  statistics are tested on two seasons: does a player who does more of it play in a team that wins,
+  and does it repeat from season to season? Only what passes counts.
+- **Three findings stand out:** defensive action counts (tackles, interceptions) do not go with
+  winning; Erling Haaland is an *average* striker on everything except scoring; and every score can
+  be rebuilt by hand, as Harry Kane's shows below.
+
+## The question
+
+Awards like the Ballon d'Or are decided by votes, and votes favour goals, trophies and reputation.
+This project asks a narrower question that data can answer: **over one league season, which players
+did the most for their team, compared with others in the same role?** The answer has to be
+explainable: for every player, it must be possible to see which numbers produced his score and how.
+
+## The data
+
+| | |
 |---|---|
-| [docs/installation.md](docs/installation.md) | How to install everything and run it locally, step by step, with troubleshooting |
-| [docs/data-pipeline.md](docs/data-pipeline.md) | How we got the data: every source, every download and every step from raw rows to clean statistics |
-| [docs/methodology.md](docs/methodology.md) | How players are measured and scored, every model version, worked examples and known limitations |
-| [docs/standards.md](docs/standards.md) | The data-derived standards per role: every candidate statistic, the numbers behind it and why it counts or not (generated) |
-| [docs/data-coverage.md](docs/data-coverage.md) | What the data can and cannot tell, measured on the actual records (generated) |
-| [docs/overlap-mvp-v3.md](docs/overlap-mvp-v3.md) | What drives the final score, per role (generated per model) |
-| [docs/data-model.md](docs/data-model.md) | The database: raw layer, players, roles, identity, statistics, score runs |
-| [docs/onboarding.md](docs/onboarding.md) | Working on the code: architecture, a player followed through the pipeline, common tasks, gotchas |
-| [docs/audit.md](docs/audit.md) | The original code and data audit that started the project |
-| [frontend/README.md](frontend/README.md) | The React app |
+| **Players** | Every player in the Premier League, La Liga, Serie A, Bundesliga and Ligue 1, 2025/26 (and 2024/25 to test which statistics matter) |
+| **Statistics** | 78 per player: goals and expected goals (xG), passing, chance creation, duels, tackles, saves, errors, … |
+| **Sources** | FBref, Understat and SofaScore statistics and EA SPORTS FC positions, via the public [Top-5 Football Dataset](https://github.com/m-mahadi/top5-football-dataset); Champions League statistics from SofaScore, checked against FotMob |
+| **Results** | Every league match with its score, for each team's goal difference |
 
-Stack: PHP 8.3, Symfony 7.4 LTS, Doctrine ORM, PostgreSQL 16, PHPUnit; Node 22.22+, React 19 + TypeScript + Vite.
+Most of the work was making the data trustworthy before using it
+([how the data was collected and cleaned](docs/data-pipeline.md)):
 
-## How it works, in one minute
+- **Transfers.** A player who changed clubs has a row per club. Some providers repeat one club's
+  numbers on every row, so a naive sum double-counts. Each provider's numbers are checked against
+  the official playing time and marked *ok*, *partial* or *suspect*.
+- **Wrong merges.** The dataset merged two different players called Vitinha, born in the same
+  year. Such cases are detected and split again.
+- **Missing is not zero.** A statistic a provider does not have is left out, never counted as 0.
+- **Rates on the right minutes.** "Per 90 minutes" uses the minutes of the provider that supplied
+  the number.
 
-1. **Data.** League statistics for every player in the top-5 leagues come from the
-   [Top-5 Football Dataset](https://github.com/m-mahadi/top5-football-dataset) (FBref, Understat,
-   SofaScore and EA SPORTS FC positions); Champions League statistics from SofaScore, checked
-   against FotMob. Every download is stored unchanged, so every number can be traced back to it.
-2. **Cleaning.** Transfers are merged into one season per player, each provider is checked
-   against FBref's minutes, Champions League records are linked to league players, and every
-   player gets one of eight roles (striker, winger, attacking/central/defensive midfielder,
-   full-back, centre-back, goalkeeper). Missing is never counted as zero.
-3. **Standards.** For each role, the data decides which statistics count and how much: a
-   statistic counts when players who do more of it play in teams that win (in each of two seasons),
-   and it weighs more when it is the player's own repeatable doing rather than luck.
-4. **Score.** 50% *positional excellence* (how far a player stands above the others in his role on
-   those standards; 50 = the role's average, every 10 points one standard deviation) + 50%
-   *contribution* (the goals he added above a replacement-level player of his role).
-5. **Explained.** The app shows every statistic with its source, how each point was earned, and
-   charts that compare every part of the score with all other players.
+## The approach
 
-## Quick start
+**Score = 50% positional excellence + 50% contribution in goals.**
 
-The full guide, with prerequisites and expected output, is [docs/installation.md](docs/installation.md).
+1. **Role.** Each player is compared only with players in the same role (8 roles), so a centre-back
+   is not judged on goals.
+2. **Positional excellence: which statistics count is measured, not chosen.** For every role and
+   every statistic, two questions are asked of the data:
+   - *Does it go with winning?* The correlation between the statistic and the team's goal difference
+     per match, with possession taken into account (a team with the ball passes more; that is style,
+     not quality). It must be positive and statistically significant **in each of the two seasons**
+     separately.
+   - *Is it the player's own doing?* How strongly it repeats for the same player from one season to
+     the next. What does not repeat is mostly luck.
 
-```bash
-composer install && npm --prefix frontend ci
-docker compose up -d database                 # PostgreSQL 16 on localhost:5432
-php bin/console doctrine:migrations:migrate -n
-git clone https://github.com/m-mahadi/top5-football-dataset var/sources/top5-football-dataset
-git -C var/sources/top5-football-dataset checkout 8940299c2c56c2c0932d3caf292336f5e1689893
-php bin/console app:import:top5
-php bin/console app:import:sofascore-cl       # needs the curl program
-php bin/console app:import:fotmob-cl
-php bin/console app:build-season
-php bin/console app:score                     # the default model, mvp-v3
-php -S 127.0.0.1:8010 -t public               # API + data inspector, keep running
-npm --prefix frontend run dev                 # the app: http://localhost:5173
-```
+   A statistic's weight is the product of the two. Statistics that measure the same thing are merged,
+   small samples are pulled toward the average, and the result is a score where 50 is the role's
+   average and every 10 points is one standard deviation.
+3. **Contribution in goals.** The goals a player added to his team's goal difference above a
+   replacement-level player of his role. It is measured in the same unit for every position, which
+   makes a striker and a goalkeeper comparable.
 
-Tests and quality checks (after creating the test database once, see the installation guide):
-`composer qa`.
+The full method, with every number, is in [methodology.md](docs/methodology.md); every statistic and
+the reason it counts or not is in [standards.md](docs/standards.md).
 
-## Commands
+## Findings
 
-| Command | What |
-|---|---|
-| `app:import:top5` | League player seasons from the Top-5 dataset → a raw import batch |
-| `app:import:sofascore-cl [--no-fetch]` | Champions League statistics from SofaScore → a raw batch (snapshot in `var/sources/sofascore/`) |
-| `app:import:fotmob-cl` | CL minutes, goals and assists from FotMob → a raw batch (cross-check only) |
-| `app:data:audit` | Writes `docs/data-coverage.md` |
-| `app:build-season` | Players, teams, roles and season statistics from the latest batches (safe to re-run) |
-| `app:standards:derive [--dry-run]` | Positional standards per role from two seasons → `config/standards/`, `docs/standards.md` |
-| `app:score [-m model]` | Scores a model and stores the ranking as a score run |
-| `app:analyse:overlap [-m model]` | Writes `docs/overlap-<model>.md` |
+### 1. Tackles and interceptions do not go with winning
 
-Every import is stored unchanged as a new `import_batch` with its `source_record`s
-(source URL, dataset version, import date). Older batches are kept, so results can be
-reproduced after a source changes. The assessment scope (season, competitions) is set
-in `config/services.yaml`.
+![Link with winning per statistic and role](docs/images/link-with-winning.png)
 
-## API
+Once possession is taken into account, the number of tackles, interceptions, clearances and ball
+recoveries a defender or midfielder makes has **no replicated link with his team's results**, in any
+role. These counts measure how much defending a team *has to do*, not how well it defends. A team
+that dominates the ball gives its defenders little to tackle.
 
-| Endpoint | What |
-|---|---|
-| `GET /api/models` | Released scoring models and their full definitions |
-| `GET /api/rankings?model=&run=&position=&limit=&offset=&unranked=` | A ranking (latest run of the model unless `run` is given); `position` is a role (ST, W, …) for mvp-v3, a group (FW, MF, DF, GK) for older models |
-| `GET /api/distribution?model=&run=&position=&part=&component=&metric=` | How one part of the score is spread over all ranked players: `part` = final, positional, contribution, component or metric (the charts) |
-| `GET /api/stats?x=&y=&per=90\|total&min_minutes=&model=&run=` | Two statistics (or parts of the score) for every league player, with role and line: the stat explorer. Unknown values are left out and counted per role |
-| `GET /api/players?q=` | Accent-insensitive name search |
-| `GET /api/players/{id}?model=&run=` | Season, statistics per scope with source and trust per value, score breakdown |
+What does go with winning, for every outfield role: **passing into the opposition half and
+involvement in build-up**. Defending still counts in the score, through the goals a team concedes
+compared with the league (in the contribution half).
 
-Errors are JSON with a status code: 400 for a malformed request, 404 for an unknown model, run
-or player, or (rankings, distribution) when nothing is scored yet.
+### 2. Haaland is an average striker, except at scoring
 
-The app's pages: ranking (`/`), player (`/players/{id}`), compare up to four players and the stat explorer
-(`/compare?ids=`), methodology (`/methodology`). The data inspector (`/inspector` on the backend)
-shows the raw and built data for developers.
+![Strikers: positional excellence against contribution](docs/images/app-explorer-strikers.png)
 
-## Structure
+Every dot is a striker. Erling Haaland's positional score is **49.9**: exactly the striker average.
+He is elite at shooting and finishing, but the data shows that strikers who also link up play (key
+passes, passes into the final third) are found in winning teams just as much. On those he scores low
+(27.4 on passing in the opposition half, where Mbappé scores 80.9). His goals carry him: his
+contribution, **100.7**, is the second highest of all strikers, and he finishes **#16** overall.
 
-```
-src/
-  Command/       console commands (thin: they call services)
-  Controller/    HTTP: JSON API (Api/) and the data inspector (developer tool)
-  EventSubscriber/  JSON error responses for the API
-  DataImport/    source readers and clients, raw import, identity matching, season builder
-  DataQuality/   stint merging, provider consistency checks, data audit
-  Entity/        raw layer and domain model (see docs/data-model.md)
-  Api/           JSON presenters for the API
-  Football/      assessment scope, field catalog, scoring models and engine, standards, model analysis
-  Inspector/     read-only SQL for the inspector pages
-  Repository/    Doctrine repositories
-tests/           Unit/ (pure logic), Integration/ (pipeline on the test DB), Functional/ (HTTP)
-config/standards/  the frozen, data-derived positional standards
-config/identity/   manual player links
-frontend/   React app (see frontend/README.md)
-legacy/     the original plain-PHP importer and viewer, kept as a reference
-            until the Symfony version replaces it (see legacy/README.md)
-docs/       installation, data pipeline, methodology, data model, onboarding, generated reports
-```
+![How the scores of Kane, Haaland and Mbappé are built](docs/images/app-compare-build.png)
 
-## Licence and data
+### 3. Every score can be rebuilt by hand: Harry Kane
 
-The code is private and not licensed for reuse (`composer.json`: proprietary). The football data
-is not part of this repository: it is downloaded from its providers (FBref, Understat, SofaScore,
-EA SPORTS FC, FotMob, via the Top-5 Football Dataset), whose terms apply. See
-[docs/data-pipeline.md](docs/data-pipeline.md#data-terms-and-attribution).
+| Measure (striker standard) | Weight | Kane per 90 | Kane's score (50 = average striker) |
+|---|---|---|---|
+| Passes in the opposition half · final third | 18% | 15.0 · 10.2 | 55.2 |
+| Key passes | 15% | 1.51 | 56.4 |
+| Non-penalty xG | 14% | 0.80 | 64.0 |
+| Shots on target | 13% | 2.54 | 78.8 |
+| xA · big chances created | 11% | 0.28 · 0.68 | 73.8 |
+| Non-penalty goals | 11% | 0.98 | 76.9 |
+| Possession won in the attacking third | 9% | 0.57 | 49.2 |
+| xGBuildup | 8% | 0.40 | 72.6 |
+| Assists | 2% | 0.19 | 53.4 |
 
+Weighted, his measures average 64.8, which is **76.3** on the positional scale (compared with all
+strikers). His contribution is 11.7 goals above a replacement-level striker, **110.9** on the
+same scale. Final score: 50% × 76.3 + 50% × 110.9 = **93.6**, third of 1,531.
+
+![Kane's player page: how his score is built](docs/images/app-player-kane.png)
+
+### The top 10
+
+Olise (winger), Dimarco (full-back), Kane (striker), Undav (attacking midfielder), Yamal (winger),
+Lautaro Martínez (striker), Mbappé (striker), Luis Díaz (winger), Guéhi (centre-back),
+Schlotterbeck (centre-back). The top 100 holds 30 attackers, 30 midfielders and 38 defenders.
+
+## Limitations
+
+- **Good players play for good teams.** Possession is taken into account, but team strength itself
+  is not: a statistic that goes with winning partly reflects the team around the player.
+- **No measure of defensive quality** exists in this data beyond aerial duels for full-backs.
+  Defending counts only through the team's results.
+- **Season totals only.** There is no match or event data, so no "with and without the player".
+- **Honest validation.** Standards derived from 2024/25 alone predict 2025/26 team results no
+  better than simpler weightings (all within chance on 82 teams). They were chosen for the
+  principle, count what goes with winning and is the player's own doing, not because they won the
+  test.
+- **Roles come from a video game's position data** (EA SPORTS FC). They are curated, but they are a
+  label, not a measurement; for players without one, the role is inferred and right two times in three.
+
+## The app
+
+A React web app shows the ranking, every player's score built up step by step with the source of
+every number, and a compare page with charts: how each score is built, the role's measures as a
+radar, and a stat explorer that puts any two statistics against each other.
+
+![Comparing three strikers on the measures of their role](docs/images/app-compare-positional.png)
+
+## What's next
+
+- **Sensitivity analysis:** how stable is the ranking if the 50/50 blend, the contribution split or
+  the replacement level change? And how often is the #1 still #1 when the data is resampled?
+- **The analysis in Python and SQL:** the standards derivation re-done in a Jupyter notebook with
+  pandas and statsmodels, and the key questions as SQL queries.
+- **A Tableau Public dashboard.**
+- **The Champions League** in the score.
+
+## Built with
+
+Python (matplotlib) for the analysis charts · PostgreSQL · PHP 8.3 / Symfony for the data
+pipeline and scoring engine · React + TypeScript for the app. 173 automated backend tests; every
+published ranking is reproducible from its stored definition and data.
+
+**[For developers →](DEVELOPERS.md)** installation, architecture, the data pipeline, the API.
+
+---
+
+The football data belongs to its providers and is not part of this repository
+([data terms](docs/data-pipeline.md#data-terms-and-attribution)). The code is public to read but
+not licensed for reuse.

@@ -1,0 +1,2 @@
+# Analysis layer in Python: charts for the README, later notebooks (standards, sensitivity).
+matplotlib==3.10.7

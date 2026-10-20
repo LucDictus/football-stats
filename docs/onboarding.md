@@ -156,7 +156,7 @@ php bin/console app:analyse:overlap           # docs/overlap-<model>.md: what dr
 php -S 127.0.0.1:8010 -t public               # API + inspector at http://127.0.0.1:8010
 npm --prefix frontend ci                      # once: frontend dependencies
 npm --prefix frontend run dev                 # the app at http://127.0.0.1:5173
-php bin/phpunit                               # all tests (needs the test DB, see README)
+php bin/phpunit                               # all tests (needs the test DB, see installation.md)
 composer qa                                   # everything below must pass before a commit
 composer fix                                  # apply code style
 ```

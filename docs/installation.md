@@ -11,7 +11,7 @@ The whole data pipeline takes about two minutes. The only slow part is installin
 | What | Where |
 |---|---|
 | The app (ranking, player pages, compare, methodology) | http://localhost:5173 |
-| The JSON API | http://localhost:8010/api/models (see the [API table](../README.md#api)) |
+| The JSON API | http://localhost:8010/api/models (see the [API table](../DEVELOPERS.md#api)) |
 | The data inspector (a developer tool for the raw and built data) | http://localhost:8010/inspector |
 | PostgreSQL with the imported, built and scored season | localhost:5432, database `app` |
 

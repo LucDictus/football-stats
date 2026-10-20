@@ -14,6 +14,8 @@ const CENTRE = SIZE / 2
 const RADIUS = 150
 /** The scale runs to 100 (exceptional); 50 is the role's average, drawn as a stronger ring. */
 const MAX = 100
+/** Room beside the circle for the axis labels (up to 24 characters). */
+const PAD = 70
 
 /** Measures as axes around a circle, one shape per player; the ring at 50 is the role's average. */
 export function RadarChart({ axes, series }: { axes: string[]; series: RadarSeries[] }) {
@@ -26,7 +28,7 @@ export function RadarChart({ axes, series }: { axes: string[]; series: RadarSeri
 
   return (
     <svg
-      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      viewBox={`${-PAD} 0 ${SIZE + 2 * PAD} ${SIZE}`}
       className={styles.svg}
       role="img"
       aria-label={series.map((s) => `${s.label}: ${axes.map((a, i) => `${a} ${s.values[i] === null ? 'not measured' : Math.round(s.values[i] ?? 0)}`).join(', ')}`).join('. ')}
