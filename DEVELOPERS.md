@@ -119,6 +119,7 @@ tests/           Unit/ (pure logic), Integration/ (pipeline on the test DB), Fun
 config/standards/  the frozen, data-derived positional standards
 config/identity/   manual player links
 frontend/   React app (see frontend/README.md)
+sql/        SQL exercises: questions about the season, from easy to hard (sql/README.md)
 analysis/   Python: charts for the README (charts.py); later notebooks. Setup:
             uv venv analysis/.venv && uv pip install -p analysis/.venv -r analysis/requirements.txt
 legacy/     the original plain-PHP importer and viewer, kept as a reference
