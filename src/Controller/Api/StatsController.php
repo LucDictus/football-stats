@@ -6,6 +6,7 @@ namespace App\Controller\Api;
 
 use App\Api\StatsExplorer;
 use App\Football\Data\RoleCatalog;
+use App\Football\Scoring\ModelCatalog;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,8 +28,8 @@ final class StatsController extends AbstractController
     /**
      * Two statistics against each other for every league player of the season (the stat explorer):
      * ?x=np_xg&y=xa&per=90|total&min_minutes=900&model=&run=.
-     * x and y: a statistic of the data, or a part of the model's score (score, positional,
-     * contribution, goals_above_replacement; ranked players only). Players without a value on
+     * x and y: a statistic of the data, or a part of the model's score (score; for models with a
+     * contribution also positional, contribution, goals_above_replacement; ranked players only). Players without a value on
      * an axis are left out and counted per role in `unknown`. Filtering by role or line is left to the
      * client: every row carries both.
      */
@@ -36,11 +37,13 @@ final class StatsController extends AbstractController
     public function stats(Request $request): JsonResponse
     {
         $modelId = $this->context->modelId($request);
+        $model = ModelCatalog::get($modelId);
+        $run = $this->context->run($request, $modelId);
         $x = $this->context->string($request, 'x') ?? 'np_xg';
         $y = $this->context->string($request, 'y') ?? 'xa';
         foreach (['x' => $x, 'y' => $y] as $name => $key) {
-            if (!StatsExplorer::isAxis($key, true)) {
-                throw new BadRequestHttpException("{$name} must be a statistic (see axes): {$key} is not one");
+            if (!StatsExplorer::isAxis($key, $run, $model)) {
+                throw new BadRequestHttpException("{$name} must be one of the axes {$modelId} has: {$key} is not one");
             }
         }
         $per = $this->context->string($request, 'per') ?? StatsExplorer::PER_90;
@@ -51,7 +54,6 @@ final class StatsController extends AbstractController
         if ($minMinutes < 0 || $minMinutes > self::MAX_MIN_MINUTES) {
             throw new BadRequestHttpException('min_minutes must be between 0 and ' . self::MAX_MIN_MINUTES);
         }
-        $run = $this->context->run($request, $modelId);
         $rows = $this->explorer->rows($this->context->season(), $run, $x, $y, $per, $minMinutes);
 
         return $this->json([
@@ -61,7 +63,7 @@ final class StatsController extends AbstractController
             'y' => $y,
             'per' => $per,
             'min_minutes' => $minMinutes,
-            'axes' => StatsExplorer::axes($run !== null),
+            'axes' => StatsExplorer::axes($run, $model),
             'roles' => array_map(static fn (array $r) => $r['label'], RoleCatalog::ROLES),
             'lines' => RoleCatalog::LINES,
             'unknown' => $rows['unknown'],

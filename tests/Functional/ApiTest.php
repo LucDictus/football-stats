@@ -185,7 +185,7 @@ final class ApiTest extends WebTestCase
         // Below the minimum minutes nobody is shown.
         self::assertSame([], $this->getJson('/api/stats?min_minutes=2500')['players']);
 
-        foreach (['/api/stats?x=nope', '/api/stats?y=nope', '/api/stats?per=60', '/api/stats?min_minutes=-1', '/api/stats?min_minutes=abc'] as $url) {
+        foreach (['/api/stats?x=nope', '/api/stats?y=nope', '/api/stats?per=60', '/api/stats?min_minutes=-1', '/api/stats?min_minutes=abc', '/api/stats?x=contribution&model=positional-v1'] as $url) {
             $this->client->request('GET', $url);
             self::assertResponseStatusCodeSame(400, $url);
         }

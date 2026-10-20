@@ -167,7 +167,7 @@ export function ScatterChart({
 function extent(values: number[]): [number, number] {
   const min = Math.min(...values)
   const max = Math.max(...values)
-  return min >= 0 && min <= max * 0.4 ? [0, max] : [min, max]
+  return min >= 0 && (min <= max * 0.4 || min === max) ? [0, max] : [min, max]
 }
 
 /** Scales with round ticks, the mean, the correlation and the most extreme players. */

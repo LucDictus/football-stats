@@ -38,7 +38,7 @@ in the app says where it came from.
 
 | Source | What it gives us | How it is fetched | Used for |
 |---|---|---|---|
-| [Top-5 Football Dataset](https://github.com/m-mahadi/top5-football-dataset) (m-mahadi, open data) | One row per player per club, 2024/25 and 2025/26, 220 columns from four providers: **FBref** (minutes, goals, assists, shots; the reference for playing time), **Understat** (xG, npxG, xA, xGChain, xGBuildup, with its own minutes), **SofaScore** (115 columns: passing, duels, tackles, saves, errors, …, with its own minutes), **EA SPORTS FC** (63 columns: positions and ratings). Also every league match with its score | `git clone` into `var/sources/top5-football-dataset`. The rankings use commit `8940299c2c` | League statistics, roles, team results |
+| [Top-5 Football Dataset](https://github.com/m-mahadi/top5-football-dataset) (m-mahadi; a compilation, each provider keeps its rights) | One row per player per club, 2024/25 and 2025/26, 220 columns from four providers: **FBref** (minutes, goals, assists, shots; the reference for playing time), **Understat** (xG, npxG, xA, xGChain, xGBuildup, with its own minutes), **SofaScore** (115 columns: passing, duels, tackles, saves, errors, …, with its own minutes), **EA SPORTS FC** (63 columns: positions and ratings). Also every league match with its score | `git clone` into `var/sources/top5-football-dataset`. The rankings use commit `8940299c2c` | League statistics, roles, team results |
 | SofaScore web API (public but unofficial) | Season totals per player for the Champions League: 29 statistics, the same names as the dataset's SofaScore columns | `api.sofascore.com/api/v1/unique-tournament/7/season/76953/statistics`, 100 players a page, 9 pages, fetched with `curl` and saved as `var/sources/sofascore/ut7-s76953/page-N.json` | Champions League statistics |
 | FotMob (static stat lists) | Minutes, goals and assists per CL player | `data.fotmob.com/stats/42/season/28184/{mins_played,goals,goal_assist}.json` | A cross-check of the SofaScore CL data only, never in a score |
 
@@ -75,8 +75,8 @@ Rules:
   "latest". An old ranking can always be traced to the exact data it was made from.
 - **An empty import is refused**, so a failed download can never replace the season with
   nothing.
-- **SofaScore is fetched with the `curl` program**, because SofaScore rejects PHP's HTTP stack
-  (TLS fingerprinting). Pages go to a temporary folder first and replace the snapshot only when
+- **SofaScore is fetched with the `curl` program**, because SofaScore answers PHP's HTTP client
+  with 403. Pages are fetched one at a time with a pause between them. Pages go to a temporary folder first and replace the snapshot only when
   all of them arrived. `--no-fetch` imports the saved snapshot again.
 
 Because interpretation happens only after this step, a bug in how we read the data is fixed in
@@ -175,7 +175,8 @@ Each SofaScore CL record is linked to a league player by the first rule that mat
 Rules 3 and 4 only consider league players without a trusted SofaScore id. Each league player is
 linked to at most one CL record. Result for 2025/26: 535 of the 550 CL players at top-5 clubs are
 linked (514 by id, 11 by initial + surname, 10 by name + club). The 15 unlinked are youth players
-with no league minutes. 328 players from clubs outside the top five have CL data only. SofaScore
+with no league minutes. 328 CL players are at clubs outside the top five; 15 of them also played in a top-5 league
+(linked as transfers), so 313 have CL data only. SofaScore
 was checked against FotMob: minutes, goals and assists agree for all 822 players matched by name.
 
 ### 5.6 Roles (`RoleCatalog`, `RoleInference`)
@@ -260,3 +261,15 @@ These limits follow from the sources and are repeated in the methodology where t
   and audited, but not yet part of a score (roadmap phase 6).
 - **EA SPORTS FC positions are a label from a video game**: curated for the season, but not a
   measurement. They are missing for a quarter of La Liga rows.
+
+## Data terms and attribution
+
+The statistics belong to their providers: **FBref** (Sports Reference), **Understat**,
+**SofaScore**, **EA SPORTS FC** (positions) and **FotMob**, compiled for the leagues by the
+[Top-5 Football Dataset](https://github.com/m-mahadi/top5-football-dataset), which states that it
+does not license the data itself and that each source's terms apply. The SofaScore API is public
+but unofficial. This project downloads the data for analysis; it does not redistribute it: the
+downloads (`var/sources/`) and the database are not in git. The generated reports in `docs/`
+(coverage, standards, overlap) quote statistics of individual players. Check the providers' terms
+before publishing the repository or the app.
+

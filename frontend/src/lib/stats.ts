@@ -17,8 +17,11 @@ export function formatStat(value: number): string {
 /** Domain rounded outward to a 1–2–5 step, and its ticks (about five). */
 export function niceScale(min: number, max: number): [number, number, number[]] {
   if (min === max) {
-    min -= 1
-    max += 1
+    if (min === 0) max = 1
+    else {
+      min -= 1
+      max += 1
+    }
   }
   const raw = (max - min) / 5
   const power = 10 ** Math.floor(Math.log10(raw))

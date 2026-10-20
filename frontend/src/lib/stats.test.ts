@@ -7,6 +7,10 @@ describe('niceScale', () => {
     expect(niceScale(26.3, 74.9)).toEqual([20, 80, [20, 30, 40, 50, 60, 70, 80]])
   })
 
+  it('shows all zeros from zero up', () => {
+    expect(niceScale(0, 0)[0]).toBe(0)
+  })
+
   it('copes with a single value', () => {
     const [lo, hi] = niceScale(5, 5)
     expect(lo).toBeLessThan(5)

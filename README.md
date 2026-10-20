@@ -20,11 +20,11 @@ imported, linked and audited; it enters the score in roadmap phase 6.)
 | [docs/audit.md](docs/audit.md) | The original code and data audit that started the project |
 | [frontend/README.md](frontend/README.md) | The React app |
 
-Stack: Symfony 7.4 LTS, Doctrine ORM, PostgreSQL 16, PHPUnit; React 19 + TypeScript + Vite.
+Stack: PHP 8.3, Symfony 7.4 LTS, Doctrine ORM, PostgreSQL 16, PHPUnit; Node 22.22+, React 19 + TypeScript + Vite.
 
 ## How it works, in one minute
 
-1. **Data.** League statistics for every player in the top-5 leagues come from the open
+1. **Data.** League statistics for every player in the top-5 leagues come from the
    [Top-5 Football Dataset](https://github.com/m-mahadi/top5-football-dataset) (FBref, Understat,
    SofaScore and EA SPORTS FC positions); Champions League statistics from SofaScore, checked
    against FotMob. Every download is stored unchanged, so every number can be traced back to it.
@@ -93,7 +93,7 @@ in `config/services.yaml`.
 | `GET /api/players/{id}?model=&run=` | Season, statistics per scope with source and trust per value, score breakdown |
 
 Errors are JSON with a status code: 400 for a malformed request, 404 for an unknown model, run
-or player, or when nothing is scored yet.
+or player, or (rankings, distribution) when nothing is scored yet.
 
 The app's pages: ranking (`/`), player (`/players/{id}`), compare up to four players and the stat explorer
 (`/compare?ids=`), methodology (`/methodology`). The data inspector (`/inspector` on the backend)
@@ -121,3 +121,11 @@ legacy/     the original plain-PHP importer and viewer, kept as a reference
             until the Symfony version replaces it (see legacy/README.md)
 docs/       installation, data pipeline, methodology, data model, onboarding, generated reports
 ```
+
+## Licence and data
+
+The code is private and not licensed for reuse (`composer.json`: proprietary). The football data
+is not part of this repository: it is downloaded from its providers (FBref, Understat, SofaScore,
+EA SPORTS FC, FotMob, via the Top-5 Football Dataset), whose terms apply. See
+[docs/data-pipeline.md](docs/data-pipeline.md#data-terms-and-attribution).
+

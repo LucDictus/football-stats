@@ -10,6 +10,7 @@ use App\Entity\Season;
 use App\Entity\StatsScope;
 use App\Football\Data\FieldCatalog;
 use App\Football\Data\RoleCatalog;
+use App\Football\Scoring\ScoringModel;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -21,7 +22,7 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final readonly class StatsExplorer
 {
-    /** Axes from the score run rather than the data. */
+    /** Axes from the score run rather than the data; all but the score only for models that blend positional and contribution. */
     public const SCORE_AXES = [
         'score' => ['label' => 'Final score', 'note' => 'The model\'s final score'],
         'positional' => ['label' => 'Positional excellence', 'note' => '50 = the role\'s average, 10 points = one standard deviation'],
@@ -36,15 +37,18 @@ final readonly class StatsExplorer
     }
 
     /**
-     * The statistics an axis can show.
+     * The statistics an axis can show: the data's fields, and the parts of the score the run has.
      *
      * @return list<array{key: string, label: string, category: string, per90: bool, goalkeeper: bool, note: ?string}>
      */
-    public static function axes(bool $withScores): array
+    public static function axes(?ScoreRun $run, ?ScoringModel $model): array
     {
         $axes = [];
-        if ($withScores) {
+        if ($run !== null) {
             foreach (self::SCORE_AXES as $key => $axis) {
+                if ($key !== 'score' && $model?->impact === null) {
+                    continue;
+                }
                 $axes[] = ['key' => $key, 'label' => $axis['label'], 'category' => 'Score', 'per90' => false, 'goalkeeper' => false, 'note' => $axis['note']];
             }
         }
@@ -55,9 +59,9 @@ final readonly class StatsExplorer
         return $axes;
     }
 
-    public static function isAxis(string $key, bool $withScores): bool
+    public static function isAxis(string $key, ?ScoreRun $run, ?ScoringModel $model): bool
     {
-        return ($withScores && isset(self::SCORE_AXES[$key])) || isset(FieldCatalog::all()[$key]);
+        return in_array($key, array_column(self::axes($run, $model), 'key'), true);
     }
 
     /**
@@ -128,7 +132,7 @@ final readonly class StatsExplorer
     private function scores(ScoreRun $run): array
     {
         $rows = $this->em->getConnection()->fetchAllAssociative(
-            "SELECT player_id, rank, score, COALESCE(positional, score) AS positional,
+            "SELECT player_id, rank, score, positional,
                     (impact->>'score')::float AS contribution, (impact->>'above')::float AS above
              FROM player_score WHERE run_id = :run",
             ['run' => $run->getId()],

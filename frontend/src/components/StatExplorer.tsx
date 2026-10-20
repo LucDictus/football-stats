@@ -145,7 +145,13 @@ export function StatExplorer({
       </div>
 
       {query.error ? (
-        <ErrorState error={query.error} />
+        <>
+          <ErrorState error={query.error} />
+          {/* e.g. a shared link with a statistic this model does not have */}
+          <button type="button" className={styles.more} onClick={() => update({ sx: null, sy: null })}>
+            Reset the axes
+          </button>
+        </>
       ) : !data ? (
         <div className={`card ${styles.loading}`}>Loading…</div>
       ) : (

@@ -222,7 +222,7 @@ every new model version.
 
 ## 10. Gotchas
 
-- **SofaScore blocks PHP's HTTP stack** (TLS fingerprinting → 403) but accepts the `curl`
+- **SofaScore answers PHP's HTTP stack with 403** but answers the `curl`
   binary. That is why `SofascoreClient` shells out to curl and works from snapshot files
   in `var/sources/sofascore/`. Don't "fix" it back to Symfony HttpClient.
 - **Rebuilding recreates `PlayerSeason` rows**, so their ids change; `Player` ids don't.

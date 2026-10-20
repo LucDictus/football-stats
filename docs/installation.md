@@ -19,10 +19,10 @@ The whole data pipeline takes about two minutes. The only slow part is installin
 
 | Tool | Version | Why |
 |---|---|---|
-| PHP | 8.2 or newer (tested on 8.3), with the extensions `pdo_pgsql`, `ctype`, `iconv`, `mbstring`, `xml` | The backend (Symfony 7.4) |
+| PHP | 8.3 or newer (the locked test tools need 8.3), with the extensions `pdo_pgsql`, `ctype`, `iconv`, `mbstring`, `xml` | The backend (Symfony 7.4) |
 | Composer | 2.x | PHP dependencies |
 | Docker with Compose | any recent | Runs PostgreSQL 16. A local PostgreSQL 16 works too; it needs the `unaccent` extension, which the migrations enable |
-| Node.js | 22.12 or newer (tested on 24) | The frontend (Vite 8, Vitest 5) |
+| Node.js | 22.22 or newer (tested on 24; React Router needs 22.22) | The frontend (Vite 8, Vitest 5) |
 | git | any | Fetching the Top-5 dataset |
 | curl (the command-line program) | any | Downloading the SofaScore Champions League data (see [why](#sofascore-returns-403)) |
 | Google Chrome or Chromium | any | Only for the browser tests (`npm run e2e`) |
@@ -61,9 +61,14 @@ development defaults: `.env` has the database URL, which matches the Docker data
 (`postgresql://app:!ChangeMe!@127.0.0.1:5432/app`), and `.env.dev` and `.env.test` have
 development secrets. These are not for a public server.
 
-If you use your own PostgreSQL, create `.env.local` (not committed) with your own `DATABASE_URL`.
-Symfony reads `.env`, then `.env.local`, then `.env.dev`, so a value in `.env.local` wins over
-`.env`.
+If you use your own PostgreSQL, put your own `DATABASE_URL` in **two** files that are not
+committed: `.env.local` (for the app and the console) and `.env.test.local` (for the tests).
+Symfony reads, each overriding the one before: `.env`, `.env.local`, `.env.<env>`,
+`.env.<env>.local`; in the test environment it skips `.env.local`. The test database name gets
+`_test` appended automatically.
+
+The downloaded data (`var/sources/`) and the database are not in git: step 5 fetches and builds
+them.
 
 Everything that defines *what* is assessed (the season, its dates, the five leagues and the
 Champions League ids at SofaScore and FotMob) is in `config/services.yaml`, under
@@ -215,10 +220,13 @@ CHROME_PATH=/usr/bin/google-chrome npm --prefix frontend run e2e
 
 ### SofaScore returns 403
 
-SofaScore blocks PHP's own HTTP client but accepts the `curl` program, which is why the import
-calls curl. If curl is blocked as well, open the page URLs the import prints in a browser, save
-each response as `page-1.json`, `page-2.json`, … in `var/sources/sofascore/ut7-s76953/`, and run
-`php bin/console app:import:sofascore-cl --no-fetch`.
+SofaScore answers PHP's own HTTP client with 403 but answers the `curl` program, which is why the
+import calls curl. If curl gets a 403 as well, open the pages in a browser and save each response
+in `var/sources/sofascore/ut7-s76953/` as `page-1.json`, `page-2.json`, … up to the `pages` count
+in the first response. Page *n* is
+`https://api.sofascore.com/api/v1/unique-tournament/7/season/76953/statistics?limit=100&offset=<100·(n−1)>&order=-minutesPlayed&accumulation=total&fields=<the fields>`,
+with the field list from `SofascoreClient::FIELDS` joined by commas (the URL of the failing page
+is in the error message). Then run `php bin/console app:import:sofascore-cl --no-fetch`.
 
 ### "Connection refused" on port 5432
 

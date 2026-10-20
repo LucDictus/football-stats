@@ -12,8 +12,8 @@ React 19 + TypeScript + Vite. Reads the Symfony JSON API (`/api`).
   scores, page transitions. All motion respects the system "reduce motion" setting.
 
 ```bash
-npm install
-npm run dev      # http://127.0.0.1:5173, proxies /api to Symfony on :8010
+npm ci
+npm run dev      # http://localhost:5173, proxies /api to Symfony on :8010
 npm run check    # TypeScript, lint (oxlint) and unit tests (Vitest)
 npm run build    # production build in dist/
 npm run e2e      # browser checks (needs both servers and Chrome at /usr/bin/google-chrome; CHROME_PATH to override)
